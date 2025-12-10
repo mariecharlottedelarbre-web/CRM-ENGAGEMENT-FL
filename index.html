@@ -421,27 +421,66 @@
     const SEASONS = ["Printemps", "Été", "Automne", "Hiver"];
     const WAVE_STATUSES = ["Non concerné", "À faire", "En cours", "Engagé", "Refusé"];
 
-    /********* LOCAL STORAGE *********/
-    const STORAGE_KEY = "mini-crm-fl-v4";
-    function loadState() {
-      try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (!raw) return {};
-        return JSON.parse(raw);
-      } catch (e) { return {}; }
-    }
-    function saveState() {
-      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(STATE)); } catch (e) {}
-    }
+  /********* ÉTAT + SYNCHRO SUPABASE *********/
 
-    // state par magasin
-    let STATE = loadState();
-    function getStoreState(id) {
-      if (!STATE[id]) {
-        STATE[id] = { seasons: [], waves: {}, buysFL: "", buysEng: "", notesFL: "", notesEng: "" };
-      }
-      return STATE[id];
-    }
+// Objet qui contient l'état de tous les magasins
+let STATE = {};
+
+// Chargement de tous les états depuis Supabase au démarrage
+async function loadStateFromSupabase() {
+  const { data, error } = await sb
+    .from("store_state")
+    .select("*");
+
+  if (error) {
+    console.error("Erreur de chargement Supabase :", error);
+    STATE = {};
+    return;
+  }
+
+  STATE = {};
+  data.forEach(row => {
+    STATE[row.id] = {
+      seasons: row.seasons ? JSON.parse(row.seasons) : [],
+      waves: row.waves ? JSON.parse(row.waves) : {},
+      buysFL: row.buys_fl || "",
+      buysEng: row.buys_eng || "",
+      notesFL: row.notes_fl || "",
+      notesEng: row.notes_eng || "",
+    };
+  });
+}
+
+// Retourne l'état d'un magasin, en le créant si besoin
+function getStoreState(id) {
+  if (!STATE[id]) {
+    STATE[id] = { seasons: [], waves: {}, buysFL: "", buysEng: "", notesFL: "", notesEng: "" };
+  }
+  return STATE[id];
+}
+
+// Sauvegarde d'UN magasin dans Supabase (appelée à chaque modification)
+async function saveStoreToSupabase(id) {
+  const st = getStoreState(id);
+
+  const payload = {
+    id,
+    seasons: JSON.stringify(st.seasons || []),
+    waves: JSON.stringify(st.waves || {}),
+    buys_fl: st.buysFL || "",
+    buys_eng: st.buysEng || "",
+    notes_fl: st.notesFL || "",
+    notes_eng: st.notesEng || "",
+  };
+
+  const { error } = await sb
+    .from("store_state")
+    .upsert(payload);
+
+  if (error) {
+    console.error("Erreur de sauvegarde Supabase :", error);
+  }
+}
 
     /********* VARIABLES UI *********/
     const root = document.getElementById("root");
@@ -929,10 +968,10 @@
       });
       left.querySelectorAll("select[data-buys-fl]").forEach(sel => {
         sel.addEventListener("change", () => {
-          const id = sel.dataset.buysFl;
-          const st = getStoreState(id);
-          st.buysFL = sel.value;
-          saveState();
+         const id = sel.dataset.buysFl;
+         const st = getStoreState(id);
+         st.buysFL = sel.value;
+         saveStoreToSupabase(id);
         });
       });
 
@@ -962,7 +1001,7 @@
             const st2 = getStoreState(currentStore.id);
             const idx = st2.seasons.indexOf(season);
             if (idx >= 0) st2.seasons.splice(idx, 1); else st2.seasons.push(season);
-            saveState();
+            saveStoreToSupabase(currentStore.id);
             renderApp();
           });
         });
@@ -970,7 +1009,7 @@
         ta.addEventListener("input", () => {
           const st2 = getStoreState(currentStore.id);
           st2.notesFL = ta.value;
-          saveState();
+          saveStoreToSupabase(currentStore.id);
         });
       } else {
         right.innerHTML = '<div class="subtext">Sélectionne un magasin dans la liste.</div>';
@@ -1035,7 +1074,7 @@
           const id = sel.dataset.buysEng;
           const st = getStoreState(id);
           st.buysEng = sel.value;
-          saveState();
+          saveStoreToSupabase(id);
         });
       });
 
@@ -1071,7 +1110,7 @@
             const waveId = sel.dataset.wave;
             const st2 = getStoreState(currentStore.id);
             st2.waves[waveId] = sel.value;
-            saveState();
+            saveStoreToSupabase(currentStore.id);
             renderApp();
           });
         });
@@ -1079,7 +1118,7 @@
         ta.addEventListener("input", () => {
           const st2 = getStoreState(currentStore.id);
           st2.notesEng = ta.value;
-          saveState();
+          saveStoreToSupabase(currentStore.id);
         });
       } else {
         right.innerHTML = '<div class="subtext">Sélectionne un magasin dans la liste.</div>';
@@ -1089,7 +1128,12 @@
       container.appendChild(right);
     }
 
-    renderLogin();
+    async function init() {
+  await loadStateFromSupabase();
+  renderLogin();
+}
+
+init();
   </script>
 </body>
 </html>
