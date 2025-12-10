@@ -280,7 +280,19 @@
 <body>
   <div id="root" style="width:100%"></div>
 
+  <!-- 📡 Supabase JS -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
   <script>
+    // --- Connexion Supabase (partage CRM) ---
+    const SUPABASE_URL = "https://sytpnqayyyjdjhojafyi.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_5ernJ3tbCW3XnAdx983E8A_ASPSKBVx";
+
+    const { createClient } = supabase;
+    const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+    // Pour l’instant, on se contente de connecter la base.
+    // On branchera la sauvegarde/lecture des données dessus ensuite.
+
     /********* UTILISATEURS *********/
     const USERS = {
       admins: [
@@ -386,16 +398,16 @@
       { id: "proxi-scionzier",      name: "Proxi Scionzier",      ca2024: 318598,  commercialId: "aydogan-nevin" },
 
       // VERNAY Benoit
-      { id: "vals-les-bains",       name: "Vals Les Bains",                     ca2024: 759854,  commercialId: "vernay-benoit" },
-      { id: "proxi-langogne-capucins", name: "Proxi Super Langogne Capucins",  ca2024: 554404,  commercialId: "vernay-benoit" },
-      { id: "st-fortunat",          name: "St Fortunat",                        ca2024: 499207,  commercialId: "vernay-benoit" },
-      { id: "8-a-huit-chadrac",     name: "8 à Huit Chadrac",                   ca2024: 416296,  commercialId: "vernay-benoit" },
-      { id: "le-cheylard",          name: "Le Cheylard",                        ca2024: 398914,  commercialId: "vernay-benoit" },
-      { id: "espaly-st-marcel",     name: "Espaly St Marcel",                   ca2024: 364105,  commercialId: "vernay-benoit" },
-      { id: "colombier-le-jeune",   name: "Colombier-Le-Jeune",                 ca2024: 353985,  commercialId: "vernay-benoit" },
-      { id: "langeac-lafayette",    name: "Langeac -Lafayette",                 ca2024: 280621,  commercialId: "vernay-benoit" },
-      { id: "allanche",             name: "Allanche",                           ca2024: 213408,  commercialId: "vernay-benoit" },
-      { id: "saint-mamet-la-salvetas", name: "Saint mamet la salvetas",         ca2024: 317235,  commercialId: "vernay-benoit" }
+      { id: "vals-les-bains",          name: "Vals Les Bains",                     ca2024: 759854,  commercialId: "vernay-benoit" },
+      { id: "proxi-langogne-capucins", name: "Proxi Super Langogne Capucins",      ca2024: 554404,  commercialId: "vernay-benoit" },
+      { id: "st-fortunat",             name: "St Fortunat",                        ca2024: 499207,  commercialId: "vernay-benoit" },
+      { id: "8-a-huit-chadrac",        name: "8 à Huit Chadrac",                   ca2024: 416296,  commercialId: "vernay-benoit" },
+      { id: "le-cheylard",             name: "Le Cheylard",                        ca2024: 398914,  commercialId: "vernay-benoit" },
+      { id: "espaly-st-marcel",        name: "Espaly St Marcel",                   ca2024: 364105,  commercialId: "vernay-benoit" },
+      { id: "colombier-le-jeune",      name: "Colombier-Le-Jeune",                 ca2024: 353985,  commercialId: "vernay-benoit" },
+      { id: "langeac-lafayette",       name: "Langeac -Lafayette",                 ca2024: 280621,  commercialId: "vernay-benoit" },
+      { id: "allanche",                name: "Allanche",                           ca2024: 213408,  commercialId: "vernay-benoit" },
+      { id: "saint-mamet-la-salvetas", name: "Saint mamet la salvetas",            ca2024: 317235,  commercialId: "vernay-benoit" }
     ];
 
     const WAVES = [
