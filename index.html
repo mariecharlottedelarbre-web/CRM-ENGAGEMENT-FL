@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Mini CRM Fruits & Légumes</title>
+  <title>CRM PROXI</title>
   <style>
     :root {
       --bg: #1c1917;
@@ -560,7 +560,7 @@ async function saveStoreToSupabase(id) {
       const card = document.createElement("div");
       card.className = "card login-card";
       card.innerHTML = `
-        <h1><span class="logo-dot"></span> Mini CRM Fruits & Légumes</h1>
+        <h1><span class="logo-dot"></span> CRM PROXI</h1>
         <div class="subtext">Connexion commercial ou admin (Marie-Charlotte / Xavier).</div>
         <div class="field" style="margin-top:16px;">
           <label>Type de profil</label>
@@ -690,7 +690,7 @@ async function saveStoreToSupabase(id) {
       kpiCard.className = "card";
       const kpis = computeKpis(currentUser);
       kpiCard.innerHTML = `
-        <h1><span class="logo-dot"></span> Vue d'ensemble ${currentUser.role === "admin" ? "réseau" : "commerciale"}</h1>
+        <h1><span class="logo-dot"></span> CRM PROXI · Vue d'ensemble ${currentUser.role === "admin" ? "réseau" : "commerciale"}</h1>
         <div class="subtext">Page d'accueil : CA global, CA moyen par magasin et dynamique d'engagement.</div>
         <div class="kpi-row">
           <div class="kpi-card">
