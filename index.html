@@ -614,194 +614,134 @@ async function saveStoreToSupabase(id) {
       });
     }
 
-    /********* APP PRINCIPALE *********/
-    function renderApp() {
-      root.innerHTML = "";
-      const shell = document.createElement("div");
-      shell.className = "app-shell";
+function renderApp() {
+  root.innerHTML = "";
 
-      // Sidebar
-      const sidebar = document.createElement("div");
-      sidebar.className = "sidebar card";
-      sidebar.innerHTML = `
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
-          <div>
-            <div style="font-size:13px;color:var(--muted);opacity:.85;">Connecté en tant que</div>
-            <div style="font-size:15px;font-weight:600;">${currentUser.name}</div>
-            <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;opacity:.8;">
-              ${currentUser.role === "admin" ? "Admin · vue globale" : "Commercial · portefeuille magasins"}
-            </div>
-          </div>
-          <button class="secondary" id="logoutBtn">Quitter</button>
+  const shell = document.createElement("div");
+  shell.className = "app-shell";
+
+  /* ================= SIDEBAR ================= */
+  const sidebar = document.createElement("div");
+  sidebar.className = "sidebar card";
+  sidebar.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+      <div>
+        <div style="font-size:13px;color:var(--muted);opacity:.85;">Connecté en tant que</div>
+        <div style="font-size:15px;font-weight:600;">${currentUser.name}</div>
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;opacity:.8;">
+          ${currentUser.role === "admin" ? "Admin · vue globale" : "Commercial · portefeuille magasins"}
         </div>
-        <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap;">
-          <span class="chip">Fruits & Légumes</span>
-          <span class="chip green">Campagnes engagement</span>
-        </div>
-      `;
-      const listWrap = document.createElement("div");
-      listWrap.className = "list";
-
-      const commList =
-        currentUser.role === "admin"
-          ? USERS.commerciaux
-          : USERS.commerciaux.filter(c => c.id === currentUser.id);
-
-      const storesAll = getUserStores(currentUser);
-      const byCommercial = {};
-      storesAll.forEach(s => {
-        byCommercial[s.commercialId] = (byCommercial[s.commercialId] || 0) + 1;
-      });
-
-      commList.forEach(c => {
-        const count = byCommercial[c.id] || 0;
-        const row = document.createElement("div");
-        row.className = "commercial-row";
-        const isActive =
-          (currentUser.role === "commercial" && currentUser.id === c.id) ||
-          (currentUser.role === "admin" && currentCommercialFilter === c.id) ||
-          (currentUser.role === "admin" && !currentCommercialFilter && commList[0].id === c.id);
-        if (isActive) row.classList.add("active");
-        row.innerHTML = `
-          <div>
-            <div class="commercial-name">${c.name}</div>
-            <div class="commercial-meta">${count} magasin(s)</div>
-          </div>
-          <span class="status-pill">Portefeuille</span>
-        `;
-        row.addEventListener("click", () => {
-          if (currentUser.role === "admin") {
-            currentCommercialFilter = c.id;
-            currentStoreId = null;
-            currentTab = "overview";
-            currentSearch = "";
-            renderApp();
-          }
-        });
-        listWrap.appendChild(row);
-      });
-      sidebar.appendChild(listWrap);
-
-      // Main
-      if (currentTab === "overview") {
-      const main = document.createElement("div");
-      main.className = "main";
-
-      const kpiCard = document.createElement("div");
-      kpiCard.className = "card";
-      const kpis = computeKpis(currentUser);
-      kpiCard.innerHTML = `
-        <h1><span class="logo-dot"></span> CRM PROXI · Vue d'ensemble ${currentUser.role === "admin" ? "réseau" : "commerciale"}</h1>
-        <div class="subtext">Page d'accueil : CA global, CA moyen par magasin et dynamique d'engagement.</div>
-        <div class="kpi-row">
-          <div class="kpi-card">
-            <div class="kpi-label">Magasins en suivi</div>
-            <div class="kpi-value">${kpis.totalStores}</div>
-            <div class="kpi-sub">dans le portefeuille actuel</div>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-label">CA 2024 total</div>
-            <div class="kpi-value">${formatNumber(kpis.totalCA)} €</div>
-            <div class="kpi-sub">somme de tous les magasins</div>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-label">CA moyen / magasin</div>
-            <div class="kpi-value">${formatNumber(kpis.avgCA)} €</div>
-            <div class="kpi-sub">moyenne par point de vente</div>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-label">Magasins engagés (≥1 vague)</div>
-            <div class="kpi-value">${kpis.engagedStores}</div>
-            <div class="kpi-sub">${kpis.engagedRate}% du portefeuille</div>
-          </div>
-        </div>
-      `;
-      main.appendChild(kpiCard);
-
-      if (currentUser.role === "admin") {
-        const synth = document.createElement("div");
-        synth.className = "card";
-        const summaries = computeCommercialSummaries();
-        synth.innerHTML = `
-          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
-            <div>
-              <div style="font-size:13px;font-weight:600;">Synthèse réseau par commercial</div>
-              <div class="subtext">Comparatif des CA et taux d'engagement pour voir qui a le plus avancé.</div>
-            </div>
-          </div>
-          <table>
-            <thead>
-              <tr>
-                <th>Commercial</th>
-                <th>Magasins</th>
-                <th>CA 2024</th>
-                <th>Mag. engagés</th>
-                <th>Taux d'engagement</th>
-                <th>Vagues moy. / mag.</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${summaries.map(s => `
-                <tr>
-                  <td>${s.name}</td>
-                  <td>${s.totalStores}</td>
-                  <td>${formatNumber(s.totalCA)} €</td>
-                  <td>${s.engagedStores}</td>
-                  <td>${s.engagedRate} %</td>
-                  <td>${s.avgEngagements}</td>
-                </tr>
-              `).join("")}
-            </tbody>
-          </table>
-          <div class="bar-chart">
-            ${summaries.map(s => `
-              <div class="bar-row">
-                <div class="bar-label">${s.name}</div>
-                <div class="bar-bg"><div class="bar-fill" style="width:${s.engagedRate}%;"></div></div>
-                <div class="bar-value">${s.engagedRate}%</div>
-              </div>
-            `).join("")}
-          </div>
-        `;
-        main.appendChild(synth);
-      }
-  }
-      const mainCard = document.createElement("div");
-      mainCard.className = "card";
-
-      const stores = getUserStores(currentUser).slice().sort((a, b) => b.ca2024 - a.ca2024);
-      if (!currentStoreId && stores.length) currentStoreId = stores[0].id;
-      const currentStore = stores.find(s => s.id === currentStoreId) || stores[0];
-
-      const header = document.createElement("div");
-      header.style.display = "flex";
-      header.style.justifyContent = "space-between";
-      header.style.alignItems = "center";
-      header.style.gap = "12px";
-      header.innerHTML = `
-        <div>
-          <div style="font-size:13px;font-weight:600;">Portefeuille magasins</div>
-          <div class="subtext">Onglets <strong>Magasins</strong>, <strong>Fruits & Légumes</strong> et <strong>Engagement</strong>.</div>
-        </div>
-        <div class="tabs">
-  <button class="tab-btn ${currentTab === "overview" ? "active" : ""}" data-tab="overview">Vue d'ensemble</button>
-  <button class="tab-btn ${currentTab === "list" ? "active" : ""}" data-tab="list">Magasins</button>
-  <button class="tab-btn ${currentTab === "fl" ? "active" : ""}" data-tab="fl">Fruits & Légumes</button>
-  <button class="tab-btn ${currentTab === "eng" ? "active" : ""}" data-tab="eng">Engagement</button>
-</div>
-
-      `;
-      mainCard.appendChild(header);
-
-      const content = document.createElement("div");
-      content.className = "two-columns";
-      if (currentTab === "overview") {
-  content.innerHTML = `
-    <div class="subtext">
-      Page d’introduction du CRM PROXI.<br>
-      Utilise les onglets ci-dessus pour accéder aux vues Magasins, Fruits & Légumes ou Engagement.
+      </div>
+      <button class="secondary" id="logoutBtn">Quitter</button>
     </div>
   `;
+
+  const listWrap = document.createElement("div");
+  listWrap.className = "list";
+
+  const commList =
+    currentUser.role === "admin"
+      ? USERS.commerciaux
+      : USERS.commerciaux.filter(c => c.id === currentUser.id);
+
+  const storesAll = getUserStores(currentUser);
+  const byCommercial = {};
+  storesAll.forEach(s => {
+    byCommercial[s.commercialId] = (byCommercial[s.commercialId] || 0) + 1;
+  });
+
+  commList.forEach(c => {
+    const row = document.createElement("div");
+    row.className = "commercial-row";
+    if (currentCommercialFilter === c.id || currentUser.id === c.id) {
+      row.classList.add("active");
+    }
+    row.innerHTML = `
+      <div>
+        <div class="commercial-name">${c.name}</div>
+        <div class="commercial-meta">${byCommercial[c.id] || 0} magasin(s)</div>
+      </div>
+    `;
+    row.addEventListener("click", () => {
+      if (currentUser.role === "admin") {
+        currentCommercialFilter = c.id;
+        currentStoreId = null;
+        currentTab = "overview";
+        currentSearch = "";
+        renderApp();
+      }
+    });
+    listWrap.appendChild(row);
+  });
+
+  sidebar.appendChild(listWrap);
+
+  /* ================= MAIN ================= */
+  const main = document.createElement("div");
+  main.className = "main";
+
+  /* KPI */
+  const kpiCard = document.createElement("div");
+  kpiCard.className = "card";
+  const kpis = computeKpis(currentUser);
+  kpiCard.innerHTML = `
+    <h1><span class="logo-dot"></span> CRM PROXI</h1>
+    <div class="subtext">Vue d’ensemble du portefeuille.</div>
+    <div class="kpi-row">
+      <div class="kpi-card">
+        <div class="kpi-label">Magasins</div>
+        <div class="kpi-value">${kpis.totalStores}</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">CA total</div>
+        <div class="kpi-value">${formatNumber(kpis.totalCA)} €</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">CA moyen</div>
+        <div class="kpi-value">${formatNumber(kpis.avgCA)} €</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Magasins engagés</div>
+        <div class="kpi-value">${kpis.engagedStores}</div>
+      </div>
+    </div>
+  `;
+  main.appendChild(kpiCard);
+
+  /* CONTENU */
+  const mainCard = document.createElement("div");
+  mainCard.className = "card";
+
+  mainCard.innerHTML = `
+    <div class="tabs">
+      <button class="tab-btn ${currentTab === "overview" ? "active" : ""}" data-tab="overview">Vue d’ensemble</button>
+      <button class="tab-btn ${currentTab === "list" ? "active" : ""}" data-tab="list">Magasins</button>
+      <button class="tab-btn ${currentTab === "fl" ? "active" : ""}" data-tab="fl">Fruits & Légumes</button>
+      <button class="tab-btn ${currentTab === "eng" ? "active" : ""}" data-tab="eng">Engagement</button>
+    </div>
+  `;
+
+  const content = document.createElement("div");
+  content.className = "two-columns";
+
+  const stores = getUserStores(currentUser);
+  if (!currentStoreId && stores.length) currentStoreId = stores[0].id;
+  const currentStore = stores.find(s => s.id === currentStoreId);
+
+  if (currentTab === "overview") {
+    content.innerHTML = `
+      <div class="subtext">
+        Sélectionne un onglet pour accéder aux données du CRM.
+      </div>
+    `;
+  } else if (currentTab === "list") {
+    renderStoresTab(content, stores, currentStore);
+  } else if (currentTab === "fl") {
+    renderFruitsLegumesTab(content, stores, currentStore);
+  } else if (currentTab === "eng") {
+    renderEngagementTab(content, stores, currentStore);
+  }
+
   mainCard.appendChild(content);
   main.appendChild(mainCard);
 
@@ -809,17 +749,14 @@ async function saveStoreToSupabase(id) {
   shell.appendChild(main);
   root.appendChild(shell);
 
-  const logoutBtn = sidebar.querySelector("#logoutBtn");
-  if (logoutBtn) {
-    logoutBtn.addEventListener("click", () => {
-      currentUser = null;
-      currentCommercialFilter = null;
-      currentStoreId = null;
-      currentTab = "overview";
-      currentSearch = "";
-      renderLogin();
-    });
-  }
+  /* EVENTS */
+  sidebar.querySelector("#logoutBtn").addEventListener("click", () => {
+    currentUser = null;
+    currentCommercialFilter = null;
+    currentStoreId = null;
+    currentTab = "overview";
+    renderLogin();
+  });
 
   mainCard.querySelectorAll(".tab-btn").forEach(btn => {
     btn.addEventListener("click", () => {
@@ -827,55 +764,8 @@ async function saveStoreToSupabase(id) {
       renderApp();
     });
   });
-
-  return;
 }
 
-
-      if (currentTab === "overview") {
-  content.innerHTML = `
-    <div class="subtext">
-      Page d’accueil du CRM PROXI.<br>
-      Sélectionne un onglet pour accéder aux vues <strong>Magasins</strong>, 
-      <strong>Fruits & Légumes</strong> ou <strong>Engagement</strong>.
-    </div>
-  `;
-} else if (stores.length === 0) {
-  content.innerHTML = '<div class="subtext">Aucun magasin dans ce portefeuille.</div>';
-} else if (currentTab === "list") {
-  renderStoresTab(content, stores, currentStore);
-} else if (currentTab === "fl") {
-  renderFruitsLegumesTab(content, stores, currentStore);
-} else if (currentTab === "eng") {
-  renderEngagementTab(content, stores, currentStore);
-}
-
-
-      mainCard.appendChild(content);
-      main.appendChild(mainCard);
-
-      shell.appendChild(sidebar);
-      shell.appendChild(main);
-      root.appendChild(shell);
-
-      const logoutBtn = sidebar.querySelector("#logoutBtn");
-      if (logoutBtn) {
-        logoutBtn.addEventListener("click", () => {
-          currentUser = null;
-          currentCommercialFilter = null;
-          currentStoreId = null;
-          currentTab = "overview";
-          currentSearch = "";
-          renderLogin();
-        });
-      }
-      mainCard.querySelectorAll(".tab-btn").forEach(btn => {
-        btn.addEventListener("click", () => {
-          currentTab = btn.dataset.tab;
-          renderApp();
-        });
-      });
-    }
 
     /********* ONGLET 1 : MAGASINS *********/
     function renderStoresTab(container, stores, currentStore) {
