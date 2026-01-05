@@ -680,13 +680,31 @@ function renderApp() {
   const main = document.createElement("div");
   main.className = "main";
 
-  /* KPI */
-  const kpiCard = document.createElement("div");
-  kpiCard.className = "card";
+ /* KPI */
+const kpiCard = document.createElement("div");
+kpiCard.className = "card";
+
+if (currentTab === "fl") {
+  // 👉 KPI SPÉCIFIQUE FRUITS & LÉGUMES
+  kpiCard.innerHTML = `
+    <h1><span class="logo-dot"></span> CRM PROXI · Fruits & Légumes</h1>
+    <div class="subtext">Analyse du chiffre d’affaires Fruits & Légumes.</div>
+
+    <div class="kpi-row">
+      <div class="kpi-card">
+        <div class="kpi-label">CA Fruits & Légumes total</div>
+        <div class="kpi-value">— €</div>
+        <div class="kpi-sub">à renseigner</div>
+      </div>
+    </div>
+  `;
+} else {
+  // 👉 KPI NORMAL (magasins)
   const kpis = computeKpis(currentUser);
   kpiCard.innerHTML = `
     <h1><span class="logo-dot"></span> CRM PROXI</h1>
     <div class="subtext">Vue d’ensemble du portefeuille.</div>
+
     <div class="kpi-row">
       <div class="kpi-card">
         <div class="kpi-label">Magasins</div>
@@ -706,7 +724,9 @@ function renderApp() {
       </div>
     </div>
   `;
-  main.appendChild(kpiCard);
+}
+
+main.appendChild(kpiCard);
 
   /* CONTENU */
   const mainCard = document.createElement("div");
