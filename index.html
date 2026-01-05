@@ -486,7 +486,7 @@ async function saveStoreToSupabase(id) {
     const root = document.getElementById("root");
     let currentUser = null;
     let currentCommercialFilter = null;
-    let currentTab = "list";
+    let currentTab = "overview";
     let currentStoreId = null;
     let currentSearch = "";
 
@@ -607,7 +607,7 @@ async function saveStoreToSupabase(id) {
           currentUser = { ...USERS.commerciaux.find(c => c.id === id), role: "commercial" };
         }
         currentCommercialFilter = null;
-        currentTab = "list";
+        currentTab = "overview";
         currentStoreId = null;
         currentSearch = "";
         renderApp();
@@ -673,7 +673,7 @@ async function saveStoreToSupabase(id) {
           if (currentUser.role === "admin") {
             currentCommercialFilter = c.id;
             currentStoreId = null;
-            currentTab = "list";
+            currentTab = "overview";
             currentSearch = "";
             renderApp();
           }
@@ -683,6 +683,7 @@ async function saveStoreToSupabase(id) {
       sidebar.appendChild(listWrap);
 
       // Main
+      if (currentTab === "overview") {
       const main = document.createElement("div");
       main.className = "main";
 
@@ -764,7 +765,7 @@ async function saveStoreToSupabase(id) {
         `;
         main.appendChild(synth);
       }
-
+  }
       const mainCard = document.createElement("div");
       mainCard.className = "card";
 
@@ -783,15 +784,53 @@ async function saveStoreToSupabase(id) {
           <div class="subtext">Onglets <strong>Magasins</strong>, <strong>Fruits & Légumes</strong> et <strong>Engagement</strong>.</div>
         </div>
         <div class="tabs">
-          <button class="tab-btn ${currentTab === "list" ? "active" : ""}" data-tab="list">Magasins</button>
-          <button class="tab-btn ${currentTab === "fl" ? "active" : ""}" data-tab="fl">Fruits & Légumes</button>
-          <button class="tab-btn ${currentTab === "eng" ? "active" : ""}" data-tab="eng">Engagement</button>
-        </div>
+  <button class="tab-btn ${currentTab === "overview" ? "active" : ""}" data-tab="overview">Vue d'ensemble</button>
+  <button class="tab-btn ${currentTab === "list" ? "active" : ""}" data-tab="list">Magasins</button>
+  <button class="tab-btn ${currentTab === "fl" ? "active" : ""}" data-tab="fl">Fruits & Légumes</button>
+  <button class="tab-btn ${currentTab === "eng" ? "active" : ""}" data-tab="eng">Engagement</button>
+</div>
+
       `;
       mainCard.appendChild(header);
 
       const content = document.createElement("div");
       content.className = "two-columns";
+      if (currentTab === "overview") {
+  content.innerHTML = `
+    <div class="subtext">
+      Page d’introduction du CRM PROXI.<br>
+      Utilise les onglets ci-dessus pour accéder aux vues Magasins, Fruits & Légumes ou Engagement.
+    </div>
+  `;
+  mainCard.appendChild(content);
+  main.appendChild(mainCard);
+
+  shell.appendChild(sidebar);
+  shell.appendChild(main);
+  root.appendChild(shell);
+
+  const logoutBtn = sidebar.querySelector("#logoutBtn");
+  if (logoutBtn) {
+    logoutBtn.addEventListener("click", () => {
+      currentUser = null;
+      currentCommercialFilter = null;
+      currentStoreId = null;
+      currentTab = "overview";
+      currentSearch = "";
+      renderLogin();
+    });
+  }
+
+  mainCard.querySelectorAll(".tab-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      currentTab = btn.dataset.tab;
+      renderApp();
+    });
+  });
+
+  return;
+}
+
 
       if (stores.length === 0) {
         content.innerHTML = '<div class="subtext">Aucun magasin dans ce portefeuille.</div>';
@@ -818,7 +857,7 @@ async function saveStoreToSupabase(id) {
           currentUser = null;
           currentCommercialFilter = null;
           currentStoreId = null;
-          currentTab = "list";
+          currentTab = "overview";
           currentSearch = "";
           renderLogin();
         });
