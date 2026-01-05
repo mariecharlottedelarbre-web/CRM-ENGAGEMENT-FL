@@ -832,17 +832,24 @@ async function saveStoreToSupabase(id) {
 }
 
 
-      if (stores.length === 0) {
-        content.innerHTML = '<div class="subtext">Aucun magasin dans ce portefeuille.</div>';
-      } else {
-        if (currentTab === "list") {
-          renderStoresTab(content, stores, currentStore);
-        } else if (currentTab === "fl") {
-          renderFruitsLegumesTab(content, stores, currentStore);
-        } else {
-          renderEngagementTab(content, stores, currentStore);
-        }
-      }
+      if (currentTab === "overview") {
+  content.innerHTML = `
+    <div class="subtext">
+      Page d’accueil du CRM PROXI.<br>
+      Sélectionne un onglet pour accéder aux vues <strong>Magasins</strong>, 
+      <strong>Fruits & Légumes</strong> ou <strong>Engagement</strong>.
+    </div>
+  `;
+} else if (stores.length === 0) {
+  content.innerHTML = '<div class="subtext">Aucun magasin dans ce portefeuille.</div>';
+} else if (currentTab === "list") {
+  renderStoresTab(content, stores, currentStore);
+} else if (currentTab === "fl") {
+  renderFruitsLegumesTab(content, stores, currentStore);
+} else if (currentTab === "eng") {
+  renderEngagementTab(content, stores, currentStore);
+}
+
 
       mainCard.appendChild(content);
       main.appendChild(mainCard);
