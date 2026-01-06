@@ -454,7 +454,18 @@ async function loadStateFromSupabase() {
 // Retourne l'état d'un magasin, en le créant si besoin
 function getStoreState(id) {
   if (!STATE[id]) {
-    STATE[id] = { seasons: [], waves: {}, buysFL: "", buysEng: "", notesFL: "", notesEng: "" };
+STATE[id] = { 
+  flBySeason: {
+    "Printemps": { ordered: false, amount: "", plan: "" },
+    "Été": { ordered: false, amount: "", plan: "" },
+    "Automne": { ordered: false, amount: "", plan: "" },
+    "Hiver": { ordered: false, amount: "", plan: "" }
+  },
+  waves: {}, 
+  buysEng: "", 
+  notesEng: "" 
+};
+
   }
   return STATE[id];
 }
@@ -465,11 +476,9 @@ async function saveStoreToSupabase(id) {
 
   const payload = {
     id,
-    seasons: JSON.stringify(st.seasons || []),
+    fl_by_season: JSON.stringify(st.flBySeason || {}),
     waves: JSON.stringify(st.waves || {}),
-    buys_fl: st.buysFL || "",
     buys_eng: st.buysEng || "",
-    notes_fl: st.notesFL || "",
     notes_eng: st.notesEng || "",
   };
 
@@ -934,22 +943,62 @@ main.appendChild(kpiCard);
       if (currentStore) {
         const st = getStoreState(currentStore.id);
         right.innerHTML = `
-          <div style="font-size:13px;font-weight:600;">${currentStore.name}</div>
-          <div class="subtext">Saisons travaillées & compte-rendu Fruits & Légumes.</div>
-          <div style="margin-top:10px;">
-            <div style="font-size:12px;font-weight:600;margin-bottom:4px;">Saisons Fruits & Légumes</div>
-            <div class="seasons">
-              ${SEASONS.map(season => {
-                const active = st.seasons.includes(season);
-                return `<button type="button" class="season-pill ${active ? "active" : ""}" data-season="${season}">${season}</button>`;
-              }).join("")}
-            </div>
-          </div>
-          <div style="margin-top:12px;">
-            <div style="font-size:12px;font-weight:600;margin-bottom:4px;">Notes / actions Fruits & Légumes</div>
-            <textarea rows="5" id="notesFL">${st.notesFL || ""}</textarea>
-          </div>
-        `;
+       <div style="margin-top:10px;">
+  ${SEASONS.map(season => {
+    const data = st.flBySeason?.[season] || { ordered: "", amount: "", plan: "" };
+
+    return `
+      <div class="card" style="margin-bottom:10px;padding:10px;">
+        <div style="font-size:13px;font-weight:600;margin-bottom:6px;">${season}</div>
+
+        <div style="margin-bottom:6px;">
+          <label>Commande Fruits & Légumes ?</label>
+          <select data-season-ordered="${season}">
+            <option value="">NC</option>
+            <option value="Oui" ${data.ordered === "Oui" ? "selected" : ""}>Oui</option>
+            <option value="Non" ${data.ordered === "Non" ? "selected" : ""}>Non</option>
+          </select>
+        </div>
+
+        <div style="margin-bottom:6px;">
+          <label>Montant (€)</label>
+          <input type="number" data-season-amount="${season}" value="${data.amount || ""}" />
+        </div>
+
+        <div>
+          <label>Plan d’action</label>
+          <textarea rows="3" data-season-plan="${season}">${data.plan || ""}</textarea>
+        </div>
+      </div>
+    `;
+  }).join("")}
+</div>
+right.querySelectorAll("select[data-season-ordered]").forEach(sel => {
+  sel.addEventListener("change", () => {
+    const season = sel.dataset.seasonOrdered;
+    const st2 = getStoreState(currentStore.id);
+    st2.flBySeason[season].ordered = sel.value;
+    saveStoreToSupabase(currentStore.id);
+  });
+});
+
+right.querySelectorAll("input[data-season-amount]").forEach(inp => {
+  inp.addEventListener("input", () => {
+    const season = inp.dataset.seasonAmount;
+    const st2 = getStoreState(currentStore.id);
+    st2.flBySeason[season].amount = inp.value;
+    saveStoreToSupabase(currentStore.id);
+  });
+});
+
+right.querySelectorAll("textarea[data-season-plan]").forEach(ta => {
+  ta.addEventListener("input", () => {
+    const season = ta.dataset.seasonPlan;
+    const st2 = getStoreState(currentStore.id);
+    st2.flBySeason[season].plan = ta.value;
+    saveStoreToSupabase(currentStore.id);
+  });
+});
 
         right.querySelectorAll(".season-pill").forEach(btn => {
           btn.addEventListener("click", () => {
