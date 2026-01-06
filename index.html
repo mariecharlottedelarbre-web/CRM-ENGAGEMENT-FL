@@ -440,35 +440,36 @@ async function loadStateFromSupabase() {
 
   STATE = {};
   data.forEach(row => {
-    STATE[row.id] = {
-      seasons: row.seasons ? JSON.parse(row.seasons) : [],
-      waves: row.waves ? JSON.parse(row.waves) : {},
-      buysFL: row.buys_fl || "",
-      buysEng: row.buys_eng || "",
-      notesFL: row.notes_fl || "",
-      notesEng: row.notes_eng || "",
-    };
-  });
-}
+STATE[row.id] = {
+  flBySeason: row.fl_by_season ? JSON.parse(row.fl_by_season) : {
+    "Printemps": { ordered: "", amount: "", plan: "" },
+    "Été": { ordered: "", amount: "", plan: "" },
+    "Automne": { ordered: "", amount: "", plan: "" },
+    "Hiver": { ordered: "", amount: "", plan: "" }
+  },
+  waves: row.waves ? JSON.parse(row.waves) : {},
+  buysEng: row.buys_eng || "",
+  notesEng: row.notes_eng || ""
+};
 
 // Retourne l'état d'un magasin, en le créant si besoin
 function getStoreState(id) {
   if (!STATE[id]) {
-STATE[id] = { 
-  flBySeason: {
-    "Printemps": { ordered: false, amount: "", plan: "" },
-    "Été": { ordered: false, amount: "", plan: "" },
-    "Automne": { ordered: false, amount: "", plan: "" },
-    "Hiver": { ordered: false, amount: "", plan: "" }
-  },
-  waves: {}, 
-  buysEng: "", 
-  notesEng: "" 
-};
-
+    STATE[id] = {
+      flBySeason: {
+        "Printemps": { ordered: "", amount: "", plan: "" },
+        "Été": { ordered: "", amount: "", plan: "" },
+        "Automne": { ordered: "", amount: "", plan: "" },
+        "Hiver": { ordered: "", amount: "", plan: "" }
+      },
+      waves: {},
+      buysEng: "",
+      notesEng: ""
+    };
   }
   return STATE[id];
 }
+
 
 // Sauvegarde d'UN magasin dans Supabase (appelée à chaque modification)
 async function saveStoreToSupabase(id) {
@@ -849,7 +850,6 @@ main.appendChild(kpiCard);
       if (currentStore) {
         const st = getStoreState(currentStore.id);
         const engagedCount = WAVES.filter(w => st.waves[w.id] === "Engagé").length;
-        const seasonsActives = st.seasons.length;
         right.innerHTML = `
           <div style="font-size:13px;font-weight:600;">${currentStore.name}</div>
           <div class="subtext">Résumé magasin : CA, commandes et niveau d'engagement.</div>
@@ -862,15 +862,8 @@ main.appendChild(kpiCard);
               <div class="kpi-label">Vagues engagées</div>
               <div class="kpi-value" style="font-size:15px;">${engagedCount}</div>
             </div>
-            <div class="kpi-card" style="padding:8px 10px;">
-              <div class="kpi-label">Saisons actives</div>
-              <div class="kpi-value" style="font-size:15px;">${seasonsActives}</div>
-            </div>
           </div>
           <div style="margin-top:10px;font-size:12px;">
-            <div style="font-weight:600;margin-bottom:4px;">Commande F&L ?</div>
-            <div>${st.buysFL || '<span class="subtext">Non renseigné</span>'}</div>
-          </div>
           <div style="margin-top:6px;font-size:12px;">
             <div style="font-weight:600;margin-bottom:4px;">Commande engagement ?</div>
             <div>${st.buysEng || '<span class="subtext">Non renseigné</span>'}</div>
@@ -906,7 +899,6 @@ main.appendChild(kpiCard);
           <tbody>
             ${stores.map(s => {
               const st = getStoreState(s.id);
-              const buys = st.buysFL || "";
               return `
                 <tr data-id="${s.id}">
                   <td>${s.name}</td>
