@@ -98,18 +98,6 @@
       padding: 6px 10px;
       font-size: 12px;
     }
-    .chip {
-      padding: 4px 8px;
-      border-radius: 999px;
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: .08em;
-      border: 1px solid rgba(249,250,251,0.3);
-      color: var(--muted);
-      background: rgba(15,23,42,0.9);
-    }
-    .chip.green { border-color: rgba(34,197,94,0.6); color: #bbf7d0; background: rgba(22,163,74,0.16); }
-
     .commercial-row {
       padding: 8px 10px;
       border-radius: 10px;
@@ -142,7 +130,6 @@
     }
     .kpi-label { color: var(--muted); font-size: 11px; opacity:.9; }
     .kpi-value { font-size: 17px; font-weight: 600; margin-top: 3px; }
-    .kpi-sub { font-size: 11px; color: var(--muted); opacity:.8; }
 
     .tabs {
       display: inline-flex;
@@ -183,21 +170,6 @@
       align-items: flex-start;
     }
 
-    .seasons { display:flex; flex-wrap:wrap; gap:6px; margin-top:4px; }
-    .season-pill {
-      padding: 3px 8px;
-      border-radius: 999px;
-      font-size: 11px;
-      border: 1px solid rgba(249,250,251,0.3);
-      cursor: pointer;
-      background: rgba(15,23,42,0.9);
-    }
-    .season-pill.active {
-      border-color: rgba(34,197,94,0.7);
-      background: rgba(22,163,74,0.2);
-      color: #bbf7d0;
-    }
-
     .waves-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0,1fr));
@@ -225,50 +197,6 @@
     }
     .search-input::placeholder { color: rgba(229,231,235,0.6); }
 
-    .bar-chart { margin-top: 10px; }
-    .bar-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 6px;
-      font-size: 11px;
-    }
-    .bar-label {
-      width: 140px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      color: var(--muted);
-    }
-    .bar-bg {
-      flex: 1;
-      height: 8px;
-      border-radius: 999px;
-      background: rgba(55,65,81,0.9);
-      overflow: hidden;
-    }
-    .bar-fill {
-      height: 100%;
-      border-radius: 999px;
-      background: linear-gradient(to right, #22c55e, #bef264);
-    }
-    .bar-value {
-      width: 40px;
-      text-align: right;
-      color: var(--muted);
-    }
-
-    .status-pill {
-      padding: 2px 6px;
-      border-radius: 999px;
-      font-size: 10px;
-      border: 1px solid rgba(249,250,251,0.25);
-      color: var(--muted);
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-    }
-
     @media (max-width: 900px) {
       .app-shell { flex-direction: column; }
       .sidebar { width: 100%; }
@@ -277,6 +205,7 @@
     }
   </style>
 </head>
+
 <body>
   <div id="root" style="width:100%"></div>
 
@@ -287,11 +216,8 @@
     // --- Connexion Supabase (partage CRM) ---
     const SUPABASE_URL = "https://sytpnqayyyjdjhojafyi.supabase.co";
     const SUPABASE_KEY = "sb_publishable_5ernJ3tbCW3XnAdx983E8A_ASPSKBVx";
-
     const { createClient } = supabase;
     const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
-    // Pour l’instant, on se contente de connecter la base.
-    // On branchera la sauvegarde/lecture des données dessus ensuite.
 
     /********* UTILISATEURS *********/
     const USERS = {
@@ -311,7 +237,7 @@
       ]
     };
 
-    /********* MAGASINS : 10 PAR COMMERCIAL *********/
+    /********* MAGASINS *********/
     const STORES = [
       // COSTANZA Damien
       { id: "montpellier-delicie",  name: "Montpellier-delicie",  ca2024: 744909, commercialId: "costanza-damien" },
@@ -386,28 +312,28 @@
       { id: "nivigne-et-suran",     name: "Nivigne-Et-Suran",     ca2024: 169848,  commercialId: "michelet-yves" },
 
       // AYDOGAN Nevin
-      { id: "st-sorlin-d-arves",    name: "St Sorlin D'arves",    ca2024: 882204,  commercialId: "aydogan-nevin" },
-      { id: "virieu-lamartine",     name: "Virieu -Lamartine",    ca2024: 661928,  commercialId: "aydogan-nevin" },
-      { id: "proxi-auris-en-oisans",name: "Proxi Auris En Oisans",ca2024: 632066,  commercialId: "aydogan-nevin" },
-      { id: "courchevel-1550",      name: "Courchevel 1550",      ca2024: 548632,  commercialId: "aydogan-nevin" },
-      { id: "le-bourget-du-lac",    name: "Le Bourget Du Lac",    ca2024: 431544,  commercialId: "aydogan-nevin" },
-      { id: "macot-la-plagne",      name: "Macot La Plagne",      ca2024: 403322,  commercialId: "aydogan-nevin" },
-      { id: "lepin-le-lac-gare",    name: "Lepin-Le-Lac -Gare",   ca2024: 369333,  commercialId: "aydogan-nevin" },
-      { id: "areches",              name: "Areches",              ca2024: 366692,  commercialId: "aydogan-nevin" },
-      { id: "monestier-clermont",   name: "Monestier Clermont",   ca2024: 319730,  commercialId: "aydogan-nevin" },
-      { id: "proxi-scionzier",      name: "Proxi Scionzier",      ca2024: 318598,  commercialId: "aydogan-nevin" },
+      { id: "st-sorlin-d-arves",     name: "St Sorlin D'arves",     ca2024: 882204, commercialId: "aydogan-nevin" },
+      { id: "virieu-lamartine",      name: "Virieu -Lamartine",     ca2024: 661928, commercialId: "aydogan-nevin" },
+      { id: "proxi-auris-en-oisans", name: "Proxi Auris En Oisans", ca2024: 632066, commercialId: "aydogan-nevin" },
+      { id: "courchevel-1550",       name: "Courchevel 1550",       ca2024: 548632, commercialId: "aydogan-nevin" },
+      { id: "le-bourget-du-lac",     name: "Le Bourget Du Lac",     ca2024: 431544, commercialId: "aydogan-nevin" },
+      { id: "macot-la-plagne",       name: "Macot La Plagne",       ca2024: 403322, commercialId: "aydogan-nevin" },
+      { id: "lepin-le-lac-gare",     name: "Lepin-Le-Lac -Gare",    ca2024: 369333, commercialId: "aydogan-nevin" },
+      { id: "areches",               name: "Areches",               ca2024: 366692, commercialId: "aydogan-nevin" },
+      { id: "monestier-clermont",    name: "Monestier Clermont",    ca2024: 319730, commercialId: "aydogan-nevin" },
+      { id: "proxi-scionzier",       name: "Proxi Scionzier",       ca2024: 318598, commercialId: "aydogan-nevin" },
 
       // VERNAY Benoit
-      { id: "vals-les-bains",          name: "Vals Les Bains",                     ca2024: 759854,  commercialId: "vernay-benoit" },
-      { id: "proxi-langogne-capucins", name: "Proxi Super Langogne Capucins",      ca2024: 554404,  commercialId: "vernay-benoit" },
-      { id: "st-fortunat",             name: "St Fortunat",                        ca2024: 499207,  commercialId: "vernay-benoit" },
-      { id: "8-a-huit-chadrac",        name: "8 à Huit Chadrac",                   ca2024: 416296,  commercialId: "vernay-benoit" },
-      { id: "le-cheylard",             name: "Le Cheylard",                        ca2024: 398914,  commercialId: "vernay-benoit" },
-      { id: "espaly-st-marcel",        name: "Espaly St Marcel",                   ca2024: 364105,  commercialId: "vernay-benoit" },
-      { id: "colombier-le-jeune",      name: "Colombier-Le-Jeune",                 ca2024: 353985,  commercialId: "vernay-benoit" },
-      { id: "langeac-lafayette",       name: "Langeac -Lafayette",                 ca2024: 280621,  commercialId: "vernay-benoit" },
-      { id: "allanche",                name: "Allanche",                           ca2024: 213408,  commercialId: "vernay-benoit" },
-      { id: "saint-mamet-la-salvetas", name: "Saint mamet la salvetas",            ca2024: 317235,  commercialId: "vernay-benoit" }
+      { id: "vals-les-bains",          name: "Vals Les Bains",                ca2024: 759854, commercialId: "vernay-benoit" },
+      { id: "proxi-langogne-capucins", name: "Proxi Super Langogne Capucins", ca2024: 554404, commercialId: "vernay-benoit" },
+      { id: "st-fortunat",             name: "St Fortunat",                   ca2024: 499207, commercialId: "vernay-benoit" },
+      { id: "8-a-huit-chadrac",        name: "8 à Huit Chadrac",              ca2024: 416296, commercialId: "vernay-benoit" },
+      { id: "le-cheylard",             name: "Le Cheylard",                   ca2024: 398914, commercialId: "vernay-benoit" },
+      { id: "espaly-st-marcel",        name: "Espaly St Marcel",              ca2024: 364105, commercialId: "vernay-benoit" },
+      { id: "colombier-le-jeune",      name: "Colombier-Le-Jeune",            ca2024: 353985, commercialId: "vernay-benoit" },
+      { id: "langeac-lafayette",       name: "Langeac -Lafayette",            ca2024: 280621, commercialId: "vernay-benoit" },
+      { id: "allanche",                name: "Allanche",                     ca2024: 213408, commercialId: "vernay-benoit" },
+      { id: "saint-mamet-la-salvetas", name: "Saint mamet la salvetas",       ca2024: 317235, commercialId: "vernay-benoit" }
     ];
 
     const WAVES = [
@@ -418,69 +344,79 @@
       { id: "wave5", label: "Vague 5" },
       { id: "wave6", label: "Vague 6" }
     ];
+
     const SEASONS = ["Printemps", "Été", "Automne", "Hiver"];
     const WAVE_STATUSES = ["Non concerné", "À faire", "En cours", "Engagé", "Refusé"];
 
-  /********* ÉTAT + SYNCHRO SUPABASE *********/
+    /********* ÉTAT + SYNCHRO SUPABASE *********/
+    let STATE = {};
 
-// Objet qui contient l'état de tous les magasins
-let STATE = {};
+    function defaultFlBySeason() {
+      return {
+        "Printemps": { ordered: "", amount: "", plan: "" },
+        "Été":       { ordered: "", amount: "", plan: "" },
+        "Automne":   { ordered: "", amount: "", plan: "" },
+        "Hiver":     { ordered: "", amount: "", plan: "" }
+      };
+    }
 
-// Chargement de tous les états depuis Supabase au démarrage
-async function loadStateFromSupabase() {
-  const { data, error } = await sb
-    .from("store_state")
-    .select("*");
+    async function loadStateFromSupabase() {
+      const { data, error } = await sb.from("store_state").select("*");
+      if (error) {
+        console.error("Erreur de chargement Supabase :", error);
+        STATE = {};
+        return;
+      }
 
-  if (error) {
-    console.error("Erreur de chargement Supabase :", error);
-    STATE = {};
-    return;
-  }
+      STATE = {};
+      (data || []).forEach(row => {
+        STATE[row.id] = {
+          // ✅ NOUVELLE LOGIQUE F&L : UNIQUEMENT fl_by_season
+          flBySeason: row.fl_by_season ? safeJsonParse(row.fl_by_season, defaultFlBySeason()) : defaultFlBySeason(),
 
-  STATE = {};
-  data.forEach(row => {
-    STATE[row.id] = {
-      seasons: row.seasons ? JSON.parse(row.seasons) : [],
-      waves: row.waves ? JSON.parse(row.waves) : {},
-      buysFL: row.buys_fl || "",
-      buysEng: row.buys_eng || "",
-      notesFL: row.notes_fl || "",
-      notesEng: row.notes_eng || "",
-    };
-  });
-}
+          // ✅ engagement inchangé
+          waves: row.waves ? safeJsonParse(row.waves, {}) : {},
+          buysEng: row.buys_eng || "",
+          notesEng: row.notes_eng || ""
+        };
+      });
+    }
 
-// Retourne l'état d'un magasin, en le créant si besoin
-function getStoreState(id) {
-  if (!STATE[id]) {
-    STATE[id] = { seasons: [], waves: {}, buysFL: "", buysEng: "", notesFL: "", notesEng: "" };
-  }
-  return STATE[id];
-}
+    function safeJsonParse(str, fallback) {
+      try { return JSON.parse(str); } catch { return fallback; }
+    }
 
-// Sauvegarde d'UN magasin dans Supabase (appelée à chaque modification)
-async function saveStoreToSupabase(id) {
-  const st = getStoreState(id);
+    function getStoreState(id) {
+      if (!STATE[id]) {
+        STATE[id] = {
+          flBySeason: defaultFlBySeason(),
+          waves: {},
+          buysEng: "",
+          notesEng: ""
+        };
+      } else {
+        // sécurité si un magasin existant n’a pas encore flBySeason
+        if (!STATE[id].flBySeason) STATE[id].flBySeason = defaultFlBySeason();
+      }
+      return STATE[id];
+    }
 
-  const payload = {
-    id,
-    seasons: JSON.stringify(st.seasons || []),
-    waves: JSON.stringify(st.waves || {}),
-    buys_fl: st.buysFL || "",
-    buys_eng: st.buysEng || "",
-    notes_fl: st.notesFL || "",
-    notes_eng: st.notesEng || "",
-  };
+    async function saveStoreToSupabase(id) {
+      const st = getStoreState(id);
 
-  const { error } = await sb
-    .from("store_state")
-    .upsert(payload);
+      const payload = {
+        id,
+        // ✅ sauvegarde F&L
+        fl_by_season: JSON.stringify(st.flBySeason || defaultFlBySeason()),
+        // ✅ sauvegarde engagement
+        waves: JSON.stringify(st.waves || {}),
+        buys_eng: st.buysEng || "",
+        notes_eng: st.notesEng || ""
+      };
 
-  if (error) {
-    console.error("Erreur de sauvegarde Supabase :", error);
-  }
-}
+      const { error } = await sb.from("store_state").upsert(payload);
+      if (error) console.error("Erreur de sauvegarde Supabase :", error);
+    }
 
     /********* VARIABLES UI *********/
     const root = document.getElementById("root");
@@ -493,6 +429,11 @@ async function saveStoreToSupabase(id) {
     function formatNumber(n) {
       if (n == null) return "-";
       return n.toLocaleString("fr-FR");
+    }
+
+    function euro(n) {
+      if (n == null || n === "" || Number.isNaN(Number(n))) return "—";
+      return `${formatNumber(Number(n))} €`;
     }
 
     function getUserStores(user) {
@@ -509,46 +450,26 @@ async function saveStoreToSupabase(id) {
       const totalStores = stores.length;
       const totalCA = stores.reduce((sum, s) => sum + (s.ca2024 || 0), 0);
       let engagedStores = 0;
-      let totalEngagements = 0;
       stores.forEach(s => {
         const st = getStoreState(s.id);
-        let hasEng = false;
-        WAVES.forEach(w => {
-          if (st.waves[w.id] === "Engagé") {
-            hasEng = true;
-            totalEngagements++;
-          }
-        });
+        const hasEng = WAVES.some(w => st.waves[w.id] === "Engagé");
         if (hasEng) engagedStores++;
       });
-      const engagedRate = totalStores ? Math.round((engagedStores / totalStores) * 100) : 0;
-      const avgEngagements = totalStores ? (totalEngagements / totalStores).toFixed(1) : "0.0";
       const avgCA = totalStores ? Math.round(totalCA / totalStores) : 0;
-      return { totalStores, totalCA, engagedStores, engagedRate, avgEngagements, avgCA };
+      return { totalStores, totalCA, avgCA, engagedStores };
     }
 
-    function computeCommercialSummaries() {
-      return USERS.commerciaux.map(c => {
-        const stores = STORES.filter(s => s.commercialId === c.id);
-        const totalStores = stores.length;
-        const totalCA = stores.reduce((sum, s) => sum + (s.ca2024 || 0), 0);
-        let engagedStores = 0;
-        let totalEngagements = 0;
-        stores.forEach(s => {
-          const st = getStoreState(s.id);
-          let hasEng = false;
-          WAVES.forEach(w => {
-            if (st.waves[w.id] === "Engagé") {
-              hasEng = true;
-              totalEngagements++;
-            }
-          });
-          if (hasEng) engagedStores++;
+    function computeFlTotals(user) {
+      const stores = getUserStores(user);
+      let total = 0;
+      stores.forEach(s => {
+        const st = getStoreState(s.id);
+        SEASONS.forEach(season => {
+          const amt = Number(st.flBySeason?.[season]?.amount || 0);
+          if (!Number.isNaN(amt)) total += amt;
         });
-        const engagedRate = totalStores ? Math.round((engagedStores / totalStores) * 100) : 0;
-        const avgEngagements = totalStores ? (totalEngagements / totalStores).toFixed(1) : "0.0";
-        return { name: c.name, totalStores, totalCA, engagedStores, engagedRate, avgEngagements };
       });
+      return total;
     }
 
     /********* LOGIN *********/
@@ -574,7 +495,7 @@ async function saveStoreToSupabase(id) {
           <select id="userSelect"></select>
         </div>
         <button id="loginBtn">Entrer dans le CRM</button>
-       <div class="subtext" style="margin-top:8px;">Les données sont sauvegardées sur un serveur sécurisé (Supabase) et partagées entre les utilisateurs.</div>
+        <div class="subtext" style="margin-top:8px;">Les données sont sauvegardées sur un serveur sécurisé (Supabase) et partagées entre les utilisateurs.</div>
       `;
 
       wrap.appendChild(card);
@@ -601,11 +522,13 @@ async function saveStoreToSupabase(id) {
         const role = roleSelect.value;
         const id = userSelect.value;
         if (!id) return;
+
         if (role === "admin") {
           currentUser = { ...USERS.admins.find(a => a.id === id) };
         } else {
           currentUser = { ...USERS.commerciaux.find(c => c.id === id), role: "commercial" };
         }
+
         currentCommercialFilter = null;
         currentTab = "overview";
         currentStoreId = null;
@@ -614,158 +537,169 @@ async function saveStoreToSupabase(id) {
       });
     }
 
-function renderApp() {
-  root.innerHTML = "";
+    function renderApp() {
+      root.innerHTML = "";
 
-  const shell = document.createElement("div");
-  shell.className = "app-shell";
+      const shell = document.createElement("div");
+      shell.className = "app-shell";
 
-  /* ================= SIDEBAR ================= */
-  const sidebar = document.createElement("div");
-  sidebar.className = "sidebar card";
-  sidebar.innerHTML = `
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
-      <div>
-        <div style="font-size:13px;color:var(--muted);opacity:.85;">Connecté en tant que</div>
-        <div style="font-size:15px;font-weight:600;">${currentUser.name}</div>
-        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;opacity:.8;">
-          ${currentUser.role === "admin" ? "Admin · vue globale" : "Commercial · portefeuille magasins"}
+      /* ================= SIDEBAR ================= */
+      const sidebar = document.createElement("div");
+      sidebar.className = "sidebar card";
+      sidebar.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+          <div>
+            <div style="font-size:13px;color:var(--muted);opacity:.85;">Connecté en tant que</div>
+            <div style="font-size:15px;font-weight:600;">${currentUser.name}</div>
+            <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;opacity:.8;">
+              ${currentUser.role === "admin" ? "Admin · vue globale" : "Commercial · portefeuille magasins"}
+            </div>
+          </div>
+          <button class="secondary" id="logoutBtn">Quitter</button>
         </div>
-      </div>
-      <button class="secondary" id="logoutBtn">Quitter</button>
-    </div>
-  `;
+      `;
 
-  const listWrap = document.createElement("div");
-  listWrap.className = "list";
+      const listWrap = document.createElement("div");
+      listWrap.className = "list";
 
-  const commList =
-    currentUser.role === "admin"
-      ? USERS.commerciaux
-      : USERS.commerciaux.filter(c => c.id === currentUser.id);
+      const commList =
+        currentUser.role === "admin"
+          ? USERS.commerciaux
+          : USERS.commerciaux.filter(c => c.id === currentUser.id);
 
-  const storesAll = getUserStores(currentUser);
-  const byCommercial = {};
-  storesAll.forEach(s => {
-    byCommercial[s.commercialId] = (byCommercial[s.commercialId] || 0) + 1;
-  });
+      const storesAll = getUserStores(currentUser);
+      const byCommercial = {};
+      storesAll.forEach(s => {
+        byCommercial[s.commercialId] = (byCommercial[s.commercialId] || 0) + 1;
+      });
 
-  commList.forEach(c => {
-    const row = document.createElement("div");
-    row.className = "commercial-row";
-    if (currentCommercialFilter === c.id || currentUser.id === c.id) {
-      row.classList.add("active");
-    }
-    row.innerHTML = `
-      <div>
-        <div class="commercial-name">${c.name}</div>
-        <div class="commercial-meta">${byCommercial[c.id] || 0} magasin(s)</div>
-      </div>
-    `;
-    row.addEventListener("click", () => {
-      if (currentUser.role === "admin") {
-        currentCommercialFilter = c.id;
+      commList.forEach(c => {
+        const row = document.createElement("div");
+        row.className = "commercial-row";
+        if (currentCommercialFilter === c.id || currentUser.id === c.id) row.classList.add("active");
+        row.innerHTML = `
+          <div>
+            <div class="commercial-name">${c.name}</div>
+            <div class="commercial-meta">${byCommercial[c.id] || 0} magasin(s)</div>
+          </div>
+        `;
+        row.addEventListener("click", () => {
+          if (currentUser.role === "admin") {
+            currentCommercialFilter = c.id;
+            currentStoreId = null;
+            currentTab = "overview";
+            currentSearch = "";
+            renderApp();
+          }
+        });
+        listWrap.appendChild(row);
+      });
+
+      sidebar.appendChild(listWrap);
+
+      /* ================= MAIN ================= */
+      const main = document.createElement("div");
+      main.className = "main";
+
+      /* KPI */
+      const kpiCard = document.createElement("div");
+      kpiCard.className = "card";
+
+      if (currentTab === "fl") {
+        const totalFL = computeFlTotals(currentUser);
+        kpiCard.innerHTML = `
+          <h1><span class="logo-dot"></span> CRM PROXI · Fruits & Légumes</h1>
+          <div class="subtext">Suivi F&L par saison (commande / montant / plan d’action).</div>
+
+          <div class="kpi-row">
+            <div class="kpi-card">
+              <div class="kpi-label">Total Montants F&L (tous magasins)</div>
+              <div class="kpi-value">${euro(totalFL)}</div>
+            </div>
+          </div>
+        `;
+      } else {
+        const kpis = computeKpis(currentUser);
+        kpiCard.innerHTML = `
+          <h1><span class="logo-dot"></span> CRM PROXI</h1>
+          <div class="subtext">Vue d’ensemble du portefeuille.</div>
+
+          <div class="kpi-row">
+            <div class="kpi-card">
+              <div class="kpi-label">Magasins</div>
+              <div class="kpi-value">${kpis.totalStores}</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-label">CA total</div>
+              <div class="kpi-value">${formatNumber(kpis.totalCA)} €</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-label">CA moyen</div>
+              <div class="kpi-value">${formatNumber(kpis.avgCA)} €</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-label">Magasins engagés</div>
+              <div class="kpi-value">${kpis.engagedStores}</div>
+            </div>
+          </div>
+        `;
+      }
+
+      main.appendChild(kpiCard);
+
+      /* CONTENU */
+      const mainCard = document.createElement("div");
+      mainCard.className = "card";
+
+      mainCard.innerHTML = `
+        <div class="tabs">
+          <button class="tab-btn ${currentTab === "overview" ? "active" : ""}" data-tab="overview">Vue d’ensemble</button>
+          <button class="tab-btn ${currentTab === "list" ? "active" : ""}" data-tab="list">Magasins</button>
+          <button class="tab-btn ${currentTab === "fl" ? "active" : ""}" data-tab="fl">Fruits & Légumes</button>
+          <button class="tab-btn ${currentTab === "eng" ? "active" : ""}" data-tab="eng">Engagement</button>
+        </div>
+      `;
+
+      const content = document.createElement("div");
+      content.className = "two-columns";
+
+      const stores = getUserStores(currentUser);
+      if (!currentStoreId && stores.length) currentStoreId = stores[0].id;
+      const currentStore = stores.find(s => s.id === currentStoreId);
+
+      if (currentTab === "overview") {
+        content.innerHTML = `<div class="subtext">Sélectionne un onglet pour accéder aux données du CRM.</div>`;
+      } else if (currentTab === "list") {
+        renderStoresTab(content, stores, currentStore);
+      } else if (currentTab === "fl") {
+        renderFruitsLegumesTab(content, stores, currentStore);
+      } else if (currentTab === "eng") {
+        renderEngagementTab(content, stores, currentStore);
+      }
+
+      mainCard.appendChild(content);
+      main.appendChild(mainCard);
+
+      shell.appendChild(sidebar);
+      shell.appendChild(main);
+      root.appendChild(shell);
+
+      /* EVENTS */
+      sidebar.querySelector("#logoutBtn").addEventListener("click", () => {
+        currentUser = null;
+        currentCommercialFilter = null;
         currentStoreId = null;
         currentTab = "overview";
-        currentSearch = "";
-        renderApp();
-      }
-    });
-    listWrap.appendChild(row);
-  });
+        renderLogin();
+      });
 
-  sidebar.appendChild(listWrap);
-
-  /* ================= MAIN ================= */
-  const main = document.createElement("div");
-  main.className = "main";
-
-  /* KPI */
-  const kpiCard = document.createElement("div");
-  kpiCard.className = "card";
-  const kpis = computeKpis(currentUser);
-  kpiCard.innerHTML = `
-    <h1><span class="logo-dot"></span> CRM PROXI</h1>
-    <div class="subtext">Vue d’ensemble du portefeuille.</div>
-    <div class="kpi-row">
-      <div class="kpi-card">
-        <div class="kpi-label">Magasins</div>
-        <div class="kpi-value">${kpis.totalStores}</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-label">CA total</div>
-        <div class="kpi-value">${formatNumber(kpis.totalCA)} €</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-label">CA moyen</div>
-        <div class="kpi-value">${formatNumber(kpis.avgCA)} €</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-label">Magasins engagés</div>
-        <div class="kpi-value">${kpis.engagedStores}</div>
-      </div>
-    </div>
-  `;
-  main.appendChild(kpiCard);
-
-  /* CONTENU */
-  const mainCard = document.createElement("div");
-  mainCard.className = "card";
-
-  mainCard.innerHTML = `
-    <div class="tabs">
-      <button class="tab-btn ${currentTab === "overview" ? "active" : ""}" data-tab="overview">Vue d’ensemble</button>
-      <button class="tab-btn ${currentTab === "list" ? "active" : ""}" data-tab="list">Magasins</button>
-      <button class="tab-btn ${currentTab === "fl" ? "active" : ""}" data-tab="fl">Fruits & Légumes</button>
-      <button class="tab-btn ${currentTab === "eng" ? "active" : ""}" data-tab="eng">Engagement</button>
-    </div>
-  `;
-
-  const content = document.createElement("div");
-  content.className = "two-columns";
-
-  const stores = getUserStores(currentUser);
-  if (!currentStoreId && stores.length) currentStoreId = stores[0].id;
-  const currentStore = stores.find(s => s.id === currentStoreId);
-
-  if (currentTab === "overview") {
-    content.innerHTML = `
-      <div class="subtext">
-        Sélectionne un onglet pour accéder aux données du CRM.
-      </div>
-    `;
-  } else if (currentTab === "list") {
-    renderStoresTab(content, stores, currentStore);
-  } else if (currentTab === "fl") {
-    renderFruitsLegumesTab(content, stores, currentStore);
-  } else if (currentTab === "eng") {
-    renderEngagementTab(content, stores, currentStore);
-  }
-
-  mainCard.appendChild(content);
-  main.appendChild(mainCard);
-
-  shell.appendChild(sidebar);
-  shell.appendChild(main);
-  root.appendChild(shell);
-
-  /* EVENTS */
-  sidebar.querySelector("#logoutBtn").addEventListener("click", () => {
-    currentUser = null;
-    currentCommercialFilter = null;
-    currentStoreId = null;
-    currentTab = "overview";
-    renderLogin();
-  });
-
-  mainCard.querySelectorAll(".tab-btn").forEach(btn => {
-    btn.addEventListener("click", () => {
-      currentTab = btn.dataset.tab;
-      renderApp();
-    });
-  });
-}
-
+      mainCard.querySelectorAll(".tab-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+          currentTab = btn.dataset.tab;
+          renderApp();
+        });
+      });
+    }
 
     /********* ONGLET 1 : MAGASINS *********/
     function renderStoresTab(container, stores, currentStore) {
@@ -820,10 +754,19 @@ function renderApp() {
       if (currentStore) {
         const st = getStoreState(currentStore.id);
         const engagedCount = WAVES.filter(w => st.waves[w.id] === "Engagé").length;
-        const seasonsActives = st.seasons.length;
+
+        // Petit résumé F&L (été + total montants)
+        const summer = st.flBySeason?.["Été"] || { ordered: "", amount: "" };
+        let flTotalStore = 0;
+        SEASONS.forEach(season => {
+          const amt = Number(st.flBySeason?.[season]?.amount || 0);
+          if (!Number.isNaN(amt)) flTotalStore += amt;
+        });
+
         right.innerHTML = `
           <div style="font-size:13px;font-weight:600;">${currentStore.name}</div>
-          <div class="subtext">Résumé magasin : CA, commandes et niveau d'engagement.</div>
+          <div class="subtext">Résumé magasin : CA, F&L (été/total), engagement.</div>
+
           <div style="margin-top:10px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;">
             <div class="kpi-card" style="padding:8px 10px;">
               <div class="kpi-label">CA 2024</div>
@@ -834,15 +777,16 @@ function renderApp() {
               <div class="kpi-value" style="font-size:15px;">${engagedCount}</div>
             </div>
             <div class="kpi-card" style="padding:8px 10px;">
-              <div class="kpi-label">Saisons actives</div>
-              <div class="kpi-value" style="font-size:15px;">${seasonsActives}</div>
+              <div class="kpi-label">F&L Été (commande)</div>
+              <div class="kpi-value" style="font-size:15px;">${summer.ordered || "NC"}</div>
+            </div>
+            <div class="kpi-card" style="padding:8px 10px;">
+              <div class="kpi-label">Total montants F&L</div>
+              <div class="kpi-value" style="font-size:15px;">${euro(flTotalStore)}</div>
             </div>
           </div>
+
           <div style="margin-top:10px;font-size:12px;">
-            <div style="font-weight:600;margin-bottom:4px;">Commande F&L ?</div>
-            <div>${st.buysFL || '<span class="subtext">Non renseigné</span>'}</div>
-          </div>
-          <div style="margin-top:6px;font-size:12px;">
             <div style="font-weight:600;margin-bottom:4px;">Commande engagement ?</div>
             <div>${st.buysEng || '<span class="subtext">Non renseigné</span>'}</div>
           </div>
@@ -855,39 +799,41 @@ function renderApp() {
       container.appendChild(right);
     }
 
-    /********* ONGLET 2 : FRUITS & LÉGUMES *********/
+    /********* ONGLET 2 : FRUITS & LÉGUMES (✅ UNIQUEMENT fl_by_season) *********/
     function renderFruitsLegumesTab(container, stores, currentStore) {
       const left = document.createElement("div");
       const right = document.createElement("div");
 
+      // Table magasin -> on montre un aperçu (Été + Total montants)
       left.innerHTML = `
         <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
           <div>
             <div style="font-size:13px;font-weight:600;">Magasins · Fruits & Légumes</div>
-            <div class="subtext">Information "commande F&L" et sélection du magasin.</div>
+            <div class="subtext">Aperçu F&L (Été + total), puis détail par saisons à droite.</div>
           </div>
         </div>
         <table>
           <thead>
             <tr>
               <th>Magasin</th>
-              <th>Commande F&L ?</th>
+              <th>Été (commande)</th>
+              <th>Total montants</th>
             </tr>
           </thead>
           <tbody>
             ${stores.map(s => {
               const st = getStoreState(s.id);
-              const buys = st.buysFL || "";
+              const ete = st.flBySeason?.["Été"]?.ordered || "";
+              let total = 0;
+              SEASONS.forEach(season => {
+                const amt = Number(st.flBySeason?.[season]?.amount || 0);
+                if (!Number.isNaN(amt)) total += amt;
+              });
               return `
                 <tr data-id="${s.id}">
                   <td>${s.name}</td>
-                  <td>
-                    <select data-buys-fl="${s.id}">
-                      <option value="">NC</option>
-                      <option value="Oui" ${buys === "Oui" ? "selected" : ""}>Oui</option>
-                      <option value="Non" ${buys === "Non" ? "selected" : ""}>Non</option>
-                    </select>
-                  </td>
+                  <td>${ete || "NC"}</td>
+                  <td>${euro(total)}</td>
                 </tr>
               `;
             }).join("")}
@@ -896,57 +842,85 @@ function renderApp() {
       `;
 
       left.querySelectorAll("tbody tr").forEach(tr => {
-        tr.addEventListener("click", e => {
-          if (e.target.tagName.toLowerCase() === "select") return;
+        tr.addEventListener("click", () => {
           currentStoreId = tr.dataset.id;
           renderApp();
-        });
-      });
-      left.querySelectorAll("select[data-buys-fl]").forEach(sel => {
-        sel.addEventListener("change", () => {
-         const id = sel.dataset.buysFl;
-         const st = getStoreState(id);
-         st.buysFL = sel.value;
-         saveStoreToSupabase(id);
         });
       });
 
       if (currentStore) {
         const st = getStoreState(currentStore.id);
+
+        // UI droite: 4 blocs saisons
         right.innerHTML = `
           <div style="font-size:13px;font-weight:600;">${currentStore.name}</div>
-          <div class="subtext">Saisons travaillées & compte-rendu Fruits & Légumes.</div>
+          <div class="subtext">Renseigne la commande + montant + plan d’action pour chaque saison.</div>
+
           <div style="margin-top:10px;">
-            <div style="font-size:12px;font-weight:600;margin-bottom:4px;">Saisons Fruits & Légumes</div>
-            <div class="seasons">
-              ${SEASONS.map(season => {
-                const active = st.seasons.includes(season);
-                return `<button type="button" class="season-pill ${active ? "active" : ""}" data-season="${season}">${season}</button>`;
-              }).join("")}
-            </div>
-          </div>
-          <div style="margin-top:12px;">
-            <div style="font-size:12px;font-weight:600;margin-bottom:4px;">Notes / actions Fruits & Légumes</div>
-            <textarea rows="5" id="notesFL">${st.notesFL || ""}</textarea>
+            ${SEASONS.map(season => {
+              const data = st.flBySeason?.[season] || { ordered: "", amount: "", plan: "" };
+              return `
+                <div class="card" style="margin-bottom:10px;padding:12px;">
+                  <div style="font-size:13px;font-weight:600;margin-bottom:8px;">${season}</div>
+
+                  <div style="margin-bottom:8px;">
+                    <label>Commande Fruits & Légumes ?</label>
+                    <select data-season-ordered="${season}">
+                      <option value="">NC</option>
+                      <option value="Oui" ${data.ordered === "Oui" ? "selected" : ""}>Oui</option>
+                      <option value="Non" ${data.ordered === "Non" ? "selected" : ""}>Non</option>
+                    </select>
+                  </div>
+
+                  <div style="margin-bottom:8px;">
+                    <label>Montant (€)</label>
+                    <input type="number" step="1" min="0" data-season-amount="${season}" value="${data.amount || ""}" />
+                  </div>
+
+                  <div>
+                    <label>Plan d’action</label>
+                    <textarea rows="3" data-season-plan="${season}">${data.plan || ""}</textarea>
+                  </div>
+                </div>
+              `;
+            }).join("")}
           </div>
         `;
 
-        right.querySelectorAll(".season-pill").forEach(btn => {
-          btn.addEventListener("click", () => {
-            const season = btn.dataset.season;
+        // listeners
+        right.querySelectorAll("select[data-season-ordered]").forEach(sel => {
+          sel.addEventListener("change", () => {
+            const season = sel.dataset.seasonOrdered;
             const st2 = getStoreState(currentStore.id);
-            const idx = st2.seasons.indexOf(season);
-            if (idx >= 0) st2.seasons.splice(idx, 1); else st2.seasons.push(season);
+            if (!st2.flBySeason) st2.flBySeason = defaultFlBySeason();
+            if (!st2.flBySeason[season]) st2.flBySeason[season] = { ordered:"", amount:"", plan:"" };
+            st2.flBySeason[season].ordered = sel.value;
             saveStoreToSupabase(currentStore.id);
-            renderApp();
           });
         });
-        const ta = right.querySelector("#notesFL");
-        ta.addEventListener("input", () => {
-          const st2 = getStoreState(currentStore.id);
-          st2.notesFL = ta.value;
-          saveStoreToSupabase(currentStore.id);
+
+        right.querySelectorAll("input[data-season-amount]").forEach(inp => {
+          inp.addEventListener("input", () => {
+            const season = inp.dataset.seasonAmount;
+            const st2 = getStoreState(currentStore.id);
+            if (!st2.flBySeason) st2.flBySeason = defaultFlBySeason();
+            if (!st2.flBySeason[season]) st2.flBySeason[season] = { ordered:"", amount:"", plan:"" };
+            st2.flBySeason[season].amount = inp.value;
+            saveStoreToSupabase(currentStore.id);
+          });
         });
+
+        right.querySelectorAll("textarea[data-season-plan]").forEach(ta => {
+          ta.addEventListener("input", () => {
+            const season = ta.dataset.seasonPlan;
+            const st2 = getStoreState(currentStore.id);
+            if (!st2.flBySeason) st2.flBySeason = defaultFlBySeason();
+            if (!st2.flBySeason[season]) st2.flBySeason[season] = { ordered:"", amount:"", plan:"" };
+            st2.flBySeason[season].plan = ta.value;
+            saveStoreToSupabase(currentStore.id);
+          });
+        });
+
       } else {
         right.innerHTML = '<div class="subtext">Sélectionne un magasin dans la liste.</div>';
       }
@@ -955,7 +929,7 @@ function renderApp() {
       container.appendChild(right);
     }
 
-    /********* ONGLET 3 : ENGAGEMENT *********/
+    /********* ONGLET 3 : ENGAGEMENT (inchangé) *********/
     function renderEngagementTab(container, stores, currentStore) {
       const left = document.createElement("div");
       const right = document.createElement("div");
@@ -1005,6 +979,7 @@ function renderApp() {
           renderApp();
         });
       });
+
       left.querySelectorAll("select[data-buys-eng]").forEach(sel => {
         sel.addEventListener("change", () => {
           const id = sel.dataset.buysEng;
@@ -1050,12 +1025,14 @@ function renderApp() {
             renderApp();
           });
         });
+
         const ta = right.querySelector("#notesEng");
         ta.addEventListener("input", () => {
           const st2 = getStoreState(currentStore.id);
           st2.notesEng = ta.value;
           saveStoreToSupabase(currentStore.id);
         });
+
       } else {
         right.innerHTML = '<div class="subtext">Sélectionne un magasin dans la liste.</div>';
       }
@@ -1065,11 +1042,11 @@ function renderApp() {
     }
 
     async function init() {
-  await loadStateFromSupabase();
-  renderLogin();
-}
+      await loadStateFromSupabase();
+      renderLogin();
+    }
 
-init();
+    init();
   </script>
 </body>
 </html>
