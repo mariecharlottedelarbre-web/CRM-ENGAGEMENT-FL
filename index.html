@@ -1,88 +1,102 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CRM PROXI</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CRM PROXI</title>
 
-  <!-- ⚠️ STYLE IDENTIQUE À TON SCRIPT -->
-  <style>
-    :root {
-      --bg:#1c1917;--card:#111827;--card-soft:#0f172a;
-      --accent:#f97316;--accent-soft:rgba(248,148,56,.18);
-      --text:#f9fafb;--muted:#e5e7eb;--border:#374151;
-    }
-    *{box-sizing:border-box}
-    body{
-      margin:0;font-family:system-ui,-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif;
-      background:
-        radial-gradient(circle at top left, rgba(248,148,56,.35), transparent 55%),
-        radial-gradient(circle at bottom right, rgba(34,197,94,.22), transparent 55%),
-        linear-gradient(145deg,#0b1120,#111827);
-      color:var(--text);min-height:100vh;display:flex;justify-content:center
-    }
-    .app-shell{width:100%;max-width:1400px;display:flex;gap:16px;padding:16px}
-    .card{background:linear-gradient(145deg,rgba(15,23,42,.96),rgba(15,23,42,.9));
-      border-radius:18px;padding:18px 20px;border:1px solid rgba(249,250,251,.08)}
-    .sidebar{width:260px}
-    .main{flex:1;display:flex;flex-direction:column;gap:16px}
-    h1{margin:0;font-size:22px;display:flex;gap:8px;align-items:center}
-    .logo-dot{width:9px;height:9px;border-radius:999px;
-      background:radial-gradient(circle at 30% 20%,#fed7aa,#f97316)}
-    .subtext{font-size:13px;color:var(--muted);opacity:.85}
-    .tabs{display:inline-flex;padding:3px;border-radius:999px;background:#0f172a}
-    .tab-btn{border:none;background:transparent;color:var(--muted);
-      padding:6px 14px;border-radius:999px;cursor:pointer}
-    .tab-btn.active{background:var(--accent);color:#1c1917}
-    table{width:100%;border-collapse:collapse;font-size:12px}
-    th,td{padding:6px 8px;border-bottom:1px solid #1f2937}
-    th{color:var(--muted);font-size:11px;text-transform:uppercase}
-    .two-columns{display:grid;grid-template-columns:1.2fr 1fr;gap:12px}
-    select,input,textarea{
-      width:100%;padding:8px;border-radius:10px;
-      background:#0f172a;color:var(--text);border:1px solid var(--border)
-    }
-  </style>
+<style>
+body {
+  margin:0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  background:#0b1120;
+  color:#f9fafb;
+}
+.app-shell {
+  max-width:1400px;
+  margin:auto;
+  padding:16px;
+}
+.card {
+  background:#111827;
+  border-radius:16px;
+  padding:16px;
+  margin-bottom:12px;
+}
+.tabs button {
+  margin-right:6px;
+}
+table {
+  width:100%;
+  border-collapse:collapse;
+}
+td, th {
+  padding:6px;
+  border-bottom:1px solid #374151;
+}
+input, select, textarea {
+  width:100%;
+  background:#0f172a;
+  color:white;
+  border:1px solid #374151;
+  border-radius:8px;
+  padding:6px;
+}
+</style>
 </head>
 
 <body>
 <div id="root"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <script>
 /* ================= SUPABASE ================= */
-const sb = supabase.createClient(
-  "https://sytpnqayyyjdjhojafyi.supabase.co",
-  "sb_publishable_5ernJ3tbCW3XnAdx983E8A_ASPSKBVx"
-);
+const SUPABASE_URL = "https://sytpnqayyyjdjhojafyi.supabase.co";
+const SUPABASE_KEY = "sb_publishable_5ernJ3tbCW3XnAdx983E8A_ASPSKBVx";
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-/* ================= CONSTANTES ================= */
+/* ================= DATA ================= */
 const SEASONS = ["Printemps","Été","Automne","Hiver"];
 
-/* ================= ÉTAT ================= */
-let STATE = {};
+const STORES = [
+  { id:"poulx", name:"Poulx" },
+  { id:"moussac", name:"Moussac" },
+  { id:"vercheny", name:"Vercheny" }
+];
 
-function getStoreState(id){
-  if(!STATE[id]){
-    STATE[id]={flBySeason:{
-      "Printemps":{ordered:"",amount:"",plan:""},
-      "Été":{ordered:"",amount:"",plan:""},
-      "Automne":{ordered:"",amount:"",plan:""},
-      "Hiver":{ordered:"",amount:"",plan:""}
-    }};
+/* ================= STATE ================= */
+let STATE = {};
+let currentStoreId = null;
+
+/* ================= LOAD ================= */
+async function loadState() {
+  const { data } = await sb.from("store_state").select("*");
+  STATE = {};
+  (data || []).forEach(r => {
+    STATE[r.id] = {
+      flBySeason: r.fl_by_season ? JSON.parse(r.fl_by_season) : {}
+    };
+  });
+}
+
+/* ================= HELPERS ================= */
+function getStoreState(id) {
+  if (!STATE[id]) {
+    STATE[id] = {
+      flBySeason: {
+        "Printemps": { ordered:"", amount:"", plan:"" },
+        "Été": { ordered:"", amount:"", plan:"" },
+        "Automne": { ordered:"", amount:"", plan:"" },
+        "Hiver": { ordered:"", amount:"", plan:"" }
+      }
+    };
   }
   return STATE[id];
 }
 
-async function loadState(){
-  const {data}=await sb.from("store_state").select("*");
-  data?.forEach(r=>{
-    STATE[r.id]={flBySeason: r.fl_by_season?JSON.parse(r.fl_by_season):getStoreState(r.id).flBySeason};
-  });
-}
-
-async function saveStore(id){
-  const st=getStoreState(id);
+async function saveStore(id) {
+  const st = getStoreState(id);
   await sb.from("store_state").upsert({
     id,
     fl_by_season: JSON.stringify(st.flBySeason)
@@ -90,77 +104,98 @@ async function saveStore(id){
 }
 
 /* ================= UI ================= */
-let currentStoreId=null;
-const STORES=[{id:"montpellier-delicie",name:"Montpellier-delicie"}]; // (raccourci visuel — ta liste complète reste identique)
+function render() {
+  const root = document.getElementById("root");
+  root.innerHTML = "";
 
-function render(){
-  const root=document.getElementById("root");
-  const store=STORES.find(s=>s.id===currentStoreId)||STORES[0];
-  currentStoreId=store.id;
-  const st=getStoreState(store.id);
+  const left = document.createElement("div");
+  const right = document.createElement("div");
 
-  // KPI F&L
-  let totalFL=0;
-  SEASONS.forEach(s=>{
-    const v=parseFloat(st.flBySeason[s].amount||0);
-    totalFL+=isNaN(v)?0:v;
-  });
+  left.className = "card";
+  right.className = "card";
 
-  root.innerHTML=`
-    <div class="app-shell">
-      <div class="main">
-        <div class="card">
-          <h1><span class="logo-dot"></span> CRM PROXI · Fruits & Légumes</h1>
-          <div class="kpi-card">
-            <div class="kpi-label">CA Fruits & Légumes total</div>
-            <div class="kpi-value">${totalFL.toLocaleString("fr-FR")} €</div>
-          </div>
-        </div>
-
-        <div class="card two-columns">
-          <div>
-            <table>
-              <tbody>
-                ${STORES.map(s=>`<tr data-id="${s.id}"><td>${s.name}</td></tr>`).join("")}
-              </tbody>
-            </table>
-          </div>
-
-          <div>
-            ${SEASONS.map(season=>{
-              const d=st.flBySeason[season];
-              return`
-              <div class="card" style="margin-bottom:10px">
-                <b>${season}</b>
-                <select data-o="${season}">
-                  <option value="">NC</option>
-                  <option value="Oui" ${d.ordered==="Oui"?"selected":""}>Oui</option>
-                  <option value="Non" ${d.ordered==="Non"?"selected":""}>Non</option>
-                </select>
-                <input type="number" placeholder="Montant €" value="${d.amount}" data-a="${season}">
-                <textarea rows="3" placeholder="Plan d'action" data-p="${season}">${d.plan}</textarea>
-              </div>`;
-            }).join("")}
-          </div>
-        </div>
-      </div>
-    </div>
+  /* LISTE MAGASINS */
+  left.innerHTML = `
+    <h3>Magasins</h3>
+    <table>
+      ${STORES.map(s => `
+        <tr data-id="${s.id}">
+          <td>${s.name}</td>
+        </tr>
+      `).join("")}
+    </table>
   `;
 
-  // EVENTS
-  root.querySelectorAll("select[data-o]").forEach(e=>{
-    e.onchange=()=>{st.flBySeason[e.dataset.o].ordered=e.value;saveStore(store.id)};
+  left.querySelectorAll("tr").forEach(tr => {
+    tr.onclick = () => {
+      currentStoreId = tr.dataset.id;
+      render();
+    };
   });
-  root.querySelectorAll("input[data-a]").forEach(e=>{
-    e.oninput=()=>{st.flBySeason[e.dataset.a].amount=e.value;saveStore(store.id)};
-  });
-  root.querySelectorAll("textarea[data-p]").forEach(e=>{
-    e.oninput=()=>{st.flBySeason[e.dataset.p].plan=e.value;saveStore(store.id)};
-  });
+
+  /* DETAIL F&L */
+  if (currentStoreId) {
+    const st = getStoreState(currentStoreId);
+
+    right.innerHTML = `
+      <h3>Fruits & Légumes – ${currentStoreId}</h3>
+      ${SEASONS.map(season => {
+        const d = st.flBySeason[season];
+        return `
+          <div class="card">
+            <strong>${season}</strong><br><br>
+
+            Commande ?
+            <select data-o="${season}">
+              <option value="">NC</option>
+              <option value="Oui" ${d.ordered==="Oui"?"selected":""}>Oui</option>
+              <option value="Non" ${d.ordered==="Non"?"selected":""}>Non</option>
+            </select><br><br>
+
+            Montant (€)
+            <input type="number" data-a="${season}" value="${d.amount||""}"><br><br>
+
+            Plan d’action
+            <textarea data-p="${season}">${d.plan||""}</textarea>
+          </div>
+        `;
+      }).join("")}
+    `;
+
+    right.querySelectorAll("select[data-o]").forEach(el => {
+      el.onchange = () => {
+        const s = el.dataset.o;
+        st.flBySeason[s].ordered = el.value;
+        saveStore(currentStoreId);
+      };
+    });
+
+    right.querySelectorAll("input[data-a]").forEach(el => {
+      el.oninput = () => {
+        const s = el.dataset.a;
+        st.flBySeason[s].amount = el.value;
+        saveStore(currentStoreId);
+      };
+    });
+
+    right.querySelectorAll("textarea[data-p]").forEach(el => {
+      el.oninput = () => {
+        const s = el.dataset.p;
+        st.flBySeason[s].plan = el.value;
+        saveStore(currentStoreId);
+      };
+    });
+
+  } else {
+    right.innerHTML = "<p>Sélectionne un magasin</p>";
+  }
+
+  root.appendChild(left);
+  root.appendChild(right);
 }
 
 /* ================= INIT ================= */
-(async()=>{
+(async () => {
   await loadState();
   render();
 })();
