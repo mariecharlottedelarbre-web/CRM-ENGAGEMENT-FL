@@ -941,11 +941,6 @@
       `;
 
       const input = left.querySelector("#searchInput");
-      input.addEventListener("input", () => {
-        currentSearch = input.value;
-        renderApp();
-      });
-
       left.querySelectorAll("tbody tr").forEach(tr => {
         tr.addEventListener("click", () => {
           currentStoreId = tr.dataset.id;
@@ -957,8 +952,8 @@
         const st = getStoreState(currentStore.id);
         const engagedCount = WAVES.filter(w => st.waves[w.id] === "Engagé").length;
 
-        const summer = st.flBySeason?.["Été"] || { ordered: "", amount: "" };
-        let flTotalStore = computeFLActualTotal(currentStore.id);
+        const flCommande = st.flCommande || "NC";
+let flTotalStore = computeFLActualTotal(currentStore.id);
 
         right.innerHTML = `
           <div style="font-size:13px;font-weight:600;">${currentStore.name}</div>
@@ -974,8 +969,8 @@
               <div class="kpi-value" style="font-size:15px;">${engagedCount}</div>
             </div>
             <div class="kpi-card" style="padding:8px 10px;">
-              <div class="kpi-label">F&L Été (commande)</div>
-              <div class="kpi-value" style="font-size:15px;">${summer.ordered || "NC"}</div>
+              <div class="kpi-label">Commande F&L</div>
+              <div class="kpi-value">${flCommande}</div>
             </div>
             <div class="kpi-card" style="padding:8px 10px;">
               <div class="kpi-label">Total montant actuel F&L</div>
