@@ -1091,9 +1091,9 @@ let flTotalStore = computeFLActualTotal(currentStore.id);
 
         const totalActuelStore = computeFLActualTotal(currentStore.id);
         const total2025Store = getFlTarget(currentStore.id);
-        const n1 = Number(currentStore.ca2024 || 0);
-        const a = Number(totalActuelStore || 0);
-        const progressionVs2024 =
+        const n1 = Number(getFlTarget(currentStore.id) || 0); // N-1 = total montants 2025
+const a = Number(totalActuelStore || 0);
+const progressionVsN1 =
   n1 > 0 ? Math.round((a / n1) * 100) + " %" : "—";
 
         const progressionStore = computeFLProgression(totalActuelStore, total2025Store);
@@ -1111,9 +1111,9 @@ let flTotalStore = computeFLActualTotal(currentStore.id);
   F&L – Référence N-1
 </div>
       <div class="subtext">
-  N-1 : <b>${euro(currentStore.ca2024)}</b>
-  · Actuel : <b data-kpi-fl-actual>${euro(totalActuelStore)}</b>
-  · Progression : <b>${progressionVs2024}</b>
+  N-1 : <b>${euro(getFlTarget(currentStore.id))}</b>
+· Actuel : <b data-kpi-fl-actual>${euro(totalActuelStore)}</b>
+· Progression : <b>${progressionVsN1}</b>
 </div>
          </div>
 
