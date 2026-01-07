@@ -1150,7 +1150,6 @@ let flTotalStore = computeFLActualTotal(currentStore.id);
           if (!st2.flBySeason[currentFlSeason]) st2.flBySeason[currentFlSeason] = { ordered:"", amount:"", plan:"" };
           st2.flBySeason[currentFlSeason].amount = amountInp.value;
           saveStoreToSupabase(currentStore.id);
-          renderApp();
         });
 
         const planTa = right.querySelector("#seasonPlan");
