@@ -427,7 +427,7 @@
     let currentSearch = "";
 
     function formatNumber(n) {
-      function computeFLActualTotal(storeId) {
+   function computeFLActualTotal(storeId) {
   const st = getStoreState(storeId);
   let total = 0;
 
@@ -444,9 +444,10 @@ function computeFLProgression(actual, target) {
   return Math.round((actual / target) * 100) + " %";
 }
 
-      if (n == null) return "-";
-      return n.toLocaleString("fr-FR");
-    }
+function formatNumber(n) {
+  if (n == null) return "-";
+  return n.toLocaleString("fr-FR");
+}
 
     function euro(n) {
       if (n == null || n === "" || Number.isNaN(Number(n))) return "—";
@@ -844,7 +845,7 @@ function computeFLProgression(actual, target) {
     const st = getStoreState(s.id);
 
     const ete = st.flBySeason?.["Été"]?.ordered || "NC";
-    const total2025 = parseFloat(st.flTotal2025) || 0;
+    const total2025 = parseFloat(st.flTarget2025) || 0;
     const totalActuel = computeFLActualTotal(s.id);
     const progression = computeFLProgression(totalActuel, total2025);
 
