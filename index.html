@@ -348,8 +348,10 @@
     const SEASONS = ["Printemps", "Été", "Automne", "Hiver"];
     const WAVE_STATUSES = ["Non concerné", "À faire", "En cours", "Engagé", "Refusé"];
 
-    /********* ÉTAT + SYNCHRO SUPABASE *********/
-    let STATE = {};
+    /********* HELPERS *********/
+    function safeJsonParse(str, fallback) {
+      try { return JSON.parse(str); } catch { return fallback; }
+    }
 
     function defaultFlBySeason() {
       return {
@@ -359,6 +361,40 @@
         "Hiver":     { ordered: "", amount: "", plan: "" }
       };
     }
+
+    function formatNumber(n) {
+      if (n == null) return "-";
+      const num = Number(n);
+      if (Number.isNaN(num)) return "-";
+      return num.toLocaleString("fr-FR");
+    }
+
+    function euro(n) {
+      if (n == null || n === "" || Number.isNaN(Number(n))) return "—";
+      return `${formatNumber(Number(n))} €`;
+    }
+
+    // ✅ Total ACTUEL = somme des montants saisis par saison (fl_by_season)
+    function computeFLActualTotal(storeId) {
+      const st = getStoreState(storeId);
+      let total = 0;
+      Object.values(st.flBySeason || {}).forEach(season => {
+        const val = Number(season?.amount || 0);
+        if (!Number.isNaN(val)) total += val;
+      });
+      return total;
+    }
+
+    // ✅ Progression (%) = actuel / objectif
+    function computeFLProgression(actual, target) {
+      const t = Number(target || 0);
+      const a = Number(actual || 0);
+      if (!t || t <= 0) return "—";
+      return Math.round((a / t) * 100) + " %";
+    }
+
+    /********* ÉTAT + SYNCHRO SUPABASE *********/
+    let STATE = {};
 
     async function loadStateFromSupabase() {
       const { data, error } = await sb.from("store_state").select("*");
@@ -371,8 +407,9 @@
       STATE = {};
       (data || []).forEach(row => {
         STATE[row.id] = {
-          // ✅ NOUVELLE LOGIQUE F&L : UNIQUEMENT fl_by_season
+          // ✅ F&L
           flBySeason: row.fl_by_season ? safeJsonParse(row.fl_by_season, defaultFlBySeason()) : defaultFlBySeason(),
+          flTotal2025: row.fl_total_2025 ?? "",
 
           // ✅ engagement inchangé
           waves: row.waves ? safeJsonParse(row.waves, {}) : {},
@@ -382,21 +419,18 @@
       });
     }
 
-    function safeJsonParse(str, fallback) {
-      try { return JSON.parse(str); } catch { return fallback; }
-    }
-
     function getStoreState(id) {
       if (!STATE[id]) {
         STATE[id] = {
           flBySeason: defaultFlBySeason(),
+          flTotal2025: "",
           waves: {},
           buysEng: "",
           notesEng: ""
         };
       } else {
-        // sécurité si un magasin existant n’a pas encore flBySeason
         if (!STATE[id].flBySeason) STATE[id].flBySeason = defaultFlBySeason();
+        if (STATE[id].flTotal2025 === undefined) STATE[id].flTotal2025 = "";
       }
       return STATE[id];
     }
@@ -406,9 +440,11 @@
 
       const payload = {
         id,
-        // ✅ sauvegarde F&L
+        // ✅ F&L
         fl_by_season: JSON.stringify(st.flBySeason || defaultFlBySeason()),
-        // ✅ sauvegarde engagement
+        fl_total_2025: (st.flTotal2025 === "" || st.flTotal2025 == null) ? null : Number(st.flTotal2025),
+
+        // ✅ engagement
         waves: JSON.stringify(st.waves || {}),
         buys_eng: st.buysEng || "",
         notes_eng: st.notesEng || ""
@@ -425,33 +461,6 @@
     let currentTab = "overview";
     let currentStoreId = null;
     let currentSearch = "";
-
-    function formatNumber(n) {
-      function computeFLActualTotal(storeId) {
-  const st = getStoreState(storeId);
-  let total = 0;
-
-  Object.values(st.flBySeason || {}).forEach(season => {
-    const val = parseFloat(season.amount);
-    if (!isNaN(val)) total += val;
-  });
-
-  return total;
-}
-
-function computeFLProgression(actual, target) {
-  if (!target || target === 0) return "—";
-  return Math.round((actual / target) * 100) + " %";
-}
-
-      if (n == null) return "-";
-      return n.toLocaleString("fr-FR");
-    }
-
-    function euro(n) {
-      if (n == null || n === "" || Number.isNaN(Number(n))) return "—";
-      return `${formatNumber(Number(n))} €`;
-    }
 
     function getUserStores(user) {
       if (!user) return [];
@@ -476,17 +485,21 @@ function computeFLProgression(actual, target) {
       return { totalStores, totalCA, avgCA, engagedStores };
     }
 
-    function computeFlTotals(user) {
+    function computeFlKpis(user) {
       const stores = getUserStores(user);
-      let total = 0;
+      let totalTarget = 0;
+      let totalActual = 0;
+
       stores.forEach(s => {
         const st = getStoreState(s.id);
-        SEASONS.forEach(season => {
-          const amt = Number(st.flBySeason?.[season]?.amount || 0);
-          if (!Number.isNaN(amt)) total += amt;
-        });
+        const target = Number(st.flTotal2025 || 0);
+        if (!Number.isNaN(target)) totalTarget += target;
+
+        totalActual += computeFLActualTotal(s.id);
       });
-      return total;
+
+      const progression = computeFLProgression(totalActual, totalTarget);
+      return { totalTarget, totalActual, progression };
     }
 
     /********* LOGIN *********/
@@ -623,15 +636,27 @@ function computeFLProgression(actual, target) {
       kpiCard.className = "card";
 
       if (currentTab === "fl") {
-        const totalFL = computeFlTotals(currentUser);
+        const fl = computeFlKpis(currentUser);
         kpiCard.innerHTML = `
           <h1><span class="logo-dot"></span> CRM PROXI · Fruits & Légumes</h1>
           <div class="subtext">Suivi F&L par saison (commande / montant / plan d’action).</div>
 
           <div class="kpi-row">
             <div class="kpi-card">
-              <div class="kpi-label">Total Montants F&L (tous magasins)</div>
-              <div class="kpi-value">${euro(totalFL)}</div>
+              <div class="kpi-label">Total montants 2025 (objectif)</div>
+              <div class="kpi-value">${euro(fl.totalTarget)}</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-label">Total montant actuel</div>
+              <div class="kpi-value">${euro(fl.totalActual)}</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-label">Progression</div>
+              <div class="kpi-value">${fl.progression}</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-label">Écart (actuel - objectif)</div>
+              <div class="kpi-value">${euro(Number(fl.totalActual) - Number(fl.totalTarget))}</div>
             </div>
           </div>
         `;
@@ -772,13 +797,8 @@ function computeFLProgression(actual, target) {
         const st = getStoreState(currentStore.id);
         const engagedCount = WAVES.filter(w => st.waves[w.id] === "Engagé").length;
 
-        // Petit résumé F&L (été + total montants)
         const summer = st.flBySeason?.["Été"] || { ordered: "", amount: "" };
-        let flTotalStore = 0;
-        SEASONS.forEach(season => {
-          const amt = Number(st.flBySeason?.[season]?.amount || 0);
-          if (!Number.isNaN(amt)) flTotalStore += amt;
-        });
+        let flTotalStore = computeFLActualTotal(currentStore.id);
 
         right.innerHTML = `
           <div style="font-size:13px;font-weight:600;">${currentStore.name}</div>
@@ -798,7 +818,7 @@ function computeFLProgression(actual, target) {
               <div class="kpi-value" style="font-size:15px;">${summer.ordered || "NC"}</div>
             </div>
             <div class="kpi-card" style="padding:8px 10px;">
-              <div class="kpi-label">Total montants F&L</div>
+              <div class="kpi-label">Total montant actuel F&L</div>
               <div class="kpi-value" style="font-size:15px;">${euro(flTotalStore)}</div>
             </div>
           </div>
@@ -816,49 +836,48 @@ function computeFLProgression(actual, target) {
       container.appendChild(right);
     }
 
-    /********* ONGLET 2 : FRUITS & LÉGUMES (✅ UNIQUEMENT fl_by_season) *********/
+    /********* ONGLET 2 : FRUITS & LÉGUMES *********/
     function renderFruitsLegumesTab(container, stores, currentStore) {
       const left = document.createElement("div");
       const right = document.createElement("div");
 
-      // Table magasin -> on montre un aperçu (Été + Total montants)
       left.innerHTML = `
         <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
           <div>
             <div style="font-size:13px;font-weight:600;">Magasins · Fruits & Légumes</div>
-            <div class="subtext">Aperçu F&L (Été + total), puis détail par saisons à droite.</div>
+            <div class="subtext">Aperçu F&L (Été + objectif + actuel + progression), puis détail par saisons à droite.</div>
           </div>
         </div>
         <table>
-       <thead>
-  <tr>
-    <th>Magasin</th>
-    <th>Été (commande)</th>
-    <th>Total montant 2025</th>
-    <th>Total montant actuel</th>
-    <th>Progression</th>
-  </tr>
-</thead>
+          <thead>
+            <tr>
+              <th>Magasin</th>
+              <th>Été (commande)</th>
+              <th>Total montant 2025</th>
+              <th>Total montant actuel</th>
+              <th>Progression</th>
+            </tr>
+          </thead>
           <tbody>
-  ${stores.map(s => {
-    const st = getStoreState(s.id);
+            ${stores.map(s => {
+              const st = getStoreState(s.id);
 
-    const ete = st.flBySeason?.["Été"]?.ordered || "NC";
-    const total2025 = parseFloat(st.flTotal2025) || 0;
-    const totalActuel = computeFLActualTotal(s.id);
-    const progression = computeFLProgression(totalActuel, total2025);
+              const ete = st.flBySeason?.["Été"]?.ordered || "NC";
+              const total2025 = Number(st.flTotal2025 || 0);
+              const totalActuel = computeFLActualTotal(s.id);
+              const progression = computeFLProgression(totalActuel, total2025);
 
-    return `
-      <tr data-id="${s.id}">
-        <td>${s.name}</td>
-        <td>${ete}</td>
-        <td>${formatNumber(total2025)} €</td>
-        <td>${formatNumber(totalActuel)} €</td>
-        <td>${progression}</td>
-      </tr>
-    `;
-  }).join("")}
-</tbody>
+              return `
+                <tr data-id="${s.id}">
+                  <td>${s.name}</td>
+                  <td>${ete}</td>
+                  <td>${euro(total2025)}</td>
+                  <td>${euro(totalActuel)}</td>
+                  <td>${progression}</td>
+                </tr>
+              `;
+            }).join("")}
+          </tbody>
         </table>
       `;
 
@@ -872,10 +891,22 @@ function computeFLProgression(actual, target) {
       if (currentStore) {
         const st = getStoreState(currentStore.id);
 
-        // UI droite: 4 blocs saisons
+        const totalActuelStore = computeFLActualTotal(currentStore.id);
+        const total2025Store = Number(st.flTotal2025 || 0);
+        const progressionStore = computeFLProgression(totalActuelStore, total2025Store);
+
         right.innerHTML = `
           <div style="font-size:13px;font-weight:600;">${currentStore.name}</div>
-          <div class="subtext">Renseigne la commande + montant + plan d’action pour chaque saison.</div>
+          <div class="subtext">Renseigne l’objectif 2025 + commande + montant + plan d’action pour chaque saison.</div>
+
+          <div class="card" style="margin-top:10px;padding:12px;">
+            <div style="font-size:13px;font-weight:600;margin-bottom:8px;">Objectif F&L 2025 (magasin)</div>
+            <label>Montant objectif 2025 (€)</label>
+            <input type="number" step="1" min="0" id="flTotal2025Input" value="${st.flTotal2025 ?? ""}" />
+            <div class="subtext" style="margin-top:8px;">
+              Actuel : <b>${euro(totalActuelStore)}</b> · Progression : <b>${progressionStore}</b>
+            </div>
+          </div>
 
           <div style="margin-top:10px;">
             ${SEASONS.map(season => {
@@ -908,7 +939,17 @@ function computeFLProgression(actual, target) {
           </div>
         `;
 
-        // listeners
+        // ✅ Objectif 2025 input
+        const objInput = right.querySelector("#flTotal2025Input");
+        objInput.addEventListener("input", () => {
+          const st2 = getStoreState(currentStore.id);
+          st2.flTotal2025 = objInput.value;
+          saveStoreToSupabase(currentStore.id);
+          // on rafraîchit la vue pour mettre à jour progression/colonnes
+          renderApp();
+        });
+
+        // ✅ listeners saisons
         right.querySelectorAll("select[data-season-ordered]").forEach(sel => {
           sel.addEventListener("change", () => {
             const season = sel.dataset.seasonOrdered;
@@ -917,6 +958,7 @@ function computeFLProgression(actual, target) {
             if (!st2.flBySeason[season]) st2.flBySeason[season] = { ordered:"", amount:"", plan:"" };
             st2.flBySeason[season].ordered = sel.value;
             saveStoreToSupabase(currentStore.id);
+            renderApp();
           });
         });
 
@@ -928,6 +970,8 @@ function computeFLProgression(actual, target) {
             if (!st2.flBySeason[season]) st2.flBySeason[season] = { ordered:"", amount:"", plan:"" };
             st2.flBySeason[season].amount = inp.value;
             saveStoreToSupabase(currentStore.id);
+            // actual/progression
+            renderApp();
           });
         });
 
@@ -950,7 +994,7 @@ function computeFLProgression(actual, target) {
       container.appendChild(right);
     }
 
-    /********* ONGLET 3 : ENGAGEMENT (inchangé) *********/
+    /********* ONGLET 3 : ENGAGEMENT *********/
     function renderEngagementTab(container, stores, currentStore) {
       const left = document.createElement("div");
       const right = document.createElement("div");
