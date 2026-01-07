@@ -427,6 +427,23 @@
     let currentSearch = "";
 
     function formatNumber(n) {
+      function computeFLActualTotal(storeId) {
+  const st = getStoreState(storeId);
+  let total = 0;
+
+  Object.values(st.flBySeason || {}).forEach(season => {
+    const val = parseFloat(season.amount);
+    if (!isNaN(val)) total += val;
+  });
+
+  return total;
+}
+
+function computeFLProgression(actual, target) {
+  if (!target || target === 0) return "—";
+  return Math.round((actual / target) * 100) + " %";
+}
+
       if (n == null) return "-";
       return n.toLocaleString("fr-FR");
     }
@@ -813,31 +830,35 @@
           </div>
         </div>
         <table>
-          <thead>
-            <tr>
-              <th>Magasin</th>
-              <th>Été (commande)</th>
-              <th>Total montants</th>
-            </tr>
-          </thead>
+       <thead>
+  <tr>
+    <th>Magasin</th>
+    <th>Été (commande)</th>
+    <th>Total montant 2025</th>
+    <th>Total montant actuel</th>
+    <th>Progression</th>
+  </tr>
+</thead>
           <tbody>
-            ${stores.map(s => {
-              const st = getStoreState(s.id);
-              const ete = st.flBySeason?.["Été"]?.ordered || "";
-              let total = 0;
-              SEASONS.forEach(season => {
-                const amt = Number(st.flBySeason?.[season]?.amount || 0);
-                if (!Number.isNaN(amt)) total += amt;
-              });
-              return `
-                <tr data-id="${s.id}">
-                  <td>${s.name}</td>
-                  <td>${ete || "NC"}</td>
-                  <td>${euro(total)}</td>
-                </tr>
-              `;
-            }).join("")}
-          </tbody>
+  ${stores.map(s => {
+    const st = getStoreState(s.id);
+
+    const ete = st.flBySeason?.["Été"]?.ordered || "NC";
+    const total2025 = parseFloat(st.flTotal2025) || 0;
+    const totalActuel = computeFLActualTotal(s.id);
+    const progression = computeFLProgression(totalActuel, total2025);
+
+    return `
+      <tr data-id="${s.id}">
+        <td>${s.name}</td>
+        <td>${ete}</td>
+        <td>${formatNumber(total2025)} €</td>
+        <td>${formatNumber(totalActuel)} €</td>
+        <td>${progression}</td>
+      </tr>
+    `;
+  }).join("")}
+</tbody>
         </table>
       `;
 
