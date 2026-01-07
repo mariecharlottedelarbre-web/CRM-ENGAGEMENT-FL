@@ -1091,6 +1091,11 @@ let flTotalStore = computeFLActualTotal(currentStore.id);
 
         const totalActuelStore = computeFLActualTotal(currentStore.id);
         const total2025Store = getFlTarget(currentStore.id);
+        const n1 = Number(currentStore.ca2024 || 0);
+        const a = Number(totalActuelStore || 0);
+        const progressionVs2024 =
+  n1 > 0 ? Math.round((a / n1) * 100) + " %" : "—";
+
         const progressionStore = computeFLProgression(totalActuelStore, total2025Store);
 
         // sécurise saison courante
