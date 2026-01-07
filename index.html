@@ -1102,12 +1102,15 @@ let flTotalStore = computeFLActualTotal(currentStore.id);
           <div class="subtext">Objectif 2025 figé + saisie du montant et plan d’action par saison (menu).</div>
 
           <div class="card" style="margin-top:10px;padding:12px;">
-            <div style="font-size:13px;font-weight:600;margin-bottom:8px;">Objectif F&L 2025 (magasin)</div>
-            <div class="subtext">
-              Objectif : <b>${euro(total2025Store)}</b> · Actuel : <b data-kpi-fl-actual>${euro(totalActuelStore)}</b>
- · Progression : <b>${progressionStore}</b>
-            </div>
-          </div>
+            <div style="font-size:13px;font-weight:600;margin-bottom:8px;">
+  F&L – Référence N-1
+</div>
+      <div class="subtext">
+  N-1 : <b>${euro(currentStore.ca2024)}</b>
+  · Actuel : <b data-kpi-fl-actual>${euro(totalActuelStore)}</b>
+  · Progression : <b>${progressionVs2024}</b>
+</div>
+         </div>
 
           <div class="card" style="margin-top:10px;padding:12px;">
             <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
