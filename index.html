@@ -348,9 +348,160 @@
     const SEASONS = ["Printemps", "Été", "Automne", "Hiver"];
     const WAVE_STATUSES = ["Non concerné", "À faire", "En cours", "Engagé", "Refusé"];
 
+    /********* ✅ OBJECTIFS F&L 2025 (FIGÉS) *********
+      👉 Renseigne ici tes objectifs par magasin (en €).
+      Personne ne peut les modifier dans l’interface.
+    **************************************************/
+    const FL_OBJECTIFS_2025 = {
+      // COSTANZA Damien
+      "montpellier-delicie": 0,
+      "poulx": 0,
+      "saint-jean-du-gard": 0,
+      "moussac": 0,
+      "lus-la-croix-haute": 0,
+      "marseille-st-antoin": 0,
+      "valras-plage-rompud": 0,
+      "martigues-couronne": 0,
+      "vercheny": 0,
+      "palavas-magdelone": 0,
+
+      // BESQUENT Dominique
+      "bargemon": 0,
+      "colmars-les-alpes": 0,
+      "la-palud-s-verdon": 0,
+      "frejus-anc-comb-afn": 0,
+      "comps-s-artuby-crx": 0,
+      "riez-rouguiere": 0,
+      "callas": 0,
+      "greoux-les-bains": 0,
+      "pra-loup-placette": 0,
+      "frejus-afriq-n-3775": 0,
+
+      // HAMPARSOUMIAN Armand
+      "apt-marchands": 0,
+      "calacussia": 0,
+      "savines-le-lac": 0,
+      "orcieres-merlette": 0,
+      "l-ile-rousse": 0,
+      "malemort-du-comtat": 0,
+      "ceillac-rue-ppl": 0,
+      "mirabeau-rd973": 0,
+      "montgenevre-obelisq": 0,
+      "petreto-bicchisano": 0,
+
+      // JUIF Olivier
+      "guillaumes": 0,
+      "valdeblore-dalmas": 0,
+      "st-etienne-de-tinee": 0,
+      "carces": 0,
+      "nice-e-d-orves": 0,
+      "nice-thiers": 0,
+      "st-julien-83": 0,
+      "antibes-4-chemins": 0,
+      "bormes-les-mi-plage": 0,
+      "le-pradet-herminier": 0,
+
+      // LAURENT Séverine
+      "besse-e-st-anastasie": 0,
+      "cunhlat": 0,
+      "varennes-st-sauveur": 0,
+      "belmont-de-la-loire": 0,
+      "branges-bourg": 0,
+      "vernet-la-varenne": 0,
+      "st-julien-la-vetre": 0,
+      "vollore-ville": 0,
+      "vichy": 0,
+      "issy-l-eveque": 0,
+
+      // MICHELET Yves
+      "monsols": 0,
+      "gigny": 0,
+      "bessenay": 0,
+      "propieres": 0,
+      "legny-tarrets": 0,
+      "leymant-gare": 0,
+      "porte-pier-dor-ecla": 0,
+      "montanay-poype": 0,
+      "villeurbanne-blum": 0,
+      "nivigne-et-suran": 0,
+
+      // AYDOGAN Nevin
+      "st-sorlin-d-arves": 0,
+      "virieu-lamartine": 0,
+      "proxi-auris-en-oisans": 0,
+      "courchevel-1550": 0,
+      "le-bourget-du-lac": 0,
+      "macot-la-plagne": 0,
+      "lepin-le-lac-gare": 0,
+      "areches": 0,
+      "monestier-clermont": 0,
+      "proxi-scionzier": 0,
+
+      // VERNAY Benoit
+      "vals-les-bains": 0,
+      "proxi-langogne-capucins": 0,
+      "st-fortunat": 0,
+      "8-a-huit-chadrac": 0,
+      "le-cheylard": 0,
+      "espaly-st-marcel": 0,
+      "colombier-le-jeune": 0,
+      "langeac-lafayette": 0,
+      "allanche": 0,
+      "saint-mamet-la-salvetas": 0
+    };
+
+    function getFlTarget(storeId) {
+      const v = FL_OBJECTIFS_2025[storeId];
+      const n = Number(v || 0);
+      return Number.isNaN(n) ? 0 : n;
+    }
+
     /********* HELPERS *********/
     function safeJsonParse(str, fallback) {
       try { return JSON.parse(str); } catch { return fallback; }
+    }
+
+    // ✅ Nouvelle structure F&L (compatible anciennes données)
+    // - Ancien: { "Printemps": {...}, "Été": {...}, ... }
+    // - Nouveau: { meta:{ commande:"" }, seasons:{ "Printemps":{...}, ... } }
+    function normalizeFlData(any) {
+      // si rien
+      if (!any || typeof any !== "object") {
+        return {
+          meta: { commande: "" },
+          seasons: defaultFlBySeason()
+        };
+      }
+
+      // déjà au bon format
+      if (any.seasons && typeof any.seasons === "object") {
+        return {
+          meta: { commande: (any.meta && typeof any.meta === "object") ? (any.meta.commande || "") : "" },
+          seasons: ensureAllSeasons(any.seasons)
+        };
+      }
+
+      // ancien format (saisons à plat)
+      return {
+        meta: { commande: "" },
+        seasons: ensureAllSeasons(any)
+      };
+    }
+
+    function ensureAllSeasons(obj) {
+      const base = defaultFlBySeason();
+      const out = { ...base };
+      SEASONS.forEach(s => {
+        const d = obj?.[s];
+        if (d && typeof d === "object") {
+          out[s] = {
+            ordered: d.ordered || "",
+            amount: d.amount || "",
+            plan: d.plan || ""
+          };
+        }
+      });
+      return out;
     }
 
     function defaultFlBySeason() {
@@ -374,11 +525,12 @@
       return `${formatNumber(Number(n))} €`;
     }
 
-    // ✅ Total ACTUEL = somme des montants saisis par saison (fl_by_season)
+    // ✅ Total ACTUEL = somme des montants saisis par saison
     function computeFLActualTotal(storeId) {
       const st = getStoreState(storeId);
       let total = 0;
-      Object.values(st.flBySeason || {}).forEach(season => {
+      const seasons = st.flBySeason || defaultFlBySeason();
+      Object.values(seasons).forEach(season => {
         const val = Number(season?.amount || 0);
         if (!Number.isNaN(val)) total += val;
       });
@@ -406,10 +558,14 @@
 
       STATE = {};
       (data || []).forEach(row => {
+        // ✅ On récupère fl_by_season (ancienne ou nouvelle structure), puis on normalise
+        const rawFl = row.fl_by_season ? safeJsonParse(row.fl_by_season, defaultFlBySeason()) : defaultFlBySeason();
+        const flNorm = normalizeFlData(rawFl);
+
         STATE[row.id] = {
           // ✅ F&L
-          flBySeason: row.fl_by_season ? safeJsonParse(row.fl_by_season, defaultFlBySeason()) : defaultFlBySeason(),
-          flTotal2025: row.fl_total_2025 ?? "",
+          flBySeason: flNorm.seasons,
+          flCommande: flNorm.meta?.commande || "",
 
           // ✅ engagement inchangé
           waves: row.waves ? safeJsonParse(row.waves, {}) : {},
@@ -423,14 +579,14 @@
       if (!STATE[id]) {
         STATE[id] = {
           flBySeason: defaultFlBySeason(),
-          flTotal2025: "",
+          flCommande: "",
           waves: {},
           buysEng: "",
           notesEng: ""
         };
       } else {
         if (!STATE[id].flBySeason) STATE[id].flBySeason = defaultFlBySeason();
-        if (STATE[id].flTotal2025 === undefined) STATE[id].flTotal2025 = "";
+        if (STATE[id].flCommande === undefined) STATE[id].flCommande = "";
       }
       return STATE[id];
     }
@@ -438,11 +594,16 @@
     async function saveStoreToSupabase(id) {
       const st = getStoreState(id);
 
+      // ✅ On sauvegarde fl_by_season avec la nouvelle structure (meta + seasons)
+      const flPayload = {
+        meta: { commande: st.flCommande || "" },
+        seasons: st.flBySeason || defaultFlBySeason()
+      };
+
       const payload = {
         id,
         // ✅ F&L
-        fl_by_season: JSON.stringify(st.flBySeason || defaultFlBySeason()),
-        fl_total_2025: (st.flTotal2025 === "" || st.flTotal2025 == null) ? null : Number(st.flTotal2025),
+        fl_by_season: JSON.stringify(flPayload),
 
         // ✅ engagement
         waves: JSON.stringify(st.waves || {}),
@@ -461,6 +622,9 @@
     let currentTab = "overview";
     let currentStoreId = null;
     let currentSearch = "";
+
+    // ✅ menu saisons (onglet F&L à droite)
+    let currentFlSeason = "Printemps";
 
     function getUserStores(user) {
       if (!user) return [];
@@ -491,10 +655,7 @@
       let totalActual = 0;
 
       stores.forEach(s => {
-        const st = getStoreState(s.id);
-        const target = Number(st.flTotal2025 || 0);
-        if (!Number.isNaN(target)) totalTarget += target;
-
+        totalTarget += getFlTarget(s.id);
         totalActual += computeFLActualTotal(s.id);
       });
 
@@ -563,6 +724,7 @@
         currentTab = "overview";
         currentStoreId = null;
         currentSearch = "";
+        currentFlSeason = "Printemps";
         renderApp();
       });
     }
@@ -619,6 +781,7 @@
             currentStoreId = null;
             currentTab = "overview";
             currentSearch = "";
+            currentFlSeason = "Printemps";
             renderApp();
           }
         });
@@ -639,7 +802,7 @@
         const fl = computeFlKpis(currentUser);
         kpiCard.innerHTML = `
           <h1><span class="logo-dot"></span> CRM PROXI · Fruits & Légumes</h1>
-          <div class="subtext">Suivi F&L par saison (commande / montant / plan d’action).</div>
+          <div class="subtext">Suivi F&L par saison (commande / montant / plan d'action).</div>
 
           <div class="kpi-row">
             <div class="kpi-card">
@@ -722,16 +885,13 @@
       mainCard.appendChild(content);
       main.appendChild(mainCard);
 
-      shell.appendChild(sidebar);
-      shell.appendChild(main);
-      root.appendChild(shell);
-
       /* EVENTS */
       sidebar.querySelector("#logoutBtn").addEventListener("click", () => {
         currentUser = null;
         currentCommercialFilter = null;
         currentStoreId = null;
         currentTab = "overview";
+        currentFlSeason = "Printemps";
         renderLogin();
       });
 
@@ -845,15 +1005,15 @@
         <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
           <div>
             <div style="font-size:13px;font-weight:600;">Magasins · Fruits & Légumes</div>
-            <div class="subtext">Aperçu F&L (Été + objectif + actuel + progression), puis détail par saisons à droite.</div>
+            <div class="subtext">Aperçu F&L (commande + objectif + actuel + progression), puis détail par saisons à droite.</div>
           </div>
         </div>
         <table>
           <thead>
             <tr>
               <th>Magasin</th>
-              <th>Été (commande)</th>
-              <th>Total montant 2025</th>
+              <th>Commande</th>
+              <th>Total montants 2025</th>
               <th>Total montant actuel</th>
               <th>Progression</th>
             </tr>
@@ -862,15 +1022,21 @@
             ${stores.map(s => {
               const st = getStoreState(s.id);
 
-              const ete = st.flBySeason?.["Été"]?.ordered || "NC";
-              const total2025 = Number(st.flTotal2025 || 0);
+              const commande = st.flCommande || "";
+              const total2025 = getFlTarget(s.id);
               const totalActuel = computeFLActualTotal(s.id);
               const progression = computeFLProgression(totalActuel, total2025);
 
               return `
                 <tr data-id="${s.id}">
                   <td>${s.name}</td>
-                  <td>${ete}</td>
+                  <td>
+                    <select data-fl-commande="${s.id}">
+                      <option value="">NC</option>
+                      <option value="Oui" ${commande === "Oui" ? "selected" : ""}>Oui</option>
+                      <option value="Non" ${commande === "Non" ? "selected" : ""}>Non</option>
+                    </select>
+                  </td>
                   <td>${euro(total2025)}</td>
                   <td>${euro(totalActuel)}</td>
                   <td>${progression}</td>
@@ -881,9 +1047,23 @@
         </table>
       `;
 
+      // clic ligne (sauf sur le select)
       left.querySelectorAll("tbody tr").forEach(tr => {
-        tr.addEventListener("click", () => {
+        tr.addEventListener("click", e => {
+          if (e.target.tagName.toLowerCase() === "select") return;
           currentStoreId = tr.dataset.id;
+          renderApp();
+        });
+      });
+
+      // ✅ commande Oui/Non par magasin (sauvegarde supabase)
+      left.querySelectorAll("select[data-fl-commande]").forEach(sel => {
+        sel.addEventListener("change", () => {
+          const id = sel.dataset.flCommande;
+          const st = getStoreState(id);
+          st.flCommande = sel.value;
+          saveStoreToSupabase(id);
+          // refresh kpis/colonnes
           renderApp();
         });
       });
@@ -892,98 +1072,95 @@
         const st = getStoreState(currentStore.id);
 
         const totalActuelStore = computeFLActualTotal(currentStore.id);
-        const total2025Store = Number(st.flTotal2025 || 0);
+        const total2025Store = getFlTarget(currentStore.id);
         const progressionStore = computeFLProgression(totalActuelStore, total2025Store);
+
+        // sécurise saison courante
+        if (!SEASONS.includes(currentFlSeason)) currentFlSeason = "Printemps";
+        const data = st.flBySeason?.[currentFlSeason] || { ordered: "", amount: "", plan: "" };
 
         right.innerHTML = `
           <div style="font-size:13px;font-weight:600;">${currentStore.name}</div>
-          <div class="subtext">Renseigne l’objectif 2025 + commande + montant + plan d’action pour chaque saison.</div>
+          <div class="subtext">Objectif 2025 figé + saisie du montant et plan d’action par saison (menu).</div>
 
           <div class="card" style="margin-top:10px;padding:12px;">
             <div style="font-size:13px;font-weight:600;margin-bottom:8px;">Objectif F&L 2025 (magasin)</div>
-            <label>Montant objectif 2025 (€)</label>
-            <input type="number" step="1" min="0" id="flTotal2025Input" value="${st.flTotal2025 ?? ""}" />
-            <div class="subtext" style="margin-top:8px;">
-              Actuel : <b>${euro(totalActuelStore)}</b> · Progression : <b>${progressionStore}</b>
+            <div class="subtext">
+              Objectif : <b>${euro(total2025Store)}</b> · Actuel : <b>${euro(totalActuelStore)}</b> · Progression : <b>${progressionStore}</b>
             </div>
           </div>
 
-          <div style="margin-top:10px;">
-            ${SEASONS.map(season => {
-              const data = st.flBySeason?.[season] || { ordered: "", amount: "", plan: "" };
-              return `
-                <div class="card" style="margin-bottom:10px;padding:12px;">
-                  <div style="font-size:13px;font-weight:600;margin-bottom:8px;">${season}</div>
+          <div class="card" style="margin-top:10px;padding:12px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
+              <div style="font-size:13px;font-weight:600;">Saisonnalité</div>
+              <div class="tabs" style="padding:2px;">
+                ${SEASONS.map(season => `
+                  <button class="tab-btn ${currentFlSeason === season ? "active" : ""}" data-fl-season="${season}">${season}</button>
+                `).join("")}
+              </div>
+            </div>
 
-                  <div style="margin-bottom:8px;">
-                    <label>Commande Fruits & Légumes ?</label>
-                    <select data-season-ordered="${season}">
-                      <option value="">NC</option>
-                      <option value="Oui" ${data.ordered === "Oui" ? "selected" : ""}>Oui</option>
-                      <option value="Non" ${data.ordered === "Non" ? "selected" : ""}>Non</option>
-                    </select>
-                  </div>
+            <div style="margin-top:10px;">
+              <div style="font-size:13px;font-weight:600;margin-bottom:8px;">${currentFlSeason}</div>
 
-                  <div style="margin-bottom:8px;">
-                    <label>Montant (€)</label>
-                    <input type="number" step="1" min="0" data-season-amount="${season}" value="${data.amount || ""}" />
-                  </div>
+              <div style="margin-bottom:8px;">
+                <label>Commande Fruits & Légumes ?</label>
+                <select id="seasonOrdered">
+                  <option value="">NC</option>
+                  <option value="Oui" ${data.ordered === "Oui" ? "selected" : ""}>Oui</option>
+                  <option value="Non" ${data.ordered === "Non" ? "selected" : ""}>Non</option>
+                </select>
+              </div>
 
-                  <div>
-                    <label>Plan d’action</label>
-                    <textarea rows="3" data-season-plan="${season}">${data.plan || ""}</textarea>
-                  </div>
-                </div>
-              `;
-            }).join("")}
+              <div style="margin-bottom:8px;">
+                <label>Montant (€)</label>
+                <input type="number" step="1" min="0" id="seasonAmount" value="${data.amount || ""}" />
+              </div>
+
+              <div>
+                <label>Plan d’action</label>
+                <textarea rows="5" id="seasonPlan">${data.plan || ""}</textarea>
+              </div>
+            </div>
           </div>
         `;
 
-        // ✅ Objectif 2025 input
-        const objInput = right.querySelector("#flTotal2025Input");
-        objInput.addEventListener("input", () => {
+        // ✅ menu saison
+        right.querySelectorAll("button[data-fl-season]").forEach(btn => {
+          btn.addEventListener("click", () => {
+            currentFlSeason = btn.dataset.flSeason;
+            renderApp();
+          });
+        });
+
+        // ✅ listeners saison courante
+        const orderedSel = right.querySelector("#seasonOrdered");
+        orderedSel.addEventListener("change", () => {
           const st2 = getStoreState(currentStore.id);
-          st2.flTotal2025 = objInput.value;
+          if (!st2.flBySeason) st2.flBySeason = defaultFlBySeason();
+          if (!st2.flBySeason[currentFlSeason]) st2.flBySeason[currentFlSeason] = { ordered:"", amount:"", plan:"" };
+          st2.flBySeason[currentFlSeason].ordered = orderedSel.value;
           saveStoreToSupabase(currentStore.id);
-          // on rafraîchit la vue pour mettre à jour progression/colonnes
           renderApp();
         });
 
-        // ✅ listeners saisons
-        right.querySelectorAll("select[data-season-ordered]").forEach(sel => {
-          sel.addEventListener("change", () => {
-            const season = sel.dataset.seasonOrdered;
-            const st2 = getStoreState(currentStore.id);
-            if (!st2.flBySeason) st2.flBySeason = defaultFlBySeason();
-            if (!st2.flBySeason[season]) st2.flBySeason[season] = { ordered:"", amount:"", plan:"" };
-            st2.flBySeason[season].ordered = sel.value;
-            saveStoreToSupabase(currentStore.id);
-            renderApp();
-          });
+        const amountInp = right.querySelector("#seasonAmount");
+        amountInp.addEventListener("input", () => {
+          const st2 = getStoreState(currentStore.id);
+          if (!st2.flBySeason) st2.flBySeason = defaultFlBySeason();
+          if (!st2.flBySeason[currentFlSeason]) st2.flBySeason[currentFlSeason] = { ordered:"", amount:"", plan:"" };
+          st2.flBySeason[currentFlSeason].amount = amountInp.value;
+          saveStoreToSupabase(currentStore.id);
+          renderApp();
         });
 
-        right.querySelectorAll("input[data-season-amount]").forEach(inp => {
-          inp.addEventListener("input", () => {
-            const season = inp.dataset.seasonAmount;
-            const st2 = getStoreState(currentStore.id);
-            if (!st2.flBySeason) st2.flBySeason = defaultFlBySeason();
-            if (!st2.flBySeason[season]) st2.flBySeason[season] = { ordered:"", amount:"", plan:"" };
-            st2.flBySeason[season].amount = inp.value;
-            saveStoreToSupabase(currentStore.id);
-            // actual/progression
-            renderApp();
-          });
-        });
-
-        right.querySelectorAll("textarea[data-season-plan]").forEach(ta => {
-          ta.addEventListener("input", () => {
-            const season = ta.dataset.seasonPlan;
-            const st2 = getStoreState(currentStore.id);
-            if (!st2.flBySeason) st2.flBySeason = defaultFlBySeason();
-            if (!st2.flBySeason[season]) st2.flBySeason[season] = { ordered:"", amount:"", plan:"" };
-            st2.flBySeason[season].plan = ta.value;
-            saveStoreToSupabase(currentStore.id);
-          });
+        const planTa = right.querySelector("#seasonPlan");
+        planTa.addEventListener("input", () => {
+          const st2 = getStoreState(currentStore.id);
+          if (!st2.flBySeason) st2.flBySeason = defaultFlBySeason();
+          if (!st2.flBySeason[currentFlSeason]) st2.flBySeason[currentFlSeason] = { ordered:"", amount:"", plan:"" };
+          st2.flBySeason[currentFlSeason].plan = planTa.value;
+          saveStoreToSupabase(currentStore.id);
         });
 
       } else {
