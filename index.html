@@ -564,14 +564,6 @@ function updateFlKpisLive(storeId) {
       return total;
     }
 
-    // ✅ Progression (%) = actuel / objectif
-    function computeFLProgression(actual, target) {
-      const t = Number(target || 0);
-      const a = Number(actual || 0);
-      if (!t || t <= 0) return "—";
-      return Math.round((a / t) * 100) + " %";
-    }
-
     /********* ÉTAT + SYNCHRO SUPABASE *********/
     let STATE = {};
 
