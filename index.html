@@ -551,12 +551,14 @@ function updateFlKpisLive(storeId) {
   const orderedSel = document.querySelector("#seasonOrdered");
   const amountInp  = document.querySelector("#seasonAmount");
   const planTa     = document.querySelector("#seasonPlan");
+  const seasonLabel = document.querySelector("#currentSeasonLabel");
 
   if (orderedSel) orderedSel.value = data.ordered || "";
   if (amountInp)  amountInp.value  = data.amount || "";
   if (planTa)     planTa.value     = data.plan || "";
+  if (seasonLabel) seasonLabel.textContent = currentFlSeason;
 
-  // met à jour l’onglet actif visuellement
+  // met à jour l'onglet actif visuellement
   document.querySelectorAll("button[data-fl-season]").forEach(btn => {
     btn.classList.toggle(
       "active",
@@ -1155,7 +1157,7 @@ const progressionVsN1 =
             </div>
 
             <div style="margin-top:10px;">
-              <div style="font-size:13px;font-weight:600;margin-bottom:8px;">${currentFlSeason}</div>
+              <div style="font-size:13px;font-weight:600;margin-bottom:8px;" id="currentSeasonLabel">${currentFlSeason}</div>
 
               <div style="margin-bottom:8px;">
                 <label>Commande Fruits & Légumes ?</label>
