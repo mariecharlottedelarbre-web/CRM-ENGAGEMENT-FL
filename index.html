@@ -1179,14 +1179,13 @@ const progressionVsN1 =
         // ✅ listeners saison courante
         const orderedSel = right.querySelector("#seasonOrdered");
         orderedSel.addEventListener("change", () => {
-          const st2 = getStoreState(currentStore.id);
-          if (!st2.flBySeason) st2.flBySeason = defaultFlBySeason();
-          if (!st2.flBySeason[currentFlSeason]) st2.flBySeason[currentFlSeason] = { ordered:"", amount:"", plan:"" };
-          st2.flBySeason[currentFlSeason].ordered = orderedSel.value;
-          saveStoreToSupabase(currentStore.id);
-          renderApp();
-        });
+  const st2 = getStoreState(currentStore.id);
+  st2.flBySeason[currentFlSeason].ordered = orderedSel.value;
+  saveStoreToSupabase(currentStore.id);
+});
 
+        amountInp.addEventListener("input", () => {
+  if (amountInp.value === "") return;
         const amountInp = right.querySelector("#seasonAmount");
         amountInp.addEventListener("input", () => {
           const st2 = getStoreState(currentStore.id);
