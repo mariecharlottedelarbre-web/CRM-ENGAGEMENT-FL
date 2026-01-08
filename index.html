@@ -540,6 +540,31 @@ function updateFlKpisLive(storeId) {
         "Hiver":     { ordered: "", amount: "", plan: "" }
       };
     }
+    function updateSeasonForm(storeId) {
+  const st = getStoreState(storeId);
+  const data = st.flBySeason?.[currentFlSeason] || {
+    ordered: "",
+    amount: "",
+    plan: ""
+  };
+
+  const orderedSel = document.querySelector("#seasonOrdered");
+  const amountInp  = document.querySelector("#seasonAmount");
+  const planTa     = document.querySelector("#seasonPlan");
+
+  if (orderedSel) orderedSel.value = data.ordered || "";
+  if (amountInp)  amountInp.value  = data.amount || "";
+  if (planTa)     planTa.value     = data.plan || "";
+
+  // met à jour l’onglet actif visuellement
+  document.querySelectorAll("button[data-fl-season]").forEach(btn => {
+    btn.classList.toggle(
+      "active",
+      btn.dataset.flSeason === currentFlSeason
+    );
+  });
+}
+
 
     function formatNumber(n) {
       if (n == null) return "-";
@@ -1155,14 +1180,14 @@ const progressionVsN1 =
         `;
 
         // ✅ menu saison
-        right.querySelectorAll("button[data-fl-season]").forEach(btn => {
+      right.querySelectorAll("button[data-fl-season]").forEach(btn => {
   btn.addEventListener("click", () => {
     currentFlSeason = btn.dataset.flSeason;
-
-    // 🔁 re-render propre du panneau Fruits & Légumes
-    renderFruitsLegumesTab(container, stores, currentStore);
+    updateSeasonForm(currentStore.id);
   });
 });
+        
+updateSeasonForm(currentStore.id);
 
         // ✅ listeners saison courante
         const orderedSel = right.querySelector("#seasonOrdered");
@@ -1173,14 +1198,20 @@ const progressionVsN1 =
 });
 
         const amountInp = right.querySelector("#seasonAmount");
-        amountInp.addEventListener("input", () => {
-          const st2 = getStoreState(currentStore.id);
-          if (!st2.flBySeason) st2.flBySeason = defaultFlBySeason();
-          if (!st2.flBySeason[currentFlSeason]) st2.flBySeason[currentFlSeason] = { ordered:"", amount:"", plan:"" };
-          st2.flBySeason[currentFlSeason].amount = amountInp.value;
-          saveStoreToSupabase(currentStore.id);
-          updateFlKpisLive(currentStore.id);
-        });
+        let flSaveTimeout = null;
+
+amountInp.addEventListener("input", () => {
+  const st2 = getStoreState(currentStore.id);
+  st2.flBySeason[currentFlSeason].amount = amountInp.value;
+
+  updateFlKpisLive(currentStore.id);
+
+  // ⏱ debounce Supabase
+  clearTimeout(flSaveTimeout);
+  flSaveTimeout = setTimeout(() => {
+    saveStoreToSupabase(currentStore.id);
+  }, 400);
+});
 
         const planTa = right.querySelector("#seasonPlan");
         planTa.addEventListener("input", () => {
