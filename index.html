@@ -564,6 +564,14 @@ function updateFlKpisLive(storeId) {
       });
       return total;
     }
+function updateSeasonForm(storeId, season) {
+  const st = getStoreState(storeId);
+  const data = st.flBySeason?.[season] || { ordered: "", amount: "", plan: "" };
+
+  document.querySelector("#seasonOrdered").value = data.ordered || "";
+  document.querySelector("#seasonAmount").value  = data.amount || "";
+  document.querySelector("#seasonPlan").value    = data.plan || "";
+}
 
     /********* ÉTAT + SYNCHRO SUPABASE *********/
     let STATE = {};
@@ -1155,11 +1163,18 @@ const progressionVsN1 =
 
         // ✅ menu saison
         right.querySelectorAll("button[data-fl-season]").forEach(btn => {
-          btn.addEventListener("click", () => {
-            currentFlSeason = btn.dataset.flSeason;
-            renderApp();
-          });
-        });
+  btn.addEventListener("click", () => {
+    currentFlSeason = btn.dataset.flSeason;
+
+    // mise à jour visuelle des onglets
+    right.querySelectorAll("button[data-fl-season]").forEach(b =>
+      b.classList.toggle("active", b === btn)
+    );
+
+    // mise à jour instantanée du formulaire
+    updateSeasonForm(currentStore.id, currentFlSeason);
+  });
+});
 
         // ✅ listeners saison courante
         const orderedSel = right.querySelector("#seasonOrdered");
