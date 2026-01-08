@@ -1179,13 +1179,13 @@ const progressionVsN1 =
           </div>
         `;
 
-        // ✅ menu saison
-      right.querySelectorAll("button[data-fl-season]").forEach(btn => {
-  btn.addEventListener("click", () => {
-    currentFlSeason = btn.dataset.flSeason;
-    updateSeasonForm(currentStore.id);
-  });
-});
+      // ✅ menu saison - update local sans recharger toute la page
+        right.querySelectorAll("button[data-fl-season]").forEach(btn => {
+          btn.addEventListener("click", () => {
+            currentFlSeason = btn.dataset.flSeason;
+            updateSeasonForm(currentStore.id);
+          });
+        });
         
 updateSeasonForm(currentStore.id);
 
