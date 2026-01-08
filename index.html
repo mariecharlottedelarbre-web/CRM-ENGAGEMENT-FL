@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+je te donne mon script car j'ai fait ce que tu m'as dit mais ça marche toujours pas : <!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
@@ -1179,13 +1179,14 @@ const progressionVsN1 =
         // ✅ listeners saison courante
         const orderedSel = right.querySelector("#seasonOrdered");
         orderedSel.addEventListener("change", () => {
-  const st2 = getStoreState(currentStore.id);
-  st2.flBySeason[currentFlSeason].ordered = orderedSel.value;
-  saveStoreToSupabase(currentStore.id);
-});
+          const st2 = getStoreState(currentStore.id);
+          if (!st2.flBySeason) st2.flBySeason = defaultFlBySeason();
+          if (!st2.flBySeason[currentFlSeason]) st2.flBySeason[currentFlSeason] = { ordered:"", amount:"", plan:"" };
+          st2.flBySeason[currentFlSeason].ordered = orderedSel.value;
+          saveStoreToSupabase(currentStore.id);
+          renderApp();
+        });
 
-        amountInp.addEventListener("input", () => {
-  if (amountInp.value === "") return;
         const amountInp = right.querySelector("#seasonAmount");
         amountInp.addEventListener("input", () => {
           const st2 = getStoreState(currentStore.id);
