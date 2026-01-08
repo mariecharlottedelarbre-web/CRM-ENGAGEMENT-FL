@@ -564,14 +564,6 @@ function updateFlKpisLive(storeId) {
       });
       return total;
     }
-function updateSeasonForm(storeId, season) {
-  const st = getStoreState(storeId);
-  const data = st.flBySeason?.[season] || { ordered: "", amount: "", plan: "" };
-
-  document.querySelector("#seasonOrdered").value = data.ordered || "";
-  document.querySelector("#seasonAmount").value  = data.amount || "";
-  document.querySelector("#seasonPlan").value    = data.plan || "";
-}
 
     /********* ÉTAT + SYNCHRO SUPABASE *********/
     let STATE = {};
@@ -1024,8 +1016,9 @@ let flTotalStore = computeFLActualTotal(currentStore.id);
     }
 
     /********* ONGLET 2 : FRUITS & LÉGUMES *********/
-    function renderFruitsLegumesTab(container, stores, currentStore) {
-      const left = document.createElement("div");
+   function renderFruitsLegumesTab(container, stores, currentStore) {
+  container.innerHTML = ""; 
+     const left = document.createElement("div");
       const right = document.createElement("div");
 
       left.innerHTML = `
@@ -1091,7 +1084,7 @@ let flTotalStore = computeFLActualTotal(currentStore.id);
           st.flCommande = sel.value;
           saveStoreToSupabase(id);
           // refresh kpis/colonnes
-          renderApp();
+      
         });
       });
 
@@ -1166,13 +1159,8 @@ const progressionVsN1 =
   btn.addEventListener("click", () => {
     currentFlSeason = btn.dataset.flSeason;
 
-    // mise à jour visuelle des onglets
-    right.querySelectorAll("button[data-fl-season]").forEach(b =>
-      b.classList.toggle("active", b === btn)
-    );
-
-    // mise à jour instantanée du formulaire
-    updateSeasonForm(currentStore.id, currentFlSeason);
+    // 🔁 re-render propre du panneau Fruits & Légumes
+    renderFruitsLegumesTab(container, stores, currentStore);
   });
 });
 
