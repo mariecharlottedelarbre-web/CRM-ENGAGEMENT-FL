@@ -540,6 +540,16 @@ function updateFlKpisLive(storeId) {
         "Hiver":     { ordered: "", amount: "", plan: "" }
       };
     }
+    function defaultEngagementByWave() {
+  return {
+    wave1: { name: "", amount: "" },
+    wave2: { name: "", amount: "" },
+    wave3: { name: "", amount: "" },
+    wave4: { name: "", amount: "" },
+    wave5: { name: "", amount: "" },
+    wave6: { name: "", amount: "" }
+  };
+}
    function updateSeasonForm(storeId) {
   const st = getStoreState(storeId);
   const data = st.flBySeason?.[currentFlSeason] || {
@@ -604,6 +614,19 @@ function updateFlKpisLive(storeId) {
       });
       return total;
     }
+  function computeEngagementTotal(storeId) {
+  const st = getStoreState(storeId);
+  let total = 0;
+
+  Object.entries(st.engagementByWave || {}).forEach(([waveId, data]) => {
+    if (st.waves?.[waveId] === "Engagé") {
+      const val = Number(data?.amount || 0);
+      if (!Number.isNaN(val)) total += val;
+    }
+  });
+
+  return total;
+}
 
     /********* ÉTAT + SYNCHRO SUPABASE *********/
     let STATE = {};
@@ -623,33 +646,35 @@ function updateFlKpisLive(storeId) {
         const flNorm = normalizeFlData(rawFl);
 
         STATE[row.id] = {
-          // ✅ F&L
-          flBySeason: flNorm.seasons,
-          flCommande: flNorm.meta?.commande || "",
-
-          // ✅ engagement inchangé
-          waves: row.waves ? safeJsonParse(row.waves, {}) : {},
-          buysEng: row.buys_eng || "",
-          notesEng: row.notes_eng || ""
-        };
+  flBySeason: flNorm.seasons,
+  flCommande: flNorm.meta?.commande || "",
+  waves: row.waves ? safeJsonParse(row.waves, {}) : {},
+  engagementByWave: row.engagement_by_wave
+    ? safeJsonParse(row.engagement_by_wave, defaultEngagementByWave())
+    : defaultEngagementByWave(),
+  buysEng: row.buys_eng || "",
+  notesEng: row.notes_eng || ""
+};
       });
     }
 
-    function getStoreState(id) {
-      if (!STATE[id]) {
-        STATE[id] = {
-          flBySeason: defaultFlBySeason(),
-          flCommande: "",
-          waves: {},
-          buysEng: "",
-          notesEng: ""
-        };
-      } else {
-        if (!STATE[id].flBySeason) STATE[id].flBySeason = defaultFlBySeason();
-        if (STATE[id].flCommande === undefined) STATE[id].flCommande = "";
-      }
-      return STATE[id];
-    }
+   function getStoreState(id) {
+  if (!STATE[id]) {
+    STATE[id] = {
+      flBySeason: defaultFlBySeason(),
+      flCommande: "",
+      waves: {},
+      engagementByWave: defaultEngagementByWave(),
+      buysEng: "",
+      notesEng: ""
+    };
+  } else {
+    if (!STATE[id].flBySeason) STATE[id].flBySeason = defaultFlBySeason();
+    if (!STATE[id].engagementByWave) STATE[id].engagementByWave = defaultEngagementByWave();
+    if (STATE[id].flCommande === undefined) STATE[id].flCommande = "";
+  }
+  return STATE[id];
+}
 
     async function saveStoreToSupabase(id) {
       const st = getStoreState(id);
@@ -661,15 +686,13 @@ function updateFlKpisLive(storeId) {
       };
 
       const payload = {
-        id,
-        // ✅ F&L
-        fl_by_season: JSON.stringify(flPayload),
-
-        // ✅ engagement
-        waves: JSON.stringify(st.waves || {}),
-        buys_eng: st.buysEng || "",
-        notes_eng: st.notesEng || ""
-      };
+  id,
+  fl_by_season: JSON.stringify(flPayload),
+  waves: JSON.stringify(st.waves || {}),
+  engagement_by_wave: JSON.stringify(st.engagementByWave || defaultEngagementByWave()),
+  buys_eng: st.buysEng || "",
+  notes_eng: st.notesEng || ""
+};
 
       const { error } = await sb.from("store_state").upsert(payload);
       if (error) console.error("Erreur de sauvegarde Supabase :", error);
@@ -1265,35 +1288,31 @@ const progressionVsN1 =
         <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
           <div>
             <div style="font-size:13px;font-weight:600;">Magasins · Engagement</div>
-            <div class="subtext">Suivi des 6 vagues d'engagement et "commande engagement".</div>
-          </div>
+            <div class="subtext">
+  Suivi des 6 vagues d’engagement (statut, nom et montant).
+</div>
+         </div>
         </div>
         <table>
-          <thead>
-            <tr>
-              <th>Magasin</th>
-              <th>Commande engagement ?</th>
-              <th>Vagues engagées</th>
-            </tr>
-          </thead>
+    <thead>
+  <tr>
+    <th>Magasin</th>
+    <th>Vagues engagées</th>
+    <th>Total montant engagé</th>
+  </tr>
+</thead>
           <tbody>
             ${stores.map(s => {
               const st = getStoreState(s.id);
-              const buys = st.buysEng || "";
               const engagedCount = WAVES.filter(w => st.waves[w.id] === "Engagé").length;
-              return `
-                <tr data-id="${s.id}">
-                  <td>${s.name}</td>
-                  <td>
-                    <select data-buys-eng="${s.id}">
-                      <option value="">NC</option>
-                      <option value="Oui" ${buys === "Oui" ? "selected" : ""}>Oui</option>
-                      <option value="Non" ${buys === "Non" ? "selected" : ""}>Non</option>
-                    </select>
-                  </td>
-                  <td>${engagedCount}</td>
-                </tr>
-              `;
+              const totalEngaged = computeEngagementTotal(s.id);
+             return `
+  <tr data-id="${s.id}">
+    <td>${s.name}</td>
+    <td>${engagedCount}</td>
+    <td>${euro(totalEngaged)}</td>
+  </tr>
+`;
             }).join("")}
           </tbody>
         </table>
@@ -1304,15 +1323,6 @@ const progressionVsN1 =
           if (e.target.tagName.toLowerCase() === "select") return;
           currentStoreId = tr.dataset.id;
           renderApp();
-        });
-      });
-
-      left.querySelectorAll("select[data-buys-eng]").forEach(sel => {
-        sel.addEventListener("change", () => {
-          const id = sel.dataset.buysEng;
-          const st = getStoreState(id);
-          st.buysEng = sel.value;
-          saveStoreToSupabase(id);
         });
       });
 
@@ -1328,11 +1338,28 @@ const progressionVsN1 =
                 const val = st.waves[w.id] || "Non concerné";
                 return `
                   <div class="wave-card">
-                    <div class="wave-title">${w.label}</div>
-                    <select data-wave="${w.id}">
-                      ${WAVE_STATUSES.map(stat => `<option value="${stat}" ${stat === val ? "selected" : ""}>${stat}</option>`).join("")}
-                    </select>
-                  </div>
+  <div class="wave-title">${w.label}</div>
+
+  <label>Statut</label>
+  <select data-wave-status="${w.id}">
+    ${WAVE_STATUSES.map(stat => `<option value="${stat}" ${stat === val ? "selected" : ""}>${stat}</option>`).join("")}
+  </select>
+
+  <label style="margin-top:4px;">Nom de la vague</label>
+  <input type="text"
+    data-wave-name="${w.id}"
+    value="${st.engagementByWave?.[w.id]?.name || ""}"
+    placeholder="Ex : Opé rentrée"
+  />
+
+  <label style="margin-top:4px;">Montant engagé (€)</label>
+  <input type="number"
+    min="0"
+    step="1"
+    data-wave-amount="${w.id}"
+    value="${st.engagementByWave?.[w.id]?.amount || ""}"
+  />
+</div>
                 `;
               }).join("")}
             </div>
@@ -1343,15 +1370,52 @@ const progressionVsN1 =
           </div>
         `;
 
-        right.querySelectorAll("select[data-wave]").forEach(sel => {
-          sel.addEventListener("change", () => {
-            const waveId = sel.dataset.wave;
-            const st2 = getStoreState(currentStore.id);
-            st2.waves[waveId] = sel.value;
-            saveStoreToSupabase(currentStore.id);
-            renderApp();
-          });
-        });
+        // Statut de vague
+right.querySelectorAll("select[data-wave-status]").forEach(sel => {
+  sel.addEventListener("change", () => {
+    const waveId = sel.dataset.waveStatus;
+    const st2 = getStoreState(currentStore.id);
+    st2.waves[waveId] = sel.value;
+    saveStoreToSupabase(currentStore.id);
+    renderApp();
+  });
+});
+
+// Nom de vague
+right.querySelectorAll("input[data-wave-name]").forEach(inp => {
+  inp.addEventListener("input", () => {
+    const waveId = inp.dataset.waveName;
+    const st2 = getStoreState(currentStore.id);
+    st2.engagementByWave[waveId].name = inp.value;
+
+    clearTimeout(window._engNameSave);
+    window._engNameSave = setTimeout(() => {
+      saveStoreToSupabase(currentStore.id);
+    }, 400);
+  });
+});
+
+// Montant engagé
+right.querySelectorAll("input[data-wave-amount]").forEach(inp => {
+  inp.addEventListener("input", () => {
+    const waveId = inp.dataset.waveAmount;
+    const st2 = getStoreState(currentStore.id);
+    st2.engagementByWave[waveId].amount = inp.value;
+
+    clearTimeout(window._engAmountSave);
+    window._engAmountSave = setTimeout(() => {
+  saveStoreToSupabase(currentStore.id);
+
+  // update uniquement la ligne du tableau
+  const row = document.querySelector(`tr[data-id="${currentStore.id}"]`);
+  if (row) {
+    const total = computeEngagementTotal(currentStore.id);
+    const tds = row.querySelectorAll("td");
+    if (tds[2]) tds[2].textContent = euro(total);
+  }
+}, 400);
+  });
+});
 
         const ta = right.querySelector("#notesEng");
         ta.addEventListener("input", () => {
