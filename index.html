@@ -672,15 +672,15 @@ function updateFlKpisLive(storeId) {
         const flNorm = normalizeFlData(rawFl);
 
         const rawEng =
-  typeof row.engagement_by_wave === "object" && row.engagement_by_wave !== null
-    ? row.engagement_by_wave
-    : {};
+  typeof row.engagement_by_wave === "string"
+    ? safeJsonParse(row.engagement_by_wave, {})
+    : (row.engagement_by_wave || {});
 
 STATE[row.id] = {
   engNotesByWave:
-  typeof row.eng_notes_by_wave === "object" && row.eng_notes_by_wave !== null
-    ? row.eng_notes_by_wave
-    : {},
+  typeof row.eng_notes_by_wave === "string"
+    ? safeJsonParse(row.eng_notes_by_wave, {})
+    : (row.eng_notes_by_wave || {}),
   flBySeason: flNorm.seasons,
   flCommande: flNorm.meta?.commande || "",
   waves: row.waves
@@ -729,9 +729,9 @@ STATE[row.id] = {
       const payload = {
   id,
   fl_by_season: JSON.stringify(flPayload),
-  waves: st.waves || {},
-  engagement_by_wave: st.engagementByWave || {},
-  eng_notes_by_wave: st.engNotesByWave || {},
+ waves: JSON.stringify(st.waves || {}),
+engagement_by_wave: JSON.stringify(st.engagementByWave || {}),
+eng_notes_by_wave: JSON.stringify(st.engNotesByWave || {}),
   visits: st.visits || [],
   buys_eng: st.buysEng || "",
   notes_eng: st.notesEng || ""
