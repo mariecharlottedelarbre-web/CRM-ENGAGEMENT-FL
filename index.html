@@ -1434,6 +1434,10 @@ const progressionVsN1 =
   }
 
   const st = getStoreState(currentStore.id);
+      // 🔒 Sécurité : initialise la vague si elle n’existe pas encore
+if (!st.engagementByWave[currentEngWave]) {
+  st.engagementByWave[currentEngWave] = { name: "", amount: "" };
+}
 
   // sécurité
   if (!WAVES.some(w => w.id === currentEngWave)) currentEngWave = "wave1";
@@ -1487,12 +1491,28 @@ const progressionVsN1 =
 
  /* ================= EVENTS ================= */
 
-// menu vagues
 right.querySelectorAll("[data-eng-wave]").forEach(btn => {
   btn.addEventListener("click", e => {
     e.preventDefault();
+
     currentEngWave = btn.dataset.engWave;
-    renderEngagementTab(container, stores, currentStore);
+
+    // mise à jour visuelle des boutons
+    right.querySelectorAll("[data-eng-wave]").forEach(b =>
+      b.classList.toggle("active", b.dataset.engWave === currentEngWave)
+    );
+
+    // recharge les champs SANS recréer le DOM
+    const st2 = getStoreState(currentStore.id);
+    const data = st2.engagementByWave[currentEngWave] || { name: "", amount: "" };
+
+    right.querySelector("#engStatus").value =
+      st2.waves[currentEngWave] || "Non concerné";
+
+    right.querySelector("#engName").value = data.name || "";
+    right.querySelector("#engAmount").value = data.amount || "";
+    right.querySelector("#engNotes").value =
+      (st2.engNotesByWave && st2.engNotesByWave[currentEngWave]) || "";
   });
 });
 
