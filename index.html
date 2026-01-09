@@ -1183,9 +1183,30 @@ const progressionVsN1 =
 
       // ✅ menu saison - update local sans recharger toute la page
         right.querySelectorAll("button[data-fl-season]").forEach(btn => {
-          btn.addEventListener("click", () => {
+          btn.addEventListener("click", (e) => {
+            e.preventDefault();
+            e.stopPropagation();
             currentFlSeason = btn.dataset.flSeason;
-            updateSeasonForm(currentStore.id);
+            
+            // Met à jour visuellement les boutons
+            right.querySelectorAll("button[data-fl-season]").forEach(b => {
+              b.classList.remove("active");
+            });
+            btn.classList.add("active");
+            
+            // Met à jour le formulaire
+            const st = getStoreState(currentStore.id);
+            const data = st.flBySeason?.[currentFlSeason] || { ordered: "", amount: "", plan: "" };
+            
+            const orderedSel = right.querySelector("#seasonOrdered");
+            const amountInp = right.querySelector("#seasonAmount");
+            const planTa = right.querySelector("#seasonPlan");
+            const seasonLabel = right.querySelector("#currentSeasonLabel");
+            
+            if (orderedSel) orderedSel.value = data.ordered || "";
+            if (amountInp) amountInp.value = data.amount || "";
+            if (planTa) planTa.value = data.plan || "";
+            if (seasonLabel) seasonLabel.textContent = currentFlSeason;
           });
         });
         
