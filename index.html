@@ -1037,134 +1037,135 @@ renderFruitsLegumesTab(content, stores, currentStore);
     }
 
     /********* ONGLET 1 : MAGASINS *********/
-    function renderStoresTab(container, stores, currentStore) {
-      const left = document.createElement("div");
-      const right = document.createElement("div");
+   function renderStoresTab(container, stores, currentStore) {
+  const left = document.createElement("div");
+  const right = document.createElement("div");
 
-      const filtered = stores.filter(s =>
-        s.name.toLowerCase().includes((currentSearch || "").toLowerCase())
-      );
+  /* ================= LEFT : TABLE MAGASINS ================= */
+  left.innerHTML = `
+    <div>
+      <div style="font-size:13px;font-weight:600;">Magasins · Vue CA</div>
+      <div class="subtext">Clique sur un magasin pour voir le détail.</div>
+    </div>
 
-      left.innerHTML = `
-        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
-          <div>
-            <div style="font-size:13px;font-weight:600;">Magasins · Vue CA</div>
-            <div class="subtext">Recherche par nom + CA 2024.</div>
-          </div>
-        </div>
-        <div class="search-row">
-          <input class="search-input" id="searchInput" placeholder="Rechercher un magasin..." value="${currentSearch || ""}" />
-        </div>
-        <table>
-          <thead>
-            <tr>
-              <th>Magasin</th>
-             <th>CA 2025</th>
-             <th>Visites</th>
+    <table>
+      <thead>
+        <tr>
+          <th>Magasin</th>
+          <th>CA 2025</th>
+          <th>Visites</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${stores.map(s => {
+          const visitsCount = getStoreState(s.id).visits.length;
+          return `
+            <tr data-id="${s.id}">
+              <td>${s.name}</td>
+              <td>${formatNumber(s.ca2024)} €</td>
+              <td>${visitsCount}</td>
             </tr>
-          </thead>
-          <tbody>
-            ${filtered.map(s => {
-  const visitsCount = (getStoreState(s.id).visits || []).length;
+          `;
+        }).join("")}
+      </tbody>
+    </table>
+  `;
 
-  return `
-              <tr data-id="${s.id}">
-                <td>${s.name}</td>
-                <td>${formatNumber(s.ca2024)} €</td>
-                <td>${visitsCount}</td>
-              </tr>
-           `;
-}).join("")}
-          </tbody>
-        </table>
-      `;
-
-      const input = left.querySelector("#searchInput");
-      left.querySelectorAll("tbody tr").forEach(tr => {
-        tr.addEventListener("click", () => {
-          currentStoreId = tr.dataset.id;
-          renderApp();
-        });
-      });
-
-      if (currentStore) {
-        const st = getStoreState(currentStore.id);
-        const engagedCount = WAVES.filter(w => st.waves[w.id] === "Engagé").length;
-
-        const flCommande = st.flCommande || "NC";
-let flTotalStore = computeFLActualTotal(currentStore.id);
-
-        right.innerHTML = `
-          <div style="font-size:13px;font-weight:600;">${currentStore.name}</div>
-          <div class="subtext">Résumé magasin : CA, F&L (été/total), engagement.</div>
-
-          <div style="margin-top:10px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;">
-            <div class="kpi-card" style="padding:8px 10px;">
-              <div class="kpi-label">CA 2025</div>
-              <div class="kpi-value" style="font-size:15px;">${formatNumber(currentStore.ca2024)} €</div>
-            </div>
-            <div class="kpi-card" style="padding:8px 10px;">
-              <div class="kpi-label">Vagues engagées</div>
-              <div class="kpi-value" style="font-size:15px;">${engagedCount}</div>
-            </div>
-            <div class="kpi-card" style="padding:8px 10px;">
-              <div class="kpi-label">Commande F&L</div>
-              <div class="kpi-value">${flCommande}</div>
-            </div>
-            <div class="kpi-card" style="padding:8px 10px;">
-              <div class="kpi-label">Total montant actuel F&L</div>
-              <div class="kpi-value" style="font-size:15px;">${euro(flTotalStore)}</div>
-            </div>
-          </div>
-
-          <div style="margin-top:10px;font-size:12px;">
-            <div style="font-weight:600;margin-bottom:4px;">Commande engagement ?</div>
-            <div>${st.buysEng || '<span class="subtext">Non renseigné</span>'}</div>
-          </div>
-          <div class="card" style="margin-top:10px;padding:12px;">
-  <div style="font-size:13px;font-weight:600;">Visites terrain</div>
-
-  <div style="margin-top:6px;font-size:12px;">
-    ${
-      st.visits.length
-        ? st.visits
-            .slice()
-            .reverse()
-            .map(d => `• ${new Date(d).toLocaleDateString("fr-FR")}`)
-            .join("<br>")
-        : '<span class="subtext">Aucune visite renseignée</span>'
-    }
-  </div>
-
-  <button id="addVisitBtn" style="margin-top:8px;">
-    + Ajouter une visite aujourd’hui
-  </button>
-</div>
-
-    `;
-        const addBtn = right.querySelector("#addVisitBtn");
-if (addBtn) {
-  addBtn.addEventListener("click", () => {
-    const st2 = getStoreState(currentStore.id);
-    const today = new Date().toISOString().slice(0, 10);
-
-    // évite les doublons le même jour
-    if (!st2.visits.includes(today)) {
-      st2.visits.push(today);
-    }
-
-    saveStoreToSupabase(currentStore.id);
-    renderApp(); // met à jour la colonne + la liste
+  left.querySelectorAll("tbody tr").forEach(tr => {
+    tr.addEventListener("click", () => {
+      currentStoreId = tr.dataset.id;
+      renderApp();
+    });
   });
-}
 
-      } else {
-        right.innerHTML = '<div class="subtext">Sélectionne un magasin dans la liste.</div>';
+  /* ================= RIGHT : DÉTAIL MAGASIN ================= */
+  if (!currentStore) {
+    right.innerHTML = `<div class="subtext">Sélectionne un magasin.</div>`;
+    container.appendChild(left);
+    container.appendChild(right);
+    return;
+  }
+
+  const st = getStoreState(currentStore.id);
+
+  right.innerHTML = `
+    <div style="font-size:13px;font-weight:600;">${currentStore.name}</div>
+
+    <div class="card" style="margin-top:10px;padding:12px;">
+      <div style="font-size:13px;font-weight:600;">Visites terrain</div>
+
+      <div style="margin-top:6px;">
+        ${
+          st.visits.length
+            ? st.visits
+                .slice()
+                .reverse()
+                .map((date, i) => {
+                  const idx = st.visits.length - 1 - i;
+                  return `
+                    <div style="display:flex;gap:6px;margin-bottom:4px;">
+                      <input type="date" value="${date}" data-edit-visit="${idx}" />
+                      <button class="secondary" data-delete-visit="${idx}">🗑️</button>
+                    </div>
+                  `;
+                })
+                .join("")
+            : `<span class="subtext">Aucune visite renseignée</span>`
+        }
+      </div>
+
+      <button id="addVisitBtn" style="margin-top:8px;">
+        + Ajouter une visite aujourd’hui
+      </button>
+    </div>
+  `;
+
+  /* ================= EVENTS ================= */
+
+  // ➕ Ajouter une visite
+  right.querySelector("#addVisitBtn").addEventListener("click", () => {
+    const today = new Date().toISOString().slice(0, 10);
+    if (!st.visits.includes(today)) {
+      st.visits.push(today);
+      saveStoreToSupabase(currentStore.id);
+      renderApp();
+    }
+  });
+
+  // ✏️ Modifier une visite
+  right.querySelectorAll("[data-edit-visit]").forEach(inp => {
+    inp.addEventListener("change", () => {
+      const index = Number(inp.dataset.editVisit);
+      const newDate = inp.value;
+
+      if (!newDate) return;
+      if (st.visits.includes(newDate)) {
+        alert("Une visite existe déjà à cette date.");
+        renderApp();
+        return;
       }
 
-      container.appendChild(left);
-      container.appendChild(right);
-    }
+      st.visits[index] = newDate;
+      saveStoreToSupabase(currentStore.id);
+      renderApp();
+    });
+  });
+
+  // 🗑️ Supprimer une visite
+  right.querySelectorAll("[data-delete-visit]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const index = Number(btn.dataset.deleteVisit);
+      if (!confirm("Supprimer cette visite ?")) return;
+
+      st.visits.splice(index, 1);
+      saveStoreToSupabase(currentStore.id);
+      renderApp();
+    });
+  });
+
+  container.appendChild(left);
+  container.appendChild(right);
+}
 
     /********* ONGLET 2 : FRUITS & LÉGUMES *********/
    function renderFruitsLegumesTab(container, stores, currentStore) {
@@ -1313,7 +1314,7 @@ const progressionVsN1 =
         if (!flInputsBound) {
   flInputsBound = true;
 
-  document.addEventListener("change", (e) => {
+  right.addEventListener("change", (e) => {
     if (e.target.id === "seasonOrdered") {
       const st2 = getStoreState(currentStoreId);
       st2.flBySeason[currentFlSeason].ordered = e.target.value;
@@ -1321,7 +1322,7 @@ const progressionVsN1 =
     }
   });
 
-  document.addEventListener("input", (e) => {
+  right.addEventListener("input", (e) => {
     if (e.target.id === "seasonAmount") {
       const st2 = getStoreState(currentStoreId);
       st2.flBySeason[currentFlSeason].amount = e.target.value;
