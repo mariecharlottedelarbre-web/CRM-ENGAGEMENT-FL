@@ -550,6 +550,22 @@ function updateFlKpisLive(storeId) {
     wave6: { name: "", amount: "" }
   };
 }
+    function normalizeEngagementByWave(raw) {
+  const base = defaultEngagementByWave();
+
+  if (!raw || typeof raw !== "object") return base;
+
+  Object.keys(base).forEach(waveId => {
+    if (!raw[waveId] || typeof raw[waveId] !== "object") {
+      raw[waveId] = { name: "", amount: "" };
+    } else {
+      raw[waveId].name = raw[waveId].name || "";
+      raw[waveId].amount = raw[waveId].amount || "";
+    }
+  });
+
+  return raw;
+}
    function updateSeasonForm(storeId) {
   const st = getStoreState(storeId);
   const data = st.flBySeason?.[currentFlSeason] || {
@@ -649,9 +665,11 @@ function updateFlKpisLive(storeId) {
   flBySeason: flNorm.seasons,
   flCommande: flNorm.meta?.commande || "",
   waves: row.waves ? safeJsonParse(row.waves, {}) : {},
-  engagementByWave: row.engagement_by_wave
-    ? safeJsonParse(row.engagement_by_wave, defaultEngagementByWave())
-    : defaultEngagementByWave(),
+  engagementByWave: normalizeEngagementByWave(
+  row.engagement_by_wave
+    ? safeJsonParse(row.engagement_by_wave, {})
+    : {}
+),
   buysEng: row.buys_eng || "",
   notesEng: row.notes_eng || ""
 };
@@ -1280,6 +1298,19 @@ const progressionVsN1 =
     }
 
     /********* ONGLET 3 : ENGAGEMENT *********/
+    function updateEngagementRow(storeId) {
+  const row = document.querySelector(`tr[data-id="${storeId}"]`);
+  if (!row) return;
+
+  const st = getStoreState(storeId);
+
+  const engagedCount = WAVES.filter(w => st.waves[w.id] === "Engagé").length;
+  const total = computeEngagementTotal(storeId);
+
+  const tds = row.querySelectorAll("td");
+  if (tds[1]) tds[1].textContent = engagedCount;
+  if (tds[2]) tds[2].textContent = euro(total);
+}
     function renderEngagementTab(container, stores, currentStore) {
       const left = document.createElement("div");
       const right = document.createElement("div");
@@ -1371,20 +1402,20 @@ const progressionVsN1 =
         `;
 
         // Statut de vague
+updateEngagementRow(currentStore.id);
+        
+// Statut de vague
 right.querySelectorAll("select[data-wave-status]").forEach(sel => {
   sel.addEventListener("change", () => {
     const waveId = sel.dataset.waveStatus;
     const st2 = getStoreState(currentStore.id);
+
     st2.waves[waveId] = sel.value;
+
+    // mise à jour immédiate du tableau
+    updateEngagementRow(currentStore.id);
+
     saveStoreToSupabase(currentStore.id);
-    const row = document.querySelector(`tr[data-id="${currentStore.id}"]`);
-if (row) {
-  const engagedCount = WAVES.filter(w => st2.waves[w.id] === "Engagé").length;
-  const total = computeEngagementTotal(currentStore.id);
-  const tds = row.querySelectorAll("td");
-  if (tds[1]) tds[1].textContent = engagedCount;
-  if (tds[2]) tds[2].textContent = euro(total);
-}
   });
 });
 
@@ -1406,28 +1437,23 @@ window._engNameSave[key] = setTimeout(() => {
   });
 });
 
-// Montant engagé
 right.querySelectorAll("input[data-wave-amount]").forEach(inp => {
   inp.addEventListener("input", () => {
     const waveId = inp.dataset.waveAmount;
     const st2 = getStoreState(currentStore.id);
+
     st2.engagementByWave[waveId].amount = inp.value;
 
+    // mise à jour immédiate du tableau de gauche
+    updateEngagementRow(currentStore.id);
+
     if (!window._engAmountSave) window._engAmountSave = {};
+    const key = `${currentStore.id}_${waveId}`;
 
-const key = `${currentStore.id}_${waveId}`;
-
-clearTimeout(window._engAmountSave[key]);
-window._engAmountSave[key] = setTimeout(() => {
-  saveStoreToSupabase(currentStore.id);
-
-  const row = document.querySelector(`tr[data-id="${currentStore.id}"]`);
-  if (row) {
-    const total = computeEngagementTotal(currentStore.id);
-    const tds = row.querySelectorAll("td");
-    if (tds[2]) tds[2].textContent = euro(total);
-  }
-}, 400);
+    clearTimeout(window._engAmountSave[key]);
+    window._engAmountSave[key] = setTimeout(() => {
+      saveStoreToSupabase(currentStore.id);
+    }, 400);
   });
 });
 
