@@ -1211,46 +1211,71 @@ const progressionVsN1 =
         });
         
 
-        // ✅ Attache les événements aux champs du formulaire INITIALEMENT
-        const attachFormListeners = () => {
-          const orderedSel = right.querySelector("#seasonOrdered");
-          const amountInp = right.querySelector("#seasonAmount");
-          const planTa = right.querySelector("#seasonPlan");
-          
-          if (orderedSel) {
-            orderedSel.addEventListener("change", () => {
-              const st2 = getStoreState(currentStore.id);
-              st2.flBySeason[currentFlSeason].ordered = orderedSel.value;
-              saveStoreToSupabase(currentStore.id);
+       // ✅ menu saison - update local sans recharger toute la page
+        right.querySelectorAll("button[data-fl-season]").forEach(btn => {
+          btn.addEventListener("click", (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            currentFlSeason = btn.dataset.flSeason;
+            
+            // Met à jour visuellement les boutons
+            right.querySelectorAll("button[data-fl-season]").forEach(b => {
+              b.classList.remove("active");
             });
-          }
-          
-          if (amountInp) {
-            let flSaveTimeout = null;
-            amountInp.addEventListener("input", () => {
-              const st2 = getStoreState(currentStore.id);
-              st2.flBySeason[currentFlSeason].amount = amountInp.value;
-              updateFlKpisLive(currentStore.id);
-              clearTimeout(flSaveTimeout);
-              flSaveTimeout = setTimeout(() => {
-                saveStoreToSupabase(currentStore.id);
-              }, 400);
-            });
-          }
-          
-          if (planTa) {
-            planTa.addEventListener("input", () => {
-              const st2 = getStoreState(currentStore.id);
-              if (!st2.flBySeason) st2.flBySeason = defaultFlBySeason();
-              if (!st2.flBySeason[currentFlSeason]) st2.flBySeason[currentFlSeason] = { ordered:"", amount:"", plan:"" };
-              st2.flBySeason[currentFlSeason].plan = planTa.value;
-              saveStoreToSupabase(currentStore.id);
-            });
-          }
-        };
+            btn.classList.add("active");
+            
+            // Met à jour le formulaire
+            const st = getStoreState(currentStore.id);
+            const data = st.flBySeason?.[currentFlSeason] || { ordered: "", amount: "", plan: "" };
+            
+            const orderedSel = right.querySelector("#seasonOrdered");
+            const amountInp = right.querySelector("#seasonAmount");
+            const planTa = right.querySelector("#seasonPlan");
+            const seasonLabel = right.querySelector("#currentSeasonLabel");
+            
+            if (orderedSel) orderedSel.value = data.ordered || "";
+            if (amountInp) amountInp.value = data.amount || "";
+            if (planTa) planTa.value = data.plan || "";
+            if (seasonLabel) seasonLabel.textContent = currentFlSeason;
+          });
+        });
         
-        // Attache les listeners au chargement initial
-        attachFormListeners();
+        // ✅ Les événements qui écoutent les changements des champs
+        const orderedSel = right.querySelector("#seasonOrdered");
+        const amountInp = right.querySelector("#seasonAmount");
+        const planTa = right.querySelector("#seasonPlan");
+        
+        if (orderedSel) {
+          orderedSel.addEventListener("change", () => {
+            const st2 = getStoreState(currentStore.id);
+            st2.flBySeason[currentFlSeason].ordered = orderedSel.value;
+            saveStoreToSupabase(currentStore.id);
+          });
+        }
+        
+        if (amountInp) {
+          let flSaveTimeout = null;
+          amountInp.addEventListener("input", () => {
+            const st2 = getStoreState(currentStore.id);
+            st2.flBySeason[currentFlSeason].amount = amountInp.value;
+            updateFlKpisLive(currentStore.id);
+            clearTimeout(flSaveTimeout);
+            flSaveTimeout = setTimeout(() => {
+              saveStoreToSupabase(currentStore.id);
+            }, 400);
+          });
+        }
+        
+        if (planTa) {
+          planTa.addEventListener("input", () => {
+            const st2 = getStoreState(currentStore.id);
+            if (!st2.flBySeason) st2.flBySeason = defaultFlBySeason();
+            if (!st2.flBySeason[currentFlSeason]) st2.flBySeason[currentFlSeason] = { ordered:"", amount:"", plan:"" };
+            st2.flBySeason[currentFlSeason].plan = planTa.value;
+            saveStoreToSupabase(currentStore.id);
+          });
+        }
+        
 
       } else {
         right.innerHTML = '<div class="subtext">Sélectionne un magasin dans la liste.</div>';
