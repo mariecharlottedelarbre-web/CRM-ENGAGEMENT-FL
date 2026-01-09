@@ -1452,8 +1452,9 @@ const progressionVsN1 =
         <div style="font-size:13px;font-weight:600;">Vagues</div>
         <div class="tabs">
           ${WAVES.map(w => `
-            <button class="tab-btn ${currentEngWave === w.id ? "active" : ""}"
-                    data-eng-wave="${w.id}">
+            <button type="button"
+        class="tab-btn ${currentEngWave === w.id ? "active" : ""}"
+        data-eng-wave="${w.id}">
               ${w.label}
             </button>
           `).join("")}
@@ -1484,42 +1485,60 @@ const progressionVsN1 =
     </div>
   `;
 
-  /* ================= EVENTS ================= */
+ /* ================= EVENTS ================= */
 
-  // menu vagues
-  right.querySelectorAll("[data-eng-wave]").forEach(btn => {
-    btn.addEventListener("click", () => {
-      currentEngWave = btn.dataset.engWave;
-      renderApp();
-    });
+// menu vagues
+right.querySelectorAll("[data-eng-wave]").forEach(btn => {
+  btn.addEventListener("click", e => {
+    e.preventDefault();
+    currentEngWave = btn.dataset.engWave;
+    renderEngagementTab(container, stores, currentStore);
   });
+});
 
-  // statut
-  right.querySelector("#engStatus").addEventListener("change", e => {
-    st.waves[currentEngWave] = e.target.value;
-    updateEngagementRow(currentStore.id);
+// statut
+right.querySelector("#engStatus").addEventListener("change", e => {
+  st.waves[currentEngWave] = e.target.value;
+  updateEngagementRow(currentStore.id);
+
+  clearTimeout(window._engSaveTimeout);
+  window._engSaveTimeout = setTimeout(() => {
     saveStoreToSupabase(currentStore.id);
-  });
+  }, 300);
+});
 
-  // nom
-  right.querySelector("#engName").addEventListener("input", e => {
-    st.engagementByWave[currentEngWave].name = e.target.value;
-    saveStoreToSupabase(currentStore.id);
-  });
+// nom
+right.querySelector("#engName").addEventListener("input", e => {
+  st.engagementByWave[currentEngWave].name = e.target.value;
 
-  // montant
-  right.querySelector("#engAmount").addEventListener("input", e => {
-    st.engagementByWave[currentEngWave].amount = e.target.value;
-    updateEngagementRow(currentStore.id);
+  clearTimeout(window._engSaveTimeout);
+  window._engSaveTimeout = setTimeout(() => {
     saveStoreToSupabase(currentStore.id);
-  });
+  }, 300);
+});
 
-  // notes par vague
-  right.querySelector("#engNotes").addEventListener("input", e => {
-    if (!st.engNotesByWave) st.engNotesByWave = {};
-    st.engNotesByWave[currentEngWave] = e.target.value;
+// montant
+right.querySelector("#engAmount").addEventListener("input", e => {
+  st.engagementByWave[currentEngWave].amount = e.target.value;
+  updateEngagementRow(currentStore.id);
+
+  clearTimeout(window._engSaveTimeout);
+  window._engSaveTimeout = setTimeout(() => {
     saveStoreToSupabase(currentStore.id);
-  });
+  }, 300);
+});
+
+// notes
+right.querySelector("#engNotes").addEventListener("input", e => {
+  if (!st.engNotesByWave) st.engNotesByWave = {};
+  st.engNotesByWave[currentEngWave] = e.target.value;
+
+  clearTimeout(window._engSaveTimeout);
+  window._engSaveTimeout = setTimeout(() => {
+    saveStoreToSupabase(currentStore.id);
+  }, 300);
+});
+
 
   container.appendChild(left);
   container.appendChild(right);
