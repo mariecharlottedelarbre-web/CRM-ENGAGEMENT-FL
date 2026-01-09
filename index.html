@@ -467,7 +467,14 @@
   if (!t || t <= 0) return "—";
   return Math.round((a / t) * 100) + " %";
 }
+function defaultVisits() {
+  return [];
+}
 
+function normalizeVisits(raw) {
+  if (Array.isArray(raw)) return raw;
+  return [];
+}
 /* ================== LIVE KPI UPDATE ================== */
 function updateFlKpisLive(storeId) {
   // total actuel magasin
@@ -672,11 +679,9 @@ function updateFlKpisLive(storeId) {
 STATE[row.id] = {
   flBySeason: flNorm.seasons,
   flCommande: flNorm.meta?.commande || "",
-  waves:
-  typeof row.waves === "object" && row.waves !== null
-    ? row.waves
-    : safeJsonParse(row.waves || "{}", {}),
+  waves: typeof row.waves === "object" && row.waves !== null ? row.waves : {},
   engagementByWave: normalizeEngagementByWave(rawEng),
+  visits: normalizeVisits(row.visits),
   buysEng: row.buys_eng || "",
   notesEng: row.notes_eng || ""
 };
@@ -686,17 +691,19 @@ STATE[row.id] = {
    function getStoreState(id) {
   if (!STATE[id]) {
     STATE[id] = {
-      flBySeason: defaultFlBySeason(),
-      flCommande: "",
-      waves: {},
-      engagementByWave: defaultEngagementByWave(),
-      buysEng: "",
-      notesEng: ""
-    };
+  flBySeason: defaultFlBySeason(),
+  flCommande: "",
+  waves: {},
+  engagementByWave: defaultEngagementByWave(),
+  visits: [],
+  buysEng: "",
+  notesEng: ""
+};
   } else {
     if (!STATE[id].flBySeason) STATE[id].flBySeason = defaultFlBySeason();
     if (!STATE[id].engagementByWave) STATE[id].engagementByWave = defaultEngagementByWave();
     if (STATE[id].flCommande === undefined) STATE[id].flCommande = "";
+    if (!STATE[id].visits) STATE[id].visits = [];
   }
   return STATE[id];
 }
@@ -714,7 +721,8 @@ STATE[row.id] = {
   id,
   fl_by_season: JSON.stringify(flPayload),
   waves: st.waves || {},
-  engagement_by_wave: st.engagementByWave || defaultEngagementByWave(),
+  engagement_by_wave: st.engagementByWave || {},
+  visits: st.visits || [],
   buys_eng: st.buysEng || "",
   notes_eng: st.notesEng || ""
 };
@@ -1052,15 +1060,21 @@ renderFruitsLegumesTab(content, stores, currentStore);
             <tr>
               <th>Magasin</th>
              <th>CA 2025</th>
+             <th>Visites</th>
             </tr>
           </thead>
           <tbody>
-            ${filtered.map(s => `
+            ${filtered.map(s => {
+  const visitsCount = (getStoreState(s.id).visits || []).length;
+
+  return `
               <tr data-id="${s.id}">
                 <td>${s.name}</td>
                 <td>${formatNumber(s.ca2024)} €</td>
+                <td>${visitsCount}</td>
               </tr>
-            `).join("")}
+           `;
+}).join("")}
           </tbody>
         </table>
       `;
@@ -1107,7 +1121,43 @@ let flTotalStore = computeFLActualTotal(currentStore.id);
             <div style="font-weight:600;margin-bottom:4px;">Commande engagement ?</div>
             <div>${st.buysEng || '<span class="subtext">Non renseigné</span>'}</div>
           </div>
-        `;
+          <div class="card" style="margin-top:10px;padding:12px;">
+  <div style="font-size:13px;font-weight:600;">Visites terrain</div>
+
+  <div style="margin-top:6px;font-size:12px;">
+    ${
+      st.visits.length
+        ? st.visits
+            .slice()
+            .reverse()
+            .map(d => `• ${new Date(d).toLocaleDateString("fr-FR")}`)
+            .join("<br>")
+        : '<span class="subtext">Aucune visite renseignée</span>'
+    }
+  </div>
+
+  <button id="addVisitBtn" style="margin-top:8px;">
+    + Ajouter une visite aujourd’hui
+  </button>
+</div>
+
+    `;
+        const addBtn = right.querySelector("#addVisitBtn");
+if (addBtn) {
+  addBtn.addEventListener("click", () => {
+    const st2 = getStoreState(currentStore.id);
+    const today = new Date().toISOString().slice(0, 10);
+
+    // évite les doublons le même jour
+    if (!st2.visits.includes(today)) {
+      st2.visits.push(today);
+    }
+
+    saveStoreToSupabase(currentStore.id);
+    renderApp(); // met à jour la colonne + la liste
+  });
+}
+
       } else {
         right.innerHTML = '<div class="subtext">Sélectionne un magasin dans la liste.</div>';
       }
