@@ -658,18 +658,25 @@ function updateFlKpisLive(storeId) {
       STATE = {};
       (data || []).forEach(row => {
         // ✅ On récupère fl_by_season (ancienne ou nouvelle structure), puis on normalise
-        const rawFl = row.fl_by_season ? safeJsonParse(row.fl_by_season, defaultFlBySeason()) : defaultFlBySeason();
+        const rawFl = row.fl_by_season
+  ? safeJsonParse(row.fl_by_season, null)
+  : null;
+
         const flNorm = normalizeFlData(rawFl);
 
-        STATE[row.id] = {
+        const rawEng =
+  typeof row.engagement_by_wave === "object" && row.engagement_by_wave !== null
+    ? row.engagement_by_wave
+    : {};
+
+STATE[row.id] = {
   flBySeason: flNorm.seasons,
   flCommande: flNorm.meta?.commande || "",
-  waves: row.waves ? safeJsonParse(row.waves, {}) : {},
-  engagementByWave: normalizeEngagementByWave(
-  row.engagement_by_wave
-    ? safeJsonParse(row.engagement_by_wave, {})
-    : {}
-),
+  waves:
+  typeof row.waves === "object" && row.waves !== null
+    ? row.waves
+    : safeJsonParse(row.waves || "{}", {}),
+  engagementByWave: normalizeEngagementByWave(rawEng),
   buysEng: row.buys_eng || "",
   notesEng: row.notes_eng || ""
 };
@@ -706,8 +713,8 @@ function updateFlKpisLive(storeId) {
       const payload = {
   id,
   fl_by_season: JSON.stringify(flPayload),
-  waves: JSON.stringify(st.waves || {}),
-  engagement_by_wave: JSON.stringify(st.engagementByWave || defaultEngagementByWave()),
+  waves: st.waves || {},
+  engagement_by_wave: st.engagementByWave || defaultEngagementByWave(),
   buys_eng: st.buysEng || "",
   notes_eng: st.notesEng || ""
 };
