@@ -737,8 +737,8 @@ eng_notes_by_wave: JSON.stringify(st.engNotesByWave || {}),
   notes_eng: st.notesEng || ""
 };
 
-      const { error } = await sb.from("store_state").upsert(payload);
-      if (error) console.error("Erreur de sauvegarde Supabase :", error);
+      const { data, error } = await sb.from("store_state").upsert(payload).select();
+console.log("SUPABASE SAVE", { data, error });
     }
 
     /********* VARIABLES UI *********/
