@@ -740,6 +740,15 @@ eng_notes_by_wave: JSON.stringify(st.engNotesByWave || {}),
       const { data, error } = await sb.from("store_state").upsert(payload).select();
 console.log("SUPABASE SAVE", { data, error });
     }
+    let SAVE_TIMEOUT = null;
+
+function saveWithDebounce(storeId) {
+  clearTimeout(SAVE_TIMEOUT);
+  SAVE_TIMEOUT = setTimeout(() => {
+    saveStoreToSupabase(storeId);
+  }, 500);
+}
+
 
     /********* VARIABLES UI *********/
     const root = document.getElementById("root");
@@ -1016,7 +1025,7 @@ console.log("SUPABASE SAVE", { data, error });
       } else if (currentTab === "list") {
         renderStoresTab(content, stores, currentStore);
       } else if (currentTab === "fl") {
-        flInputsBound = false;
+      
 renderFruitsLegumesTab(content, stores, currentStore);
       } else if (currentTab === "eng") {
         renderEngagementTab(content, stores, currentStore);
@@ -1324,20 +1333,19 @@ const progressionVsN1 =
         const amountInp = right.querySelector("#seasonAmount");
         const planTa = right.querySelector("#seasonPlan");
         orderedSel.addEventListener("change", () => {
-  const st2 = getStoreState(currentStoreId);
+  const st2 = getStoreState(storeIdFixe);
   st2.flBySeason[currentFlSeason].ordered = orderedSel.value;
   saveWithDebounce(storeIdFixe);
 });
 
 amountInp.addEventListener("input", () => {
-  const st2 = getStoreState(currentStoreId);
+  const st2 = getStoreState(storeIdFixe);
   st2.flBySeason[currentFlSeason].amount = amountInp.value;
-  updateFlKpisLive(currentStoreId);
+  updateFlKpisLive(storeIdFixe);
   saveWithDebounce(storeIdFixe);
 });
-
 planTa.addEventListener("input", () => {
-  const st2 = getStoreState(currentStoreId);
+  const st2 = getStoreState(storeIdFixe);
   st2.flBySeason[currentFlSeason].plan = planTa.value;
   saveWithDebounce(storeIdFixe);
 });
