@@ -215,7 +215,7 @@
   <script>
     // --- Connexion Supabase (partage CRM) ---
     const SUPABASE_URL = "https://sytpnqayyyjdjhojafyi.supabase.co";
-    const SUPABASE_KEY = "sb_publishable_5ernJ3tbCW3XnAdx983E8A_ASPSKBVx";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...";
     const { createClient } = supabase;
     const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -740,11 +740,11 @@ eng_notes_by_wave: JSON.stringify(st.engNotesByWave || {}),
       const { data, error } = await sb.from("store_state").upsert(payload).select();
 console.log("SUPABASE SAVE", { data, error });
     }
-    let SAVE_TIMEOUT = null;
+   const SAVE_TIMEOUTS = {};
 
 function saveWithDebounce(storeId) {
-  clearTimeout(SAVE_TIMEOUT);
-  SAVE_TIMEOUT = setTimeout(() => {
+  clearTimeout(SAVE_TIMEOUTS[storeId]);
+  SAVE_TIMEOUTS[storeId] = setTimeout(() => {
     saveStoreToSupabase(storeId);
   }, 500);
 }
@@ -1264,6 +1264,7 @@ renderFruitsLegumesTab(content, stores, currentStore);
       if (currentStore) {
         const st = getStoreState(currentStore.id);
         const storeIdFixe = currentStore.id;
+        window.__flStoreIdFixe = storeIdFixe;
 
         const totalActuelStore = computeFLActualTotal(currentStore.id);
         const total2025Store = getFlTarget(currentStore.id);
@@ -1506,48 +1507,31 @@ right.querySelectorAll("[data-eng-wave]").forEach(btn => {
       (st2.engNotesByWave && st2.engNotesByWave[currentEngWave]) || "";
   });
 });
-
 // statut
 right.querySelector("#engStatus").addEventListener("change", e => {
   st.waves[currentEngWave] = e.target.value;
   updateEngagementRow(currentStore.id);
-
-  clearTimeout(window._engSaveTimeout);
-  window._engSaveTimeout = setTimeout(() => {
-    saveStoreToSupabase(currentStore.id);
-  }, 300);
+  saveWithDebounce(currentStore.id);
 });
 
 // nom
 right.querySelector("#engName").addEventListener("input", e => {
   st.engagementByWave[currentEngWave].name = e.target.value;
-
-  clearTimeout(window._engSaveTimeout);
-  window._engSaveTimeout = setTimeout(() => {
-    saveStoreToSupabase(currentStore.id);
-  }, 300);
+  saveWithDebounce(currentStore.id);
 });
 
 // montant
 right.querySelector("#engAmount").addEventListener("input", e => {
   st.engagementByWave[currentEngWave].amount = e.target.value;
   updateEngagementRow(currentStore.id);
-
-  clearTimeout(window._engSaveTimeout);
-  window._engSaveTimeout = setTimeout(() => {
-    saveStoreToSupabase(currentStore.id);
-  }, 300);
+  saveWithDebounce(currentStore.id);
 });
 
 // notes
 right.querySelector("#engNotes").addEventListener("input", e => {
   if (!st.engNotesByWave) st.engNotesByWave = {};
   st.engNotesByWave[currentEngWave] = e.target.value;
-
-  clearTimeout(window._engSaveTimeout);
-  window._engSaveTimeout = setTimeout(() => {
-    saveStoreToSupabase(currentStore.id);
-  }, 300);
+  saveWithDebounce(currentStore.id);
 });
 
 
