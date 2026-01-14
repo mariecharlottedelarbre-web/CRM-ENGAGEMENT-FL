@@ -1339,13 +1339,13 @@ const progressionVsN1 =
   saveWithDebounce(storeIdFixe);
 });
 
-amountInp.addEventListener("input", () => {
+amountInp.addEventListener("blur", () => {
   const st2 = getStoreState(storeIdFixe);
   st2.flBySeason[currentFlSeason].amount = amountInp.value;
   updateFlKpisLive(storeIdFixe);
   saveWithDebounce(storeIdFixe);
 });
-planTa.addEventListener("input", () => {
+planTa.addEventListener("blur", () => {
   const st2 = getStoreState(storeIdFixe);
   st2.flBySeason[currentFlSeason].plan = planTa.value;
   saveWithDebounce(storeIdFixe);
@@ -1521,7 +1521,7 @@ right.querySelector("#engName").addEventListener("input", e => {
 });
 
 // montant
-right.querySelector("#engAmount").addEventListener("input", e => {
+right.querySelector("#engAmount").addEventListener("blur", e => {
   st.engagementByWave[currentEngWave].amount = e.target.value;
   updateEngagementRow(currentStore.id);
   saveWithDebounce(currentStore.id);
