@@ -215,7 +215,7 @@
   <script>
     // --- Connexion Supabase (partage CRM) ---
     const SUPABASE_URL = "https://sytpnqayyyjdjhojafyi.supabase.co";
-    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...";
+    const SUPABASE_KEY = "sb_publishable_5ernJ3tbCW3XnAdx983E8A_ASPSKBVx";
     const { createClient } = supabase;
     const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -718,33 +718,36 @@ STATE[row.id] = {
 }
 
     async function saveStoreToSupabase(id) {
-      const st = getStoreState(id);
+  const st = getStoreState(id);
 
-      // ✅ On sauvegarde fl_by_season avec la nouvelle structure (meta + seasons)
-      const flPayload = {
-        meta: { commande: st.flCommande || "" },
-        seasons: st.flBySeason || defaultFlBySeason()
-      };
-const payload = {
-  id,
-  fl_by_season: flPayload,
-  waves: st.waves || {},
-  engagement_by_wave: st.engagementByWave || {},
-  eng_notes_by_wave: st.engNotesByWave || {},
-  visits: st.visits || [],
-  buys_eng: st.buysEng || "",
-  notes_eng: st.notesEng || ""
-};
-      const { data, error } = await sb.from("store_state").upsert(payload).select();
-console.log("SUPABASE SAVE", { data, error });
-    }
-   const SAVE_TIMEOUTS = {};
+  // Préparation du paquet de données
+  const flPayload = {
+    meta: { commande: st.flCommande || "" },
+    seasons: st.flBySeason || defaultFlBySeason()
+  };
 
-function saveWithDebounce(storeId) {
-  clearTimeout(SAVE_TIMEOUTS[storeId]);
-  SAVE_TIMEOUTS[storeId] = setTimeout(() => {
-    saveStoreToSupabase(storeId);
-  }, 500);
+  const payload = {
+    id: id, 
+    fl_by_season: flPayload,
+    waves: st.waves || {},
+    engagement_by_wave: st.engagementByWave || {},
+    // Ajout du 's' pour correspondre exactement à ta capture d'écran Supabase
+    eng_notes_by_waves: st.engNotesByWave || {}, 
+    visits: st.visits || [],
+    buys_eng: st.buysEng || "",
+    notes_eng: st.notesEng || ""
+  };
+
+  // Envoi à Supabase
+  const { data, error } = await sb
+    .from("store_state")
+    .upsert(payload, { onConflict: 'id' }); // Force la mise à jour si l'ID existe déjà
+
+  if (error) {
+    console.error("❌ Erreur de sauvegarde Supabase :", error.message);
+  } else {
+    console.log("✅ Données sauvegardées pour :", id);
+  }
 }
 
 
