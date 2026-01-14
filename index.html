@@ -725,18 +725,16 @@ STATE[row.id] = {
         meta: { commande: st.flCommande || "" },
         seasons: st.flBySeason || defaultFlBySeason()
       };
-
-      const payload = {
+const payload = {
   id,
-  fl_by_season: JSON.stringify(flPayload),
- waves: JSON.stringify(st.waves || {}),
-engagement_by_wave: JSON.stringify(st.engagementByWave || {}),
-eng_notes_by_wave: JSON.stringify(st.engNotesByWave || {}),
+  fl_by_season: flPayload,
+  waves: st.waves || {},
+  engagement_by_wave: st.engagementByWave || {},
+  eng_notes_by_wave: st.engNotesByWave || {},
   visits: st.visits || [],
   buys_eng: st.buysEng || "",
   notes_eng: st.notesEng || ""
 };
-
       const { data, error } = await sb.from("store_state").upsert(payload).select();
 console.log("SUPABASE SAVE", { data, error });
     }
