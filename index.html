@@ -752,7 +752,6 @@ console.log("SUPABASE SAVE", { data, error });
 
     // ✅ menu saisons (onglet F&L à droite)
     let currentFlSeason = "Printemps";
-    let flInputsBound = false;
     document.addEventListener("click", (e) => {
   const btn = e.target.closest("button[data-fl-season]");
   if (!btn) return;
@@ -1255,6 +1254,7 @@ renderFruitsLegumesTab(content, stores, currentStore);
 
       if (currentStore) {
         const st = getStoreState(currentStore.id);
+        const storeIdFixe = currentStore.id;
 
         const totalActuelStore = computeFLActualTotal(currentStore.id);
         const total2025Store = getFlTarget(currentStore.id);
@@ -1323,41 +1323,24 @@ const progressionVsN1 =
         const orderedSel = right.querySelector("#seasonOrdered");
         const amountInp = right.querySelector("#seasonAmount");
         const planTa = right.querySelector("#seasonPlan");
-        
-        if (!flInputsBound) {
-  flInputsBound = true;
+        orderedSel.addEventListener("change", () => {
+  const st2 = getStoreState(currentStoreId);
+  st2.flBySeason[currentFlSeason].ordered = orderedSel.value;
+  saveWithDebounce(storeIdFixe);
+});
 
-  right.addEventListener("change", (e) => {
-    if (e.target.id === "seasonOrdered") {
-      const st2 = getStoreState(currentStoreId);
-      st2.flBySeason[currentFlSeason].ordered = e.target.value;
-      saveStoreToSupabase(currentStoreId);
-    }
-  });
+amountInp.addEventListener("input", () => {
+  const st2 = getStoreState(currentStoreId);
+  st2.flBySeason[currentFlSeason].amount = amountInp.value;
+  updateFlKpisLive(currentStoreId);
+  saveWithDebounce(storeIdFixe);
+});
 
-  right.addEventListener("input", (e) => {
-    if (e.target.id === "seasonAmount") {
-      const st2 = getStoreState(currentStoreId);
-      st2.flBySeason[currentFlSeason].amount = e.target.value;
-      updateFlKpisLive(currentStoreId);
-
-      clearTimeout(window._flSaveTimeout);
-      window._flSaveTimeout = setTimeout(() => {
-        saveStoreToSupabase(currentStoreId);
-      }, 400);
-    }
-
-    if (e.target.id === "seasonPlan") {
-      const st2 = getStoreState(currentStoreId);
-      st2.flBySeason[currentFlSeason].plan = e.target.value;
-
-      clearTimeout(window._flPlanTimeout);
-      window._flPlanTimeout = setTimeout(() => {
-        saveStoreToSupabase(currentStoreId);
-      }, 500);
-    }
-  });
-}
+planTa.addEventListener("input", () => {
+  const st2 = getStoreState(currentStoreId);
+  st2.flBySeason[currentFlSeason].plan = planTa.value;
+  saveWithDebounce(storeIdFixe);
+});
         
 
       } else {
