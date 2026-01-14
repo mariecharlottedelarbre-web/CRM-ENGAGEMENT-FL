@@ -726,17 +726,16 @@ STATE[row.id] = {
     seasons: st.flBySeason || defaultFlBySeason()
   };
 
-  const payload = {
-    id: id, 
-    fl_by_season: flPayload,
-    waves: st.waves || {},
-    engagement_by_wave: st.engagementByWave || {},
-    // Ajout du 's' pour correspondre exactement à ta capture d'écran Supabase
-    eng_notes_by_waves: st.engNotesByWave || {}, 
-    visits: st.visits || [],
-    buys_eng: st.buysEng || "",
-    notes_eng: st.notesEng || ""
-  };
+ const payload = {
+  id: id,
+  fl_by_season: flPayload,
+  waves: st.waves || {},
+  engagement_by_wave: st.engagementByWave || {},
+  eng_notes_by_waves: st.engNotesByWave || {}, // <-- Vérifie bien le "s" ici
+  visits: st.visits || [],
+  buys_eng: st.buysEng || "",
+  notes_eng: st.notesEng || ""
+};
 
   // Envoi à Supabase
   const { data, error } = await sb
