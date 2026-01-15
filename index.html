@@ -170,33 +170,6 @@
       align-items: flex-start;
     }
 
-    .waves-grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0,1fr));
-      gap: 8px;
-      margin-top: 8px;
-    }
-    .wave-card {
-      padding: 6px 8px;
-      border-radius: 10px;
-      background: rgba(15,23,42,0.96);
-      border: 1px solid rgba(55,65,81,0.9);
-      font-size: 11px;
-    }
-    .wave-title { font-weight: 600; margin-bottom: 4px; }
-
-    .search-row { margin-top: 6px; margin-bottom: 4px; }
-    .search-input {
-      width: 100%;
-      padding: 6px 10px;
-      border-radius: 999px;
-      border: 1px solid var(--border);
-      background: rgba(15,23,42,0.95);
-      color: var(--text);
-      font-size: 12px;
-    }
-    .search-input::placeholder { color: rgba(229,231,235,0.6); }
-
     @media (max-width: 900px) {
       .app-shell { flex-direction: column; }
       .sidebar { width: 100%; }
@@ -209,133 +182,113 @@
 <body>
   <div id="root" style="width:100%"></div>
 
-  <!-- 📡 Supabase JS -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <script>
-    // --- Connexion Supabase (partage CRM) ---
     const SUPABASE_URL = "https://sytpnqayyyjdjhojafyi.supabase.co";
-    const SUPABASE_KEY = "sb_publishable_5ernJ3tbCW3XnAdx983E8A_ASPSKBVx";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN5dHBucWF5eXlqZGpob2phZnlpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzY4NDk3MjksImV4cCI6MjA1MjQyNTcyOX0.Y8llqrW0qCF5xgDKNJtgL0l74vqtmVa3lbH2kYjSP5Q";
     const { createClient } = supabase;
     const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    /********* UTILISATEURS *********/
     const USERS = {
       admins: [
         { id: "admin-marie-charlotte", name: "Marie-Charlotte", role: "admin" },
-        { id: "admin-xavier",          name: "Xavier",          role: "admin" }
+        { id: "admin-xavier", name: "Xavier", role: "admin" }
       ],
       commerciaux: [
-        { id: "costanza-damien",      name: "COSTANZA Damien" },
-        { id: "besquent-dominique",   name: "BESQUENT Dominique" },
+        { id: "costanza-damien", name: "COSTANZA Damien" },
+        { id: "besquent-dominique", name: "BESQUENT Dominique" },
         { id: "hamparsoumiam-armand", name: "HAMPARSOUMIAN Armand" },
-        { id: "juif-olivier",         name: "JUIF Olivier" },
-        { id: "laurent-severine",     name: "LAURENT Séverine" },
-        { id: "michelet-yves",        name: "MICHELET Yves" },
-        { id: "aydogan-nevin",        name: "AYDOGAN Nevin" },
-        { id: "vernay-benoit",        name: "VERNAY Benoit" }
+        { id: "juif-olivier", name: "JUIF Olivier" },
+        { id: "laurent-severine", name: "LAURENT Séverine" },
+        { id: "michelet-yves", name: "MICHELET Yves" },
+        { id: "aydogan-nevin", name: "AYDOGAN Nevin" },
+        { id: "vernay-benoit", name: "VERNAY Benoit" }
       ]
     };
 
-    /********* MAGASINS *********/
     const STORES = [
-
-  /* ================= COSTANZA Damien ================= */
-  { id:"montpellier-delicie", name:"Montpellier Delicie", ca2024:503033, commercialId:"costanza-damien" },
-  { id:"moussac", name:"Moussac", ca2024:378503, commercialId:"costanza-damien" },
-  { id:"saint-jean-du-gard", name:"Saint Jean du Gard", ca2024:361924, commercialId:"costanza-damien" },
-  { id:"poulx-chenes", name:"Poulx Chênes", ca2024:308221, commercialId:"costanza-damien" },
-  { id:"lus-la-croix-haute", name:"Lus La Croix Haute", ca2024:308362, commercialId:"costanza-damien" },
-  { id:"valras-plage", name:"Valras-Plage", ca2024:172560, commercialId:"costanza-damien" },
-  { id:"marseille-st-antoin", name:"Marseille Saint Antoine", ca2024:160242, commercialId:"costanza-damien" },
-  { id:"vercheny", name:"Vercheny", ca2024:156344, commercialId:"costanza-damien" },
-  { id:"charols", name:"Charols", ca2024:162242, commercialId:"costanza-damien" },
-  { id:"suze-la-rousse", name:"Suze la Rousse", ca2024:142053, commercialId:"costanza-damien" },
-
-  /* ================= BESQUENT Dominique ================= */
-  { id:"colmars-les-alpes", name:"Colmars les Alpes", ca2024:799900, commercialId:"besquent-dominique" },
-  { id:"bargemon", name:"Bargemon", ca2024:719952, commercialId:"besquent-dominique" },
-  { id:"la-palud-verdon", name:"La Palud s/Verdon", ca2024:505004, commercialId:"besquent-dominique" },
-  { id:"moutiers-eglise", name:"Moutiers Église", ca2024:350261, commercialId:"besquent-dominique" },
-  { id:"callas", name:"Callas", ca2024:343055, commercialId:"besquent-dominique" },
-  { id:"frejus-anc-comb-afn", name:"Fréjus Anc Comb AFN", ca2024:336117, commercialId:"besquent-dominique" },
-  { id:"comps-artuby", name:"Comps s/Artuby", ca2024:317976, commercialId:"besquent-dominique" },
-  { id:"les-salles-verdon", name:"Les Salles sur Verdon", ca2024:316500, commercialId:"besquent-dominique" },
-  { id:"greoux-les-bains", name:"Gréoux-les-Bains", ca2024:305397, commercialId:"besquent-dominique" },
-  { id:"frejus-afrique-n3775", name:"Fréjus Afrique N3775", ca2024:291165, commercialId:"besquent-dominique" },
-
-  /* ================= HAMPARSOUMIAN Armand ================= */
-  { id:"apt-marchand", name:"Apt Marchand", ca2024:558971, commercialId:"hamparsoumiam-armand" },
-  { id:"calacussia", name:"Calacussia", ca2024:519365, commercialId:"hamparsoumiam-armand" },
-  { id:"ceillac-rue-ppl", name:"Ceillac Rue PPL", ca2024:332701, commercialId:"hamparsoumiam-armand" },
-  { id:"savines-le-lac", name:"Savines le Lac", ca2024:344729, commercialId:"hamparsoumiam-armand" },
-  { id:"l-ile-rousse", name:"L’Île Rousse", ca2024:301807, commercialId:"hamparsoumiam-armand" },
-  { id:"orcieres-merlette", name:"Orcières Merlette", ca2024:298214, commercialId:"hamparsoumiam-armand" },
-  { id:"ajaccio-napoleon", name:"Ajaccio Napoléon", ca2024:289735, commercialId:"hamparsoumiam-armand" },
-  { id:"tallard-dumont", name:"Tallard Dumont", ca2024:282726, commercialId:"hamparsoumiam-armand" },
-  { id:"petreto-bicchisano", name:"Petreto Bicchisano", ca2024:236013, commercialId:"hamparsoumiam-armand" },
-  { id:"vacqueyras", name:"Vacqueyras", ca2024:254074, commercialId:"hamparsoumiam-armand" },
-
-  /* ================= JUIF Olivier ================= */
-  { id:"guillaumes", name:"Guillaumes", ca2024:584678, commercialId:"juif-olivier" },
-  { id:"valdeblore", name:"Valdeblore", ca2024:463999, commercialId:"juif-olivier" },
-  { id:"st-etienne-tinee", name:"St Étienne de Tinée", ca2024:444197, commercialId:"juif-olivier" },
-  { id:"carces", name:"Carcès", ca2024:418646, commercialId:"juif-olivier" },
-  { id:"nice-e-dorves", name:"Nice E. d’Orves", ca2024:399883, commercialId:"juif-olivier" },
-  { id:"st-julien", name:"St Julien", ca2024:376184, commercialId:"juif-olivier" },
-  { id:"antibes-4-chemins", name:"Antibes 4 Chemins", ca2024:300493, commercialId:"juif-olivier" },
-  { id:"bormes-mimosas-plage", name:"Bormes les Mimosas Plage", ca2024:290531, commercialId:"juif-olivier" },
-  { id:"nice-thiers", name:"Nice Thiers", ca2024:232677, commercialId:"juif-olivier" },
-  { id:"peille-virounours", name:"Peille Virounours", ca2024:214091, commercialId:"juif-olivier" },
-
-  /* ================= LAURENT Séverine ================= */
-  { id:"varennes-st-sauveur", name:"Varennes St Sauveur", ca2024:329427, commercialId:"laurent-severine" },
-  { id:"besse-st-anastasie", name:"Besse St Anastasie", ca2024:249079, commercialId:"laurent-severine" },
-  { id:"belmont-loire", name:"Belmont de la Loire", ca2024:239901, commercialId:"laurent-severine" },
-  { id:"cunlhat-domaize", name:"Cunlhat Domaize", ca2024:227290, commercialId:"laurent-severine" },
-  { id:"branges-bourg", name:"Branges Bourg", ca2024:203375, commercialId:"laurent-severine" },
-  { id:"vernet-la-varenne", name:"Vernet la Varenne", ca2024:198285, commercialId:"laurent-severine" },
-  { id:"st-julien-la-vetre", name:"Saint Julien la Vêtre", ca2024:143331, commercialId:"laurent-severine" },
-  { id:"issy-l-eveque", name:"Issy l’Évêque", ca2024:120262, commercialId:"laurent-severine" },
-  { id:"lucenay-l-eveque", name:"Lucenay l’Évêque", ca2024:113586, commercialId:"laurent-severine" },
-  { id:"vollore-ville", name:"Vollore Ville", ca2024:103120, commercialId:"laurent-severine" },
-
-  /* ================= MICHELET Yves ================= */
-  { id:"monsols", name:"Monsols", ca2024:485466, commercialId:"michelet-yves" },
-  { id:"propieres", name:"Propières", ca2024:451599, commercialId:"michelet-yves" },
-  { id:"bessenay", name:"Bessenay", ca2024:295103, commercialId:"michelet-yves" },
-  { id:"legny-tarrets", name:"Légny Tarrets", ca2024:219820, commercialId:"michelet-yves" },
-  { id:"porte-pier-dor-ecla", name:"Porte Pier Dor Écla", ca2024:205801, commercialId:"michelet-yves" },
-  { id:"montanay-poype", name:"Montanay Poype", ca2024:198797, commercialId:"michelet-yves" },
-  { id:"leymant", name:"Leyment", ca2024:182849, commercialId:"michelet-yves" },
-  { id:"villeurbanne-blum", name:"Villeurbanne Blum", ca2024:166715, commercialId:"michelet-yves" },
-  { id:"nivigne-et-suran", name:"Nivigne et Suran", ca2024:152322, commercialId:"michelet-yves" },
-  { id:"lyon-croix-rousse", name:"Lyon Croix Rousse", ca2024:133155, commercialId:"michelet-yves" },
-
-  /* ================= AYDOGAN Nevin ================= */
-  { id:"virieu-lamartine", name:"Virieu Lamartine", ca2024:655986, commercialId:"aydogan-nevin" },
-  { id:"st-sorlin-d-arves", name:"St Sorlin d’Arves", ca2024:574774, commercialId:"aydogan-nevin" },
-  { id:"le-bourget-du-lac", name:"Le Bourget du Lac", ca2024:497771, commercialId:"aydogan-nevin" },
-  { id:"auris-oisans", name:"Auris en Oisans", ca2024:404916, commercialId:"aydogan-nevin" },
-  { id:"courchevel", name:"Courchevel", ca2024:407291, commercialId:"aydogan-nevin" },
-  { id:"macot-la-plagne", name:"Macot la Plagne", ca2024:357829, commercialId:"aydogan-nevin" },
-  { id:"scionzier-mt-blanc", name:"Scionzier Mt Blanc", ca2024:280341, commercialId:"aydogan-nevin" },
-  { id:"areches", name:"Arêches", ca2024:271143, commercialId:"aydogan-nevin" },
-  { id:"chapelle-d-abon", name:"Chapelle d’Abon", ca2024:245209, commercialId:"aydogan-nevin" },
-  { id:"monestiers-clermont", name:"Monestiers Clermont", ca2024:231951, commercialId:"aydogan-nevin" },
-
-  /* ================= VERNAY Benoit ================= */
-  { id:"vals-les-bains", name:"Vals les Bains", ca2024:553773, commercialId:"vernay-benoit" },
-  { id:"langogne-capucins", name:"Langogne Capucins", ca2024:370729, commercialId:"vernay-benoit" },
-  { id:"st-mamet-salvetat", name:"St Mamet la Salvetat", ca2024:337355, commercialId:"vernay-benoit" },
-  { id:"chadrac-pm", name:"Chadrac PM", ca2024:316194, commercialId:"vernay-benoit" },
-  { id:"st-fortunat", name:"St Fortunat", ca2024:311429, commercialId:"vernay-benoit" },
-  { id:"espaly-st-marcel", name:"Espaly St Marcel", ca2024:247376, commercialId:"vernay-benoit" },
-  { id:"colombier-le-jeune", name:"Colombier le Jeune", ca2024:240298, commercialId:"vernay-benoit" },
-  { id:"le-cheylard", name:"Le Cheylard", ca2024:197555, commercialId:"vernay-benoit" },
-  { id:"langeac-lafayette", name:"Langeac Lafayette", ca2024:196202, commercialId:"vernay-benoit" },
-  { id:"allanche", name:"Allanche", ca2024:168103, commercialId:"vernay-benoit" }
-];
+      { id:"montpellier-delicie", name:"Montpellier Delicie", ca2024:503033, commercialId:"costanza-damien" },
+      { id:"moussac", name:"Moussac", ca2024:378503, commercialId:"costanza-damien" },
+      { id:"saint-jean-du-gard", name:"Saint Jean du Gard", ca2024:361924, commercialId:"costanza-damien" },
+      { id:"poulx-chenes", name:"Poulx Chênes", ca2024:308221, commercialId:"costanza-damien" },
+      { id:"lus-la-croix-haute", name:"Lus La Croix Haute", ca2024:308362, commercialId:"costanza-damien" },
+      { id:"valras-plage", name:"Valras-Plage", ca2024:172560, commercialId:"costanza-damien" },
+      { id:"marseille-st-antoin", name:"Marseille Saint Antoine", ca2024:160242, commercialId:"costanza-damien" },
+      { id:"vercheny", name:"Vercheny", ca2024:156344, commercialId:"costanza-damien" },
+      { id:"charols", name:"Charols", ca2024:162242, commercialId:"costanza-damien" },
+      { id:"suze-la-rousse", name:"Suze la Rousse", ca2024:142053, commercialId:"costanza-damien" },
+      { id:"colmars-les-alpes", name:"Colmars les Alpes", ca2024:799900, commercialId:"besquent-dominique" },
+      { id:"bargemon", name:"Bargemon", ca2024:719952, commercialId:"besquent-dominique" },
+      { id:"la-palud-verdon", name:"La Palud s/Verdon", ca2024:505004, commercialId:"besquent-dominique" },
+      { id:"moutiers-eglise", name:"Moutiers Église", ca2024:350261, commercialId:"besquent-dominique" },
+      { id:"callas", name:"Callas", ca2024:343055, commercialId:"besquent-dominique" },
+      { id:"frejus-anc-comb-afn", name:"Fréjus Anc Comb AFN", ca2024:336117, commercialId:"besquent-dominique" },
+      { id:"comps-artuby", name:"Comps s/Artuby", ca2024:317976, commercialId:"besquent-dominique" },
+      { id:"les-salles-verdon", name:"Les Salles sur Verdon", ca2024:316500, commercialId:"besquent-dominique" },
+      { id:"greoux-les-bains", name:"Gréoux-les-Bains", ca2024:305397, commercialId:"besquent-dominique" },
+      { id:"frejus-afrique-n3775", name:"Fréjus Afrique N3775", ca2024:291165, commercialId:"besquent-dominique" },
+      { id:"apt-marchand", name:"Apt Marchand", ca2024:558971, commercialId:"hamparsoumiam-armand" },
+      { id:"calacussia", name:"Calacussia", ca2024:519365, commercialId:"hamparsoumiam-armand" },
+      { id:"ceillac-rue-ppl", name:"Ceillac Rue PPL", ca2024:332701, commercialId:"hamparsoumiam-armand" },
+      { id:"savines-le-lac", name:"Savines le Lac", ca2024:344729, commercialId:"hamparsoumiam-armand" },
+      { id:"l-ile-rousse", name:"L'Île Rousse", ca2024:301807, commercialId:"hamparsoumiam-armand" },
+      { id:"orcieres-merlette", name:"Orcières Merlette", ca2024:298214, commercialId:"hamparsoumiam-armand" },
+      { id:"ajaccio-napoleon", name:"Ajaccio Napoléon", ca2024:289735, commercialId:"hamparsoumiam-armand" },
+      { id:"tallard-dumont", name:"Tallard Dumont", ca2024:282726, commercialId:"hamparsoumiam-armand" },
+      { id:"petreto-bicchisano", name:"Petreto Bicchisano", ca2024:236013, commercialId:"hamparsoumiam-armand" },
+      { id:"vacqueyras", name:"Vacqueyras", ca2024:254074, commercialId:"hamparsoumiam-armand" },
+      { id:"guillaumes", name:"Guillaumes", ca2024:584678, commercialId:"juif-olivier" },
+      { id:"valdeblore", name:"Valdeblore", ca2024:463999, commercialId:"juif-olivier" },
+      { id:"st-etienne-tinee", name:"St Étienne de Tinée", ca2024:444197, commercialId:"juif-olivier" },
+      { id:"carces", name:"Carcès", ca2024:418646, commercialId:"juif-olivier" },
+      { id:"nice-e-dorves", name:"Nice E. d'Orves", ca2024:399883, commercialId:"juif-olivier" },
+      { id:"st-julien", name:"St Julien", ca2024:376184, commercialId:"juif-olivier" },
+      { id:"antibes-4-chemins", name:"Antibes 4 Chemins", ca2024:300493, commercialId:"juif-olivier" },
+      { id:"bormes-mimosas-plage", name:"Bormes les Mimosas Plage", ca2024:290531, commercialId:"juif-olivier" },
+      { id:"nice-thiers", name:"Nice Thiers", ca2024:232677, commercialId:"juif-olivier" },
+      { id:"peille-virounours", name:"Peille Virounours", ca2024:214091, commercialId:"juif-olivier" },
+      { id:"varennes-st-sauveur", name:"Varennes St Sauveur", ca2024:329427, commercialId:"laurent-severine" },
+      { id:"besse-st-anastasie", name:"Besse St Anastasie", ca2024:249079, commercialId:"laurent-severine" },
+      { id:"belmont-loire", name:"Belmont de la Loire", ca2024:239901, commercialId:"laurent-severine" },
+      { id:"cunlhat-domaize", name:"Cunlhat Domaize", ca2024:227290, commercialId:"laurent-severine" },
+      { id:"branges-bourg", name:"Branges Bourg", ca2024:203375, commercialId:"laurent-severine" },
+      { id:"vernet-la-varenne", name:"Vernet la Varenne", ca2024:198285, commercialId:"laurent-severine" },
+      { id:"st-julien-la-vetre", name:"Saint Julien la Vêtre", ca2024:143331, commercialId:"laurent-severine" },
+      { id:"issy-l-eveque", name:"Issy l'Évêque", ca2024:120262, commercialId:"laurent-severine" },
+      { id:"lucenay-l-eveque", name:"Lucenay l'Évêque", ca2024:113586, commercialId:"laurent-severine" },
+      { id:"vollore-ville", name:"Vollore Ville", ca2024:103120, commercialId:"laurent-severine" },
+      { id:"monsols", name:"Monsols", ca2024:485466, commercialId:"michelet-yves" },
+      { id:"propieres", name:"Propières", ca2024:451599, commercialId:"michelet-yves" },
+      { id:"bessenay", name:"Bessenay", ca2024:295103, commercialId:"michelet-yves" },
+      { id:"legny-tarrets", name:"Légny Tarrets", ca2024:219820, commercialId:"michelet-yves" },
+      { id:"porte-pier-dor-ecla", name:"Porte Pier Dor Écla", ca2024:205801, commercialId:"michelet-yves" },
+      { id:"montanay-poype", name:"Montanay Poype", ca2024:198797, commercialId:"michelet-yves" },
+      { id:"leymant", name:"Leyment", ca2024:182849, commercialId:"michelet-yves" },
+      { id:"villeurbanne-blum", name:"Villeurbanne Blum", ca2024:166715, commercialId:"michelet-yves" },
+      { id:"nivigne-et-suran", name:"Nivigne et Suran", ca2024:152322, commercialId:"michelet-yves" },
+      { id:"lyon-croix-rousse", name:"Lyon Croix Rousse", ca2024:133155, commercialId:"michelet-yves" },
+      { id:"virieu-lamartine", name:"Virieu Lamartine", ca2024:655986, commercialId:"aydogan-nevin" },
+      { id:"st-sorlin-d-arves", name:"St Sorlin d'Arves", ca2024:574774, commercialId:"aydogan-nevin" },
+      { id:"le-bourget-du-lac", name:"Le Bourget du Lac", ca2024:497771, commercialId:"aydogan-nevin" },
+      { id:"auris-oisans", name:"Auris en Oisans", ca2024:404916, commercialId:"aydogan-nevin" },
+      { id:"courchevel", name:"Courchevel", ca2024:407291, commercialId:"aydogan-nevin" },
+      { id:"macot-la-plagne", name:"Macot la Plagne", ca2024:357829, commercialId:"aydogan-nevin" },
+      { id:"scionzier-mt-blanc", name:"Scionzier Mt Blanc", ca2024:280341, commercialId:"aydogan-nevin" },
+      { id:"areches", name:"Arêches", ca2024:271143, commercialId:"aydogan-nevin" },
+      { id:"chapelle-d-abon", name:"Chapelle d'Abon", ca2024:245209, commercialId:"aydogan-nevin" },
+      { id:"monestiers-clermont", name:"Monestiers Clermont", ca2024:231951, commercialId:"aydogan-nevin" },
+      { id:"vals-les-bains", name:"Vals les Bains", ca2024:553773, commercialId:"vernay-benoit" },
+      { id:"langogne-capucins", name:"Langogne Capucins", ca2024:370729, commercialId:"vernay-benoit" },
+      { id:"st-mamet-salvetat", name:"St Mamet la Salvetat", ca2024:337355, commercialId:"vernay-benoit" },
+      { id:"chadrac-pm", name:"Chadrac PM", ca2024:316194, commercialId:"vernay-benoit" },
+      { id:"st-fortunat", name:"St Fortunat", ca2024:311429, commercialId:"vernay-benoit" },
+      { id:"espaly-st-marcel", name:"Espaly St Marcel", ca2024:247376, commercialId:"vernay-benoit" },
+      { id:"colombier-le-jeune", name:"Colombier le Jeune", ca2024:240298, commercialId:"vernay-benoit" },
+      { id:"le-cheylard", name:"Le Cheylard", ca2024:197555, commercialId:"vernay-benoit" },
+      { id:"langeac-lafayette", name:"Langeac Lafayette", ca2024:196202, commercialId:"vernay-benoit" },
+      { id:"allanche", name:"Allanche", ca2024:168103, commercialId:"vernay-benoit" }
+    ];
 
     const WAVES = [
       { id: "wave1", label: "Vague 1" },
@@ -349,107 +302,8 @@
     const SEASONS = ["Printemps", "Été", "Automne", "Hiver"];
     const WAVE_STATUSES = ["Non concerné", "À faire", "En cours", "Engagé", "Refusé"];
 
-    /********* ✅ OBJECTIFS F&L 2025 (FIGÉS) *********
-      👉 Renseigne ici tes objectifs par magasin (en €).
-      Personne ne peut les modifier dans l’interface.
-    **************************************************/
-    const FL_OBJECTIFS_2025 = {
-      // COSTANZA Damien
-      "montpellier-delicie": 0,
-      "poulx": 0,
-      "saint-jean-du-gard": 0,
-      "moussac": 0,
-      "lus-la-croix-haute": 0,
-      "marseille-st-antoin": 0,
-      "valras-plage-rompud": 0,
-      "martigues-couronne": 0,
-      "vercheny": 0,
-      "palavas-magdelone": 0,
-
-      // BESQUENT Dominique
-      "bargemon": 0,
-      "colmars-les-alpes": 0,
-      "la-palud-s-verdon": 0,
-      "frejus-anc-comb-afn": 0,
-      "comps-s-artuby-crx": 0,
-      "riez-rouguiere": 0,
-      "callas": 0,
-      "greoux-les-bains": 0,
-      "pra-loup-placette": 0,
-      "frejus-afriq-n-3775": 0,
-
-      // HAMPARSOUMIAN Armand
-      "apt-marchands": 0,
-      "calacussia": 0,
-      "savines-le-lac": 0,
-      "orcieres-merlette": 0,
-      "l-ile-rousse": 0,
-      "malemort-du-comtat": 0,
-      "ceillac-rue-ppl": 0,
-      "mirabeau-rd973": 0,
-      "montgenevre-obelisq": 0,
-      "petreto-bicchisano": 0,
-
-      // JUIF Olivier
-      "guillaumes": 0,
-      "valdeblore-dalmas": 0,
-      "st-etienne-de-tinee": 0,
-      "carces": 0,
-      "nice-e-d-orves": 0,
-      "nice-thiers": 0,
-      "st-julien-83": 0,
-      "antibes-4-chemins": 0,
-      "bormes-les-mi-plage": 0,
-      "le-pradet-herminier": 0,
-
-      // LAURENT Séverine
-      "besse-e-st-anastasie": 0,
-      "cunhlat": 0,
-      "varennes-st-sauveur": 0,
-      "belmont-de-la-loire": 0,
-      "branges-bourg": 0,
-      "vernet-la-varenne": 0,
-      "st-julien-la-vetre": 0,
-      "vollore-ville": 0,
-      "vichy": 0,
-      "issy-l-eveque": 0,
-
-      // MICHELET Yves
-      "monsols": 0,
-      "gigny": 0,
-      "bessenay": 0,
-      "propieres": 0,
-      "legny-tarrets": 0,
-      "leymant-gare": 0,
-      "porte-pier-dor-ecla": 0,
-      "montanay-poype": 0,
-      "villeurbanne-blum": 0,
-      "nivigne-et-suran": 0,
-
-      // AYDOGAN Nevin
-      "st-sorlin-d-arves": 0,
-      "virieu-lamartine": 0,
-      "proxi-auris-en-oisans": 0,
-      "courchevel-1550": 0,
-      "le-bourget-du-lac": 0,
-      "macot-la-plagne": 0,
-      "lepin-le-lac-gare": 0,
-      "areches": 0,
-      "monestier-clermont": 0,
-      "proxi-scionzier": 0,
-
-      // VERNAY Benoit
-      "vals-les-bains": 0,
-      "proxi-langogne-capucins": 0,
-      "st-fortunat": 0,
-      "8-a-huit-chadrac": 0,
-      "le-cheylard": 0,
-      "espaly-st-marcel": 0,
-      "colombier-le-jeune": 0,
-      "langeac-lafayette": 0,
-      "allanche": 0,
-      "saint-mamet-la-salvetas": 0
-    };
+    const FL_OBJECTIFS_2025 = {};
+    STORES.forEach(s => { FL_OBJECTIFS_2025[s.id] = 0; });
 
     function getFlTarget(storeId) {
       const v = FL_OBJECTIFS_2025[storeId];
@@ -457,66 +311,50 @@
       return Number.isNaN(n) ? 0 : n;
     }
 
-    /********* HELPERS *********/
     function safeJsonParse(str, fallback) {
       try { return JSON.parse(str); } catch { return fallback; }
     }
+
     function computeFLProgression(actual, target) {
-  const t = Number(target || 0);
-  const a = Number(actual || 0);
-  if (!t || t <= 0) return "—";
-  return Math.round((a / t) * 100) + " %";
-}
-function defaultVisits() {
-  return [];
-}
-
-function normalizeVisits(raw) {
-  if (Array.isArray(raw)) return raw;
-  return [];
-}
-/* ================== LIVE KPI UPDATE ================== */
-function updateFlKpisLive(storeId) {
-  // total actuel magasin
-  const totalActuel = computeFLActualTotal(storeId);
-
-  // ligne tableau (colonne "Total montant actuel" + "Progression")
-  const row = document.querySelector(`tr[data-id="${storeId}"]`);
-  if (row) {
-    const tds = row.querySelectorAll("td");
-    if (tds[3]) tds[3].textContent = euro(totalActuel);
-    if (tds[4]) {
-      const target = getFlTarget(storeId);
-      tds[4].textContent = computeFLProgression(totalActuel, target);
+      const t = Number(target || 0);
+      const a = Number(actual || 0);
+      if (!t || t <= 0) return "—";
+      return Math.round((a / t) * 100) + " %";
     }
-  }
 
-  // KPI carte magasin (droite)
-  const kpiActual = document.querySelector("[data-kpi-fl-actual]");
-  if (kpiActual) kpiActual.textContent = euro(totalActuel);
-}
+    function defaultFlBySeason() {
+      return {
+        "Printemps": { ordered: "", amount: "", plan: "" },
+        "Été": { ordered: "", amount: "", plan: "" },
+        "Automne": { ordered: "", amount: "", plan: "" },
+        "Hiver": { ordered: "", amount: "", plan: "" }
+      };
+    }
 
-    // ✅ Nouvelle structure F&L (compatible anciennes données)
-    // - Ancien: { "Printemps": {...}, "Été": {...}, ... }
-    // - Nouveau: { meta:{ commande:"" }, seasons:{ "Printemps":{...}, ... } }
+    function defaultEngagementByWave() {
+      return {
+        wave1: { name: "", amount: "" },
+        wave2: { name: "", amount: "" },
+        wave3: { name: "", amount: "" },
+        wave4: { name: "", amount: "" },
+        wave5: { name: "", amount: "" },
+        wave6: { name: "", amount: "" }
+      };
+    }
+
     function normalizeFlData(any) {
-      // si rien
       if (!any || typeof any !== "object") {
         return {
           meta: { commande: "" },
           seasons: defaultFlBySeason()
         };
       }
-
-      // déjà au bon format
       if (any.seasons && typeof any.seasons === "object") {
         return {
           meta: { commande: (any.meta && typeof any.meta === "object") ? (any.meta.commande || "") : "" },
           seasons: ensureAllSeasons(any.seasons)
         };
       }
-
-      // ancien format (saisons à plat)
       return {
         meta: { commande: "" },
         seasons: ensureAllSeasons(any)
@@ -539,80 +377,39 @@ function updateFlKpisLive(storeId) {
       return out;
     }
 
-    function defaultFlBySeason() {
-      return {
-        "Printemps": { ordered: "", amount: "", plan: "" },
-        "Été":       { ordered: "", amount: "", plan: "" },
-        "Automne":   { ordered: "", amount: "", plan: "" },
-        "Hiver":     { ordered: "", amount: "", plan: "" }
-      };
-    }
-    function defaultEngagementByWave() {
-  return {
-    wave1: { name: "", amount: "" },
-    wave2: { name: "", amount: "" },
-    wave3: { name: "", amount: "" },
-    wave4: { name: "", amount: "" },
-    wave5: { name: "", amount: "" },
-    wave6: { name: "", amount: "" }
-  };
-}
     function normalizeEngagementByWave(raw) {
-  const base = defaultEngagementByWave();
-
-  if (!raw || typeof raw !== "object") return base;
-
-  Object.keys(base).forEach(waveId => {
-    if (!raw[waveId] || typeof raw[waveId] !== "object") {
-      raw[waveId] = { name: "", amount: "" };
-    } else {
-      raw[waveId].name = raw[waveId].name || "";
-      raw[waveId].amount = raw[waveId].amount || "";
+      const base = defaultEngagementByWave();
+      if (!raw || typeof raw !== "object") return base;
+      Object.keys(base).forEach(waveId => {
+        if (!raw[waveId] || typeof raw[waveId] !== "object") {
+          raw[waveId] = { name: "", amount: "" };
+        } else {
+          raw[waveId].name = raw[waveId].name || "";
+          raw[waveId].amount = raw[waveId].amount || "";
+        }
+      });
+      return raw;
     }
-  });
 
-  return raw;
-}
-   function updateSeasonForm(storeId) {
-  const st = getStoreState(storeId);
-  const data = st.flBySeason?.[currentFlSeason] || {
-    ordered: "",
-    amount: "",
-    plan: ""
-  };
+    function normalizeVisits(raw) {
+      if (Array.isArray(raw)) return raw;
+      return [];
+    }
 
-  const orderedSel = document.getElementById("seasonOrdered");
-  const amountInp  = document.getElementById("seasonAmount");
-  const planTa     = document.getElementById("seasonPlan");
-  const seasonLabel = document.getElementById("currentSeasonLabel");
-
-  if (orderedSel && orderedSel.value !== (data.ordered || "")) {
-    orderedSel.value = data.ordered || "";
-  }
-
-  if (amountInp && amountInp.value !== String(data.amount || "")) {
-    amountInp.value = data.amount || "";
-  }
-
-  if (planTa && planTa.value !== (data.plan || "")) {
-    planTa.value = data.plan || "";
-  }
-
-  if (seasonLabel && seasonLabel.textContent !== currentFlSeason) {
-    seasonLabel.textContent = currentFlSeason;
-  }
-
-  const tabs = document.querySelector(".season-btn")?.closest(".tabs");
-  if (tabs) {
-    tabs.querySelectorAll("button[data-fl-season]").forEach(btn => {
-      const shouldBeActive = btn.dataset.flSeason === currentFlSeason;
-      if (btn.classList.contains("active") !== shouldBeActive) {
-        btn.classList.toggle("active", shouldBeActive);
+    function updateFlKpisLive(storeId) {
+      const totalActuel = computeFLActualTotal(storeId);
+      const row = document.querySelector(`tr[data-id="${storeId}"]`);
+      if (row) {
+        const tds = row.querySelectorAll("td");
+        if (tds[3]) tds[3].textContent = euro(totalActuel);
+        if (tds[4]) {
+          const target = getFlTarget(storeId);
+          tds[4].textContent = computeFLProgression(totalActuel, target);
+        }
       }
-    });
-  }
-}
-
+      const kpiActual = document.querySelector("[data-kpi-fl-actual]");
+      if (kpiActual) kpiActual.textContent = euro(totalActuel);
+    }
 
     function formatNumber(n) {
       if (n == null) return "-";
@@ -626,7 +423,6 @@ function updateFlKpisLive(storeId) {
       return `${formatNumber(Number(n))} €`;
     }
 
-    // ✅ Total ACTUEL = somme des montants saisis par saison
     function computeFLActualTotal(storeId) {
       const st = getStoreState(storeId);
       let total = 0;
@@ -637,120 +433,136 @@ function updateFlKpisLive(storeId) {
       });
       return total;
     }
-  function computeEngagementTotal(storeId) {
-  const st = getStoreState(storeId);
-  let total = 0;
 
-  Object.entries(st.engagementByWave || {}).forEach(([waveId, data]) => {
-    if (st.waves?.[waveId] === "Engagé") {
-      const val = Number(data?.amount || 0);
-      if (!Number.isNaN(val)) total += val;
+    function computeEngagementTotal(storeId) {
+      const st = getStoreState(storeId);
+      let total = 0;
+      Object.entries(st.engagementByWave || {}).forEach(([waveId, data]) => {
+        if (st.waves?.[waveId] === "Engagé") {
+          const val = Number(data?.amount || 0);
+          if (!Number.isNaN(val)) total += val;
+        }
+      });
+      return total;
     }
-  });
 
-  return total;
-}
-
-    /********* ÉTAT + SYNCHRO SUPABASE *********/
     let STATE = {};
 
     async function loadStateFromSupabase() {
-      const { data, error } = await sb.from("store_state").select("*");
-      if (error) {
-        console.error("Erreur de chargement Supabase :", error);
-        STATE = {};
-        return;
-      }
-
       STATE = {};
-      (data || []).forEach(row => {
-        // ✅ On récupère fl_by_season (ancienne ou nouvelle structure), puis on normalise
-        const rawFl = row.fl_by_season
-  ? safeJsonParse(row.fl_by_season, null)
-  : null;
-
-        const flNorm = normalizeFlData(rawFl);
-
-        const rawEng =
-  typeof row.engagement_by_wave === "string"
-    ? safeJsonParse(row.engagement_by_wave, {})
-    : (row.engagement_by_wave || {});
-
-STATE[row.id] = {
-  engNotesByWave:
-  typeof row.eng_notes_by_wave === "string"
-    ? safeJsonParse(row.eng_notes_by_wave, {})
-    : (row.eng_notes_by_wave || {}),
-  flBySeason: flNorm.seasons,
-  flCommande: flNorm.meta?.commande || "",
-  waves: row.waves
-  ? (typeof row.waves === "string"
-      ? JSON.parse(row.waves)
-      : row.waves)
-  : {},
-  engagementByWave: normalizeEngagementByWave(rawEng),
-  visits: normalizeVisits(row.visits),
-  buysEng: row.buys_eng || "",
-  notesEng: row.notes_eng || ""
-};
-      });
+      
+      try {
+        console.log("🔄 Chargement depuis Supabase...");
+        
+        const { data, error } = await sb.from("store_state").select("*");
+        
+        if (error) {
+          console.error("❌ Erreur Supabase:", error.message);
+          console.log("⚠️ Démarrage avec état vide");
+          return;
+        }
+        
+        if (!data || data.length === 0) {
+          console.log("ℹ️ Aucune donnée - démarrage vide");
+          return;
+        }
+        
+        console.log("📦 Reçu:", data.length, "lignes");
+        
+        // ⚠️ TEST: On ignore temporairement les données Supabase
+        console.log("⚠️ MODE TEST: Données Supabase ignorées temporairement");
+        console.log("✅ Application démarrée (mode vide)");
+        
+        // Décommente ces lignes une fois que tu m'auras montré tes colonnes:
+        /*
+        const cleanData = JSON.parse(JSON.stringify(data));
+        cleanData.forEach(row => {
+          STATE[row.id] = {
+            flBySeason: row.fl_by_season ? normalizeFlData(row.fl_by_season).seasons : defaultFlBySeason(),
+            flCommande: row.fl_by_season?.meta?.commande || "",
+            waves: row.waves || {},
+            engagementByWave: normalizeEngagementByWave(row.engagement_by_wave || {}),
+            engNotesByWave: row.eng_notes_by_waves || {},
+            visits: row.visits || [],
+            buysEng: row.buys_eng || "",
+            notesEng: row.notes_eng || ""
+          };
+        });
+        console.log("✅ Chargé:", Object.keys(STATE).length, "magasins");
+        */
+        
+      } catch (err) {
+        console.error("❌ Erreur:", err.message);
+        console.log("⚠️ Démarrage avec état vide malgré l'erreur");
+      }
     }
 
-   function getStoreState(id) {
-  if (!STATE[id]) {
-   STATE[id] = {
-  flBySeason: defaultFlBySeason(),
-  flCommande: "",
-  waves: {},
-  engagementByWave: defaultEngagementByWave(),
-  engNotesByWave: {},   // 👈 ICI
-  visits: [],
-  buysEng: "",
-  notesEng: ""
-};
-  } else {
-    if (!STATE[id].flBySeason) STATE[id].flBySeason = defaultFlBySeason();
-    if (!STATE[id].engagementByWave) STATE[id].engagementByWave = defaultEngagementByWave();
-    if (STATE[id].flCommande === undefined) STATE[id].flCommande = "";
-    if (!STATE[id].visits) STATE[id].visits = [];
-  }
-  return STATE[id];
-}
+    function getStoreState(id) {
+      if (!STATE[id]) {
+        STATE[id] = {
+          flBySeason: defaultFlBySeason(),
+          flCommande: "",
+          waves: {},
+          engagementByWave: defaultEngagementByWave(),
+          engNotesByWave: {},
+          visits: [],
+          buysEng: "",
+          notesEng: ""
+        };
+      } else {
+        if (!STATE[id].flBySeason) STATE[id].flBySeason = defaultFlBySeason();
+        if (!STATE[id].engagementByWave) STATE[id].engagementByWave = defaultEngagementByWave();
+        if (!STATE[id].engNotesByWave) STATE[id].engNotesByWave = {};
+        if (STATE[id].flCommande === undefined) STATE[id].flCommande = "";
+        if (!STATE[id].visits) STATE[id].visits = [];
+      }
+      return STATE[id];
+    }
+
+    let saveTimeout = null;
+    function saveWithDebounce(storeId) {
+      clearTimeout(saveTimeout);
+      saveTimeout = setTimeout(() => {
+        saveStoreToSupabase(storeId);
+      }, 800);
+    }
 
     async function saveStoreToSupabase(id) {
-  const st = getStoreState(id);
+      const st = getStoreState(id);
+      const flPayload = {
+        meta: { commande: st.flCommande || "" },
+        seasons: st.flBySeason || defaultFlBySeason()
+      };
 
-  // Préparation du paquet de données
-  const flPayload = {
-    meta: { commande: st.flCommande || "" },
-    seasons: st.flBySeason || defaultFlBySeason()
-  };
+      // ✅ Conversion explicite en JSON pur (pas d'objets non-sérialisables)
+      const payload = {
+        id: id,
+        fl_by_season: JSON.parse(JSON.stringify(flPayload)),
+        waves: JSON.parse(JSON.stringify(st.waves || {})),
+        engagement_by_wave: JSON.parse(JSON.stringify(st.engagementByWave || {})),
+        eng_notes_by_waves: JSON.parse(JSON.stringify(st.engNotesByWave || {})),
+        visits: JSON.parse(JSON.stringify(st.visits || [])),
+        buys_eng: st.buysEng || "",
+        notes_eng: st.notesEng || ""
+      };
 
- const payload = {
-  id: id,
-  fl_by_season: flPayload,
-  waves: st.waves || {},
-  engagement_by_wave: st.engagementByWave || {},
-  eng_notes_by_waves: st.engNotesByWave || {}, // <-- Vérifie bien le "s" ici
-  visits: st.visits || [],
-  buys_eng: st.buysEng || "",
-  notes_eng: st.notesEng || ""
-};
+      try {
+        const { data, error } = await sb
+          .from("store_state")
+          .upsert(payload, { onConflict: 'id' });
 
-  // Envoi à Supabase
-  const { data, error } = await sb
-    .from("store_state")
-    .upsert(payload, { onConflict: 'id' }); // Force la mise à jour si l'ID existe déjà
+        if (error) {
+          console.error("❌ Erreur de sauvegarde Supabase :", error.message || error);
+          alert("Erreur de sauvegarde : " + (error.message || "Vérifiez la console"));
+        } else {
+          console.log("✅ Données sauvegardées pour :", id);
+        }
+      } catch (err) {
+        console.error("❌ Erreur lors de la sauvegarde :", err);
+        alert("Erreur critique lors de la sauvegarde. Consultez la console.");
+      }
+    }
 
-  if (error) {
-    console.error("❌ Erreur de sauvegarde Supabase :", error.message);
-  } else {
-    console.log("✅ Données sauvegardées pour :", id);
-  }
-}
-
-
-    /********* VARIABLES UI *********/
     const root = document.getElementById("root");
     let currentUser = null;
     let currentCommercialFilter = null;
@@ -758,20 +570,7 @@ STATE[row.id] = {
     let currentStoreId = null;
     let currentSearch = "";
     let currentEngWave = "wave1";
-
-    // ✅ menu saisons (onglet F&L à droite)
     let currentFlSeason = "Printemps";
-    document.addEventListener("click", (e) => {
-  const btn = e.target.closest("button[data-fl-season]");
-  if (!btn) return;
-  if (!currentStoreId) return;
-
-  const newSeason = btn.dataset.flSeason;
-  if (newSeason === currentFlSeason) return;
-
-  currentFlSeason = newSeason;
-  updateSeasonForm(currentStoreId);
-});
 
     function getUserStores(user) {
       if (!user) return [];
@@ -800,22 +599,18 @@ STATE[row.id] = {
       const stores = getUserStores(user);
       let totalTarget = 0;
       let totalActual = 0;
-
       stores.forEach(s => {
         totalTarget += getFlTarget(s.id);
         totalActual += computeFLActualTotal(s.id);
       });
-
       const progression = computeFLProgression(totalActual, totalTarget);
       return { totalTarget, totalActual, progression };
     }
 
-    /********* LOGIN *********/
     function renderLogin() {
       root.innerHTML = "";
       const wrap = document.createElement("div");
       wrap.className = "app-shell";
-
       const card = document.createElement("div");
       card.className = "card login-card";
       card.innerHTML = `
@@ -835,7 +630,6 @@ STATE[row.id] = {
         <button id="loginBtn">Entrer dans le CRM</button>
         <div class="subtext" style="margin-top:8px;">Les données sont sauvegardées sur un serveur sécurisé (Supabase) et partagées entre les utilisateurs.</div>
       `;
-
       wrap.appendChild(card);
       root.appendChild(wrap);
 
@@ -860,13 +654,11 @@ STATE[row.id] = {
         const role = roleSelect.value;
         const id = userSelect.value;
         if (!id) return;
-
         if (role === "admin") {
           currentUser = { ...USERS.admins.find(a => a.id === id) };
         } else {
           currentUser = { ...USERS.commerciaux.find(c => c.id === id), role: "commercial" };
         }
-
         currentCommercialFilter = null;
         currentTab = "overview";
         currentStoreId = null;
@@ -879,11 +671,9 @@ STATE[row.id] = {
 
     function renderApp() {
       root.innerHTML = "";
-
       const shell = document.createElement("div");
       shell.className = "app-shell";
 
-      /* ================= SIDEBAR ================= */
       const sidebar = document.createElement("div");
       sidebar.className = "sidebar card";
       sidebar.innerHTML = `
@@ -902,10 +692,9 @@ STATE[row.id] = {
       const listWrap = document.createElement("div");
       listWrap.className = "list";
 
-      const commList =
-        currentUser.role === "admin"
-          ? USERS.commerciaux
-          : USERS.commerciaux.filter(c => c.id === currentUser.id);
+      const commList = currentUser.role === "admin"
+        ? USERS.commerciaux
+        : USERS.commerciaux.filter(c => c.id === currentUser.id);
 
       const storesAll = getUserStores(currentUser);
       const byCommercial = {};
@@ -938,11 +727,9 @@ STATE[row.id] = {
 
       sidebar.appendChild(listWrap);
 
-      /* ================= MAIN ================= */
       const main = document.createElement("div");
       main.className = "main";
 
-      /* KPI */
       const kpiCard = document.createElement("div");
       kpiCard.className = "card";
 
@@ -951,7 +738,6 @@ STATE[row.id] = {
         kpiCard.innerHTML = `
           <h1><span class="logo-dot"></span> CRM PROXI · Fruits & Légumes</h1>
           <div class="subtext">Suivi F&L par saison (commande / montant / plan d'action).</div>
-
           <div class="kpi-row">
             <div class="kpi-card">
               <div class="kpi-label">Total montants 2025 (objectif)</div>
@@ -975,8 +761,7 @@ STATE[row.id] = {
         const kpis = computeKpis(currentUser);
         kpiCard.innerHTML = `
           <h1><span class="logo-dot"></span> CRM PROXI</h1>
-          <div class="subtext">Vue d’ensemble du portefeuille.</div>
-
+          <div class="subtext">Vue d'ensemble du portefeuille.</div>
           <div class="kpi-row">
             <div class="kpi-card">
               <div class="kpi-label">Magasins</div>
@@ -1000,13 +785,11 @@ STATE[row.id] = {
 
       main.appendChild(kpiCard);
 
-      /* CONTENU */
       const mainCard = document.createElement("div");
       mainCard.className = "card";
-
       mainCard.innerHTML = `
         <div class="tabs">
-          <button class="tab-btn ${currentTab === "overview" ? "active" : ""}" data-tab="overview">Vue d’ensemble</button>
+          <button class="tab-btn ${currentTab === "overview" ? "active" : ""}" data-tab="overview">Vue d'ensemble</button>
           <button class="tab-btn ${currentTab === "list" ? "active" : ""}" data-tab="list">Magasins</button>
           <button class="tab-btn ${currentTab === "fl" ? "active" : ""}" data-tab="fl">Fruits & Légumes</button>
           <button class="tab-btn ${currentTab === "eng" ? "active" : ""}" data-tab="eng">Engagement</button>
@@ -1025,8 +808,7 @@ STATE[row.id] = {
       } else if (currentTab === "list") {
         renderStoresTab(content, stores, currentStore);
       } else if (currentTab === "fl") {
-      
-renderFruitsLegumesTab(content, stores, currentStore);
+        renderFruitsLegumesTab(content, stores, currentStore);
       } else if (currentTab === "eng") {
         renderEngagementTab(content, stores, currentStore);
       }
@@ -1034,7 +816,6 @@ renderFruitsLegumesTab(content, stores, currentStore);
       mainCard.appendChild(content);
       main.appendChild(mainCard);
 
-      /* EVENTS */
       sidebar.querySelector("#logoutBtn").addEventListener("click", () => {
         currentUser = null;
         currentCommercialFilter = null;
@@ -1051,77 +832,67 @@ renderFruitsLegumesTab(content, stores, currentStore);
           renderApp();
         });
       });
+
       shell.appendChild(sidebar);
       shell.appendChild(main);
       root.appendChild(shell);
-
     }
 
-    /********* ONGLET 1 : MAGASINS *********/
-   function renderStoresTab(container, stores, currentStore) {
-  const left = document.createElement("div");
-  const right = document.createElement("div");
+    function renderStoresTab(container, stores, currentStore) {
+      const left = document.createElement("div");
+      const right = document.createElement("div");
 
-  /* ================= LEFT : TABLE MAGASINS ================= */
-  left.innerHTML = `
-    <div>
-      <div style="font-size:13px;font-weight:600;">Magasins · Vue CA</div>
-      <div class="subtext">Clique sur un magasin pour voir le détail.</div>
-    </div>
-
-    <table>
-      <thead>
-        <tr>
-          <th>Magasin</th>
-          <th>CA 2025</th>
-          <th>Visites</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${stores.map(s => {
-          const visitsCount = getStoreState(s.id).visits.length;
-          return `
-            <tr data-id="${s.id}">
-              <td>${s.name}</td>
-              <td>${formatNumber(s.ca2024)} €</td>
-              <td>${visitsCount}</td>
+      left.innerHTML = `
+        <div>
+          <div style="font-size:13px;font-weight:600;">Magasins · Vue CA</div>
+          <div class="subtext">Clique sur un magasin pour voir le détail.</div>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Magasin</th>
+              <th>CA 2025</th>
+              <th>Visites</th>
             </tr>
-          `;
-        }).join("")}
-      </tbody>
-    </table>
-  `;
+          </thead>
+          <tbody>
+            ${stores.map(s => {
+              const visitsCount = getStoreState(s.id).visits.length;
+              return `
+                <tr data-id="${s.id}">
+                  <td>${s.name}</td>
+                  <td>${formatNumber(s.ca2024)} €</td>
+                  <td>${visitsCount}</td>
+                </tr>
+              `;
+            }).join("")}
+          </tbody>
+        </table>
+      `;
 
-  left.querySelectorAll("tbody tr").forEach(tr => {
-    tr.addEventListener("click", () => {
-      currentStoreId = tr.dataset.id;
-      renderApp();
-    });
-  });
+      left.querySelectorAll("tbody tr").forEach(tr => {
+        tr.addEventListener("click", () => {
+          currentStoreId = tr.dataset.id;
+          renderApp();
+        });
+      });
 
-  /* ================= RIGHT : DÉTAIL MAGASIN ================= */
-  if (!currentStore) {
-    right.innerHTML = `<div class="subtext">Sélectionne un magasin.</div>`;
-    container.appendChild(left);
-    container.appendChild(right);
-    return;
-  }
+      if (!currentStore) {
+        right.innerHTML = `<div class="subtext">Sélectionne un magasin.</div>`;
+        container.appendChild(left);
+        container.appendChild(right);
+        return;
+      }
 
-  const st = getStoreState(currentStore.id);
+      const st = getStoreState(currentStore.id);
 
-  right.innerHTML = `
-    <div style="font-size:13px;font-weight:600;">${currentStore.name}</div>
-
-    <div class="card" style="margin-top:10px;padding:12px;">
-      <div style="font-size:13px;font-weight:600;">Visites terrain</div>
-
-      <div style="margin-top:6px;">
-        ${
-          st.visits.length
-            ? st.visits
-                .slice()
-                .reverse()
-                .map((date, i) => {
+      right.innerHTML = `
+        <div style="font-size:13px;font-weight:600;">${currentStore.name}</div>
+        <div class="card" style="margin-top:10px;padding:12px;">
+          <div style="font-size:13px;font-weight:600;">Visites terrain</div>
+          <div style="margin-top:6px;">
+            ${st.visits.length
+              ? st.visits.slice().reverse().map((date, i) => {
                   const idx = st.visits.length - 1 - i;
                   return `
                     <div style="display:flex;gap:6px;margin-bottom:4px;">
@@ -1129,69 +900,56 @@ renderFruitsLegumesTab(content, stores, currentStore);
                       <button class="secondary" data-delete-visit="${idx}">🗑️</button>
                     </div>
                   `;
-                })
-                .join("")
-            : `<span class="subtext">Aucune visite renseignée</span>`
+                }).join("")
+              : `<span class="subtext">Aucune visite renseignée</span>`
+            }
+          </div>
+          <button id="addVisitBtn" style="margin-top:8px;">+ Ajouter une visite aujourd'hui</button>
+        </div>
+      `;
+
+      right.querySelector("#addVisitBtn").addEventListener("click", () => {
+        const today = new Date().toISOString().slice(0, 10);
+        if (!st.visits.includes(today)) {
+          st.visits.push(today);
+          saveStoreToSupabase(currentStore.id);
+          renderApp();
         }
-      </div>
+      });
 
-      <button id="addVisitBtn" style="margin-top:8px;">
-        + Ajouter une visite aujourd’hui
-      </button>
-    </div>
-  `;
+      right.querySelectorAll("[data-edit-visit]").forEach(inp => {
+        inp.addEventListener("change", () => {
+          const index = Number(inp.dataset.editVisit);
+          const newDate = inp.value;
+          if (!newDate) return;
+          if (st.visits.includes(newDate)) {
+            alert("Une visite existe déjà à cette date.");
+            renderApp();
+            return;
+          }
+          st.visits[index] = newDate;
+          saveStoreToSupabase(currentStore.id);
+          renderApp();
+        });
+      });
 
-  /* ================= EVENTS ================= */
+      right.querySelectorAll("[data-delete-visit]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const index = Number(btn.dataset.deleteVisit);
+          if (!confirm("Supprimer cette visite ?")) return;
+          st.visits.splice(index, 1);
+          saveStoreToSupabase(currentStore.id);
+          renderApp();
+        });
+      });
 
-  // ➕ Ajouter une visite
-  right.querySelector("#addVisitBtn").addEventListener("click", () => {
-    const today = new Date().toISOString().slice(0, 10);
-    if (!st.visits.includes(today)) {
-      st.visits.push(today);
-      saveStoreToSupabase(currentStore.id);
-      renderApp();
+      container.appendChild(left);
+      container.appendChild(right);
     }
-  });
 
-  // ✏️ Modifier une visite
-  right.querySelectorAll("[data-edit-visit]").forEach(inp => {
-    inp.addEventListener("change", () => {
-      const index = Number(inp.dataset.editVisit);
-      const newDate = inp.value;
-
-      if (!newDate) return;
-      if (st.visits.includes(newDate)) {
-        alert("Une visite existe déjà à cette date.");
-        renderApp();
-        return;
-      }
-
-      st.visits[index] = newDate;
-      saveStoreToSupabase(currentStore.id);
-      renderApp();
-    });
-  });
-
-  // 🗑️ Supprimer une visite
-  right.querySelectorAll("[data-delete-visit]").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const index = Number(btn.dataset.deleteVisit);
-      if (!confirm("Supprimer cette visite ?")) return;
-
-      st.visits.splice(index, 1);
-      saveStoreToSupabase(currentStore.id);
-      renderApp();
-    });
-  });
-
-  container.appendChild(left);
-  container.appendChild(right);
-}
-
-    /********* ONGLET 2 : FRUITS & LÉGUMES *********/
-   function renderFruitsLegumesTab(container, stores, currentStore) {
-  container.innerHTML = ""; 
-     const left = document.createElement("div");
+    function renderFruitsLegumesTab(container, stores, currentStore) {
+      container.innerHTML = "";
+      const left = document.createElement("div");
       const right = document.createElement("div");
 
       left.innerHTML = `
@@ -1214,12 +972,10 @@ renderFruitsLegumesTab(content, stores, currentStore);
           <tbody>
             ${stores.map(s => {
               const st = getStoreState(s.id);
-
               const commande = st.flCommande || "";
               const total2025 = getFlTarget(s.id);
               const totalActuel = computeFLActualTotal(s.id);
               const progression = computeFLProgression(totalActuel, total2025);
-
               return `
                 <tr data-id="${s.id}">
                   <td>${s.name}</td>
@@ -1240,7 +996,6 @@ renderFruitsLegumesTab(content, stores, currentStore);
         </table>
       `;
 
-      // clic ligne (sauf sur le select)
       left.querySelectorAll("tbody tr").forEach(tr => {
         tr.addEventListener("click", e => {
           if (e.target.tagName.toLowerCase() === "select") return;
@@ -1249,64 +1004,48 @@ renderFruitsLegumesTab(content, stores, currentStore);
         });
       });
 
-      // ✅ commande Oui/Non par magasin (sauvegarde supabase)
       left.querySelectorAll("select[data-fl-commande]").forEach(sel => {
         sel.addEventListener("change", () => {
           const id = sel.dataset.flCommande;
           const st = getStoreState(id);
           st.flCommande = sel.value;
           saveStoreToSupabase(id);
-          // refresh kpis/colonnes
-      
         });
       });
 
       if (currentStore) {
         const st = getStoreState(currentStore.id);
-        const storeIdFixe = currentStore.id;
-        window.__flStoreIdFixe = storeIdFixe;
-
         const totalActuelStore = computeFLActualTotal(currentStore.id);
         const total2025Store = getFlTarget(currentStore.id);
-        const n1 = Number(getFlTarget(currentStore.id) || 0); // N-1 = total montants 2025
-const a = Number(totalActuelStore || 0);
-const progressionVsN1 =
-  n1 > 0 ? Math.round((a / n1) * 100) + " %" : "—";
+        const n1 = Number(getFlTarget(currentStore.id) || 0);
+        const a = Number(totalActuelStore || 0);
+        const progressionVsN1 = n1 > 0 ? Math.round((a / n1) * 100) + " %" : "—";
 
-        const progressionStore = computeFLProgression(totalActuelStore, total2025Store);
-
-        // sécurise saison courante
         if (!SEASONS.includes(currentFlSeason)) currentFlSeason = "Printemps";
         const data = st.flBySeason?.[currentFlSeason] || { ordered: "", amount: "", plan: "" };
 
         right.innerHTML = `
           <div style="font-size:13px;font-weight:600;">${currentStore.name}</div>
-          <div class="subtext">Objectif 2025 figé + saisie du montant et plan d’action par saison (menu).</div>
-
+          <div class="subtext">Objectif 2025 figé + saisie du montant et plan d'action par saison (menu).</div>
           <div class="card" style="margin-top:10px;padding:12px;">
-            <div style="font-size:13px;font-weight:600;margin-bottom:8px;">
-  F&L – Référence N-1
-</div>
-      <div class="subtext">
-  N-1 : <b>${euro(getFlTarget(currentStore.id))}</b>
-· Actuel : <b data-kpi-fl-actual>${euro(totalActuelStore)}</b>
-· Progression : <b>${progressionVsN1}</b>
-</div>
-         </div>
-
+            <div style="font-size:13px;font-weight:600;margin-bottom:8px;">F&L – Référence N-1</div>
+            <div class="subtext">
+              N-1 : <b>${euro(getFlTarget(currentStore.id))}</b>
+              · Actuel : <b data-kpi-fl-actual>${euro(totalActuelStore)}</b>
+              · Progression : <b>${progressionVsN1}</b>
+            </div>
+          </div>
           <div class="card" style="margin-top:10px;padding:12px;">
             <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
               <div style="font-size:13px;font-weight:600;">Saisonnalité</div>
               <div class="tabs" style="padding:2px;">
                 ${SEASONS.map(season => `
-                  <button class="season-btn ${currentFlSeason === season ? "active" : ""}" data-fl-season="${season}">${season}</button>
+                  <button class="season-btn tab-btn ${currentFlSeason === season ? "active" : ""}" data-fl-season="${season}">${season}</button>
                 `).join("")}
               </div>
             </div>
-
             <div style="margin-top:10px;">
               <div style="font-size:13px;font-weight:600;margin-bottom:8px;" id="currentSeasonLabel">${currentFlSeason}</div>
-
               <div style="margin-bottom:8px;">
                 <label>Commande Fruits & Légumes ?</label>
                 <select id="seasonOrdered">
@@ -1315,42 +1054,44 @@ const progressionVsN1 =
                   <option value="Non" ${data.ordered === "Non" ? "selected" : ""}>Non</option>
                 </select>
               </div>
-
               <div style="margin-bottom:8px;">
                 <label>Montant (€)</label>
-                <input type="number" step="1" min="0" id="seasonAmount" value="${data.amount || ""}" />
+                <input type="number" id="seasonAmount" value="${data.amount || ""}" />
               </div>
-
               <div>
-                <label>Plan d’action</label>
+                <label>Plan d'action</label>
                 <textarea rows="5" id="seasonPlan">${data.plan || ""}</textarea>
               </div>
             </div>
           </div>
         `;
-        
-        // ✅ Les événements qui écoutent les changements des champs
+
         const orderedSel = right.querySelector("#seasonOrdered");
         const amountInp = right.querySelector("#seasonAmount");
         const planTa = right.querySelector("#seasonPlan");
-        orderedSel.addEventListener("change", () => {
-  const st2 = getStoreState(storeIdFixe);
-  st2.flBySeason[currentFlSeason].ordered = orderedSel.value;
-  saveWithDebounce(storeIdFixe);
-});
 
-amountInp.addEventListener("blur", () => {
-  const st2 = getStoreState(storeIdFixe);
-  st2.flBySeason[currentFlSeason].amount = amountInp.value;
-  updateFlKpisLive(storeIdFixe);
-  saveWithDebounce(storeIdFixe);
-});
-planTa.addEventListener("blur", () => {
-  const st2 = getStoreState(storeIdFixe);
-  st2.flBySeason[currentFlSeason].plan = planTa.value;
-  saveWithDebounce(storeIdFixe);
-});
-        
+        orderedSel.addEventListener("change", () => {
+          st.flBySeason[currentFlSeason].ordered = orderedSel.value;
+          saveWithDebounce(currentStore.id);
+        });
+
+        amountInp.addEventListener("blur", () => {
+          st.flBySeason[currentFlSeason].amount = amountInp.value;
+          updateFlKpisLive(currentStore.id);
+          saveWithDebounce(currentStore.id);
+        });
+
+        planTa.addEventListener("blur", () => {
+          st.flBySeason[currentFlSeason].plan = planTa.value;
+          saveWithDebounce(currentStore.id);
+        });
+
+        right.querySelectorAll("[data-fl-season]").forEach(btn => {
+          btn.addEventListener("click", () => {
+            currentFlSeason = btn.dataset.flSeason;
+            renderApp();
+          });
+        });
 
       } else {
         right.innerHTML = '<div class="subtext">Sélectionne un magasin dans la liste.</div>';
@@ -1360,185 +1101,143 @@ planTa.addEventListener("blur", () => {
       container.appendChild(right);
     }
 
-    /********* ONGLET 3 : ENGAGEMENT *********/
     function updateEngagementRow(storeId) {
-  const row = document.querySelector(`tr[data-id="${storeId}"]`);
-  if (!row) return;
+      const row = document.querySelector(`tr[data-id="${storeId}"]`);
+      if (!row) return;
+      const st = getStoreState(storeId);
+      const engagedCount = WAVES.filter(w => st.waves[w.id] === "Engagé").length;
+      const total = computeEngagementTotal(storeId);
+      const tds = row.querySelectorAll("td");
+      if (tds[1]) tds[1].textContent = engagedCount;
+      if (tds[2]) tds[2].textContent = euro(total);
+    }
 
-  const st = getStoreState(storeId);
-
-  const engagedCount = WAVES.filter(w => st.waves[w.id] === "Engagé").length;
-  const total = computeEngagementTotal(storeId);
-
-  const tds = row.querySelectorAll("td");
-  if (tds[1]) tds[1].textContent = engagedCount;
-  if (tds[2]) tds[2].textContent = euro(total);
-}
     function renderEngagementTab(container, stores, currentStore) {
-  const left = document.createElement("div");
-  const right = document.createElement("div");
+      const left = document.createElement("div");
+      const right = document.createElement("div");
 
-  /* ================= LEFT : TABLE ================= */
-  left.innerHTML = `
-    <div>
-      <div style="font-size:13px;font-weight:600;">Magasins · Engagement</div>
-      <div class="subtext">Suivi des vagues d’engagement.</div>
-    </div>
-
-    <table>
-      <thead>
-        <tr>
-          <th>Magasin</th>
-          <th>Vagues engagées</th>
-          <th>Total engagé</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${stores.map(s => {
-          const st = getStoreState(s.id);
-          const engagedCount = WAVES.filter(w => st.waves[w.id] === "Engagé").length;
-          const total = computeEngagementTotal(s.id);
-          return `
-            <tr data-id="${s.id}">
-              <td>${s.name}</td>
-              <td>${engagedCount}</td>
-              <td>${euro(total)}</td>
-            </tr>
-          `;
-        }).join("")}
-      </tbody>
-    </table>
-  `;
-
-  left.querySelectorAll("tbody tr").forEach(tr => {
-    tr.addEventListener("click", () => {
-      currentStoreId = tr.dataset.id;
-      renderApp();
-    });
-  });
-
-  /* ================= RIGHT : MENU VAGUES ================= */
-  if (!currentStore) {
-    right.innerHTML = `<div class="subtext">Sélectionne un magasin.</div>`;
-    container.appendChild(left);
-    container.appendChild(right);
-    return;
-  }
-
-  const st = getStoreState(currentStore.id);
-      // 🔒 Sécurité : initialise la vague si elle n’existe pas encore
-if (!st.engagementByWave[currentEngWave]) {
-  st.engagementByWave[currentEngWave] = { name: "", amount: "" };
-}
-
-  // sécurité
-  if (!WAVES.some(w => w.id === currentEngWave)) currentEngWave = "wave1";
-
-  const wave = WAVES.find(w => w.id === currentEngWave);
-  const waveData = st.engagementByWave[currentEngWave] || { name: "", amount: "" };
-  const waveStatus = st.waves[currentEngWave] || "Non concerné";
-  const waveNotes = (st.engNotesByWave && st.engNotesByWave[currentEngWave]) || "";
-
-  right.innerHTML = `
-    <div style="font-size:13px;font-weight:600;">${currentStore.name}</div>
-    <div class="subtext">Gestion par vague (menu comme Fruits & Légumes).</div>
-
-    <div class="card" style="margin-top:10px;padding:12px;">
-      <div style="display:flex;justify-content:space-between;align-items:center;">
-        <div style="font-size:13px;font-weight:600;">Vagues</div>
-        <div class="tabs">
-          ${WAVES.map(w => `
-            <button type="button"
-        class="tab-btn ${currentEngWave === w.id ? "active" : ""}"
-        data-eng-wave="${w.id}">
-              ${w.label}
-            </button>
-          `).join("")}
+      left.innerHTML = `
+        <div>
+          <div style="font-size:13px;font-weight:600;">Magasins · Engagement</div>
+          <div class="subtext">Suivi des vagues d'engagement.</div>
         </div>
-      </div>
-    </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Magasin</th>
+              <th>Vagues engagées</th>
+              <th>Total engagé</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${stores.map(s => {
+              const st = getStoreState(s.id);
+              const engagedCount = WAVES.filter(w => st.waves[w.id] === "Engagé").length;
+              const total = computeEngagementTotal(s.id);
+              return `
+                <tr data-id="${s.id}">
+                  <td>${s.name}</td>
+                  <td>${engagedCount}</td>
+                  <td>${euro(total)}</td>
+                </tr>
+              `;
+            }).join("")}
+          </tbody>
+        </table>
+      `;
 
-    <div class="card" style="margin-top:10px;padding:12px;">
-      <div style="font-size:13px;font-weight:600;margin-bottom:8px;">
-        ${wave.label}
-      </div>
+      left.querySelectorAll("tbody tr").forEach(tr => {
+        tr.addEventListener("click", () => {
+          currentStoreId = tr.dataset.id;
+          renderApp();
+        });
+      });
 
-      <label>Statut</label>
-      <select id="engStatus">
-        ${WAVE_STATUSES.map(s => `
-          <option value="${s}" ${s === waveStatus ? "selected" : ""}>${s}</option>
-        `).join("")}
-      </select>
+      if (!currentStore) {
+        right.innerHTML = `<div class="subtext">Sélectionne un magasin.</div>`;
+        container.appendChild(left);
+        container.appendChild(right);
+        return;
+      }
 
-      <label style="margin-top:6px;">Nom de la vague</label>
-      <input type="text" id="engName" value="${waveData.name || ""}" />
+      const st = getStoreState(currentStore.id);
+      if (!st.engagementByWave[currentEngWave]) {
+        st.engagementByWave[currentEngWave] = { name: "", amount: "" };
+      }
 
-      <label style="margin-top:6px;">Montant engagé (€)</label>
-      <input type="number" id="engAmount" value="${waveData.amount || ""}" />
+      if (!WAVES.some(w => w.id === currentEngWave)) currentEngWave = "wave1";
 
-      <label style="margin-top:6px;">Notes / actions</label>
-      <textarea rows="4" id="engNotes">${waveNotes}</textarea>
-    </div>
-  `;
+      const wave = WAVES.find(w => w.id === currentEngWave);
+      const waveData = st.engagementByWave[currentEngWave] || { name: "", amount: "" };
+      const waveStatus = st.waves[currentEngWave] || "Non concerné";
+      const waveNotes = (st.engNotesByWave && st.engNotesByWave[currentEngWave]) || "";
 
- /* ================= EVENTS ================= */
+      right.innerHTML = `
+        <div style="font-size:13px;font-weight:600;">${currentStore.name}</div>
+        <div class="subtext">Gestion par vague (menu comme Fruits & Légumes).</div>
+        <div class="card" style="margin-top:10px;padding:12px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div style="font-size:13px;font-weight:600;">Vagues</div>
+            <div class="tabs">
+              ${WAVES.map(w => `
+                <button type="button" class="tab-btn ${currentEngWave === w.id ? "active" : ""}" data-eng-wave="${w.id}">
+                  ${w.label}
+                </button>
+              `).join("")}
+            </div>
+          </div>
+        </div>
+        <div class="card" style="margin-top:10px;padding:12px;">
+          <div style="font-size:13px;font-weight:600;margin-bottom:8px;">${wave.label}</div>
+          <label>Statut</label>
+          <select id="engStatus">
+            ${WAVE_STATUSES.map(s => `
+              <option value="${s}" ${s === waveStatus ? "selected" : ""}>${s}</option>
+            `).join("")}
+          </select>
+          <label style="margin-top:6px;">Nom de la vague</label>
+          <input type="text" id="engName" value="${waveData.name || ""}" />
+          <label style="margin-top:6px;">Montant engagé (€)</label>
+          <input type="number" id="engAmount" value="${waveData.amount || ""}" />
+          <label style="margin-top:6px;">Notes / actions</label>
+          <textarea rows="4" id="engNotes">${waveNotes}</textarea>
+        </div>
+      `;
 
-right.querySelectorAll("[data-eng-wave]").forEach(btn => {
-  btn.addEventListener("click", e => {
-    e.preventDefault();
+      right.querySelectorAll("[data-eng-wave]").forEach(btn => {
+        btn.addEventListener("click", e => {
+          e.preventDefault();
+          currentEngWave = btn.dataset.engWave;
+          renderApp();
+        });
+      });
 
-    currentEngWave = btn.dataset.engWave;
+      right.querySelector("#engStatus").addEventListener("change", e => {
+        st.waves[currentEngWave] = e.target.value;
+        updateEngagementRow(currentStore.id);
+        saveWithDebounce(currentStore.id);
+      });
 
-    // mise à jour visuelle des boutons
-    right.querySelectorAll("[data-eng-wave]").forEach(b =>
-      b.classList.toggle("active", b.dataset.engWave === currentEngWave)
-    );
+      right.querySelector("#engName").addEventListener("blur", e => {
+        st.engagementByWave[currentEngWave].name = e.target.value;
+        saveWithDebounce(currentStore.id);
+      });
 
-    // recharge les champs SANS recréer le DOM
-    const st2 = getStoreState(currentStore.id);
-    const data = st2.engagementByWave[currentEngWave] || { name: "", amount: "" };
+      right.querySelector("#engAmount").addEventListener("blur", e => {
+        st.engagementByWave[currentEngWave].amount = e.target.value;
+        updateEngagementRow(currentStore.id);
+        saveWithDebounce(currentStore.id);
+      });
 
-    right.querySelector("#engStatus").value =
-      st2.waves[currentEngWave] || "Non concerné";
+      right.querySelector("#engNotes").addEventListener("blur", e => {
+        if (!st.engNotesByWave) st.engNotesByWave = {};
+        st.engNotesByWave[currentEngWave] = e.target.value;
+        saveWithDebounce(currentStore.id);
+      });
 
-    right.querySelector("#engName").value = data.name || "";
-    right.querySelector("#engAmount").value = data.amount || "";
-    right.querySelector("#engNotes").value =
-      (st2.engNotesByWave && st2.engNotesByWave[currentEngWave]) || "";
-  });
-});
-// statut
-right.querySelector("#engStatus").addEventListener("change", e => {
-  st.waves[currentEngWave] = e.target.value;
-  updateEngagementRow(currentStore.id);
-  saveWithDebounce(currentStore.id);
-});
-
-// nom
-right.querySelector("#engName").addEventListener("input", e => {
-  st.engagementByWave[currentEngWave].name = e.target.value;
-  saveWithDebounce(currentStore.id);
-});
-
-// montant
-right.querySelector("#engAmount").addEventListener("blur", e => {
-  st.engagementByWave[currentEngWave].amount = e.target.value;
-  updateEngagementRow(currentStore.id);
-  saveWithDebounce(currentStore.id);
-});
-
-// notes
-right.querySelector("#engNotes").addEventListener("input", e => {
-  if (!st.engNotesByWave) st.engNotesByWave = {};
-  st.engNotesByWave[currentEngWave] = e.target.value;
-  saveWithDebounce(currentStore.id);
-});
-
-
-  container.appendChild(left);
-  container.appendChild(right);
-}
-
+      container.appendChild(left);
+      container.appendChild(right);
+    }
 
     async function init() {
       await loadStateFromSupabase();
