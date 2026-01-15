@@ -469,27 +469,32 @@
         
         console.log("📦 Reçu:", data.length, "lignes");
         
-        // ⚠️ TEST: On ignore temporairement les données Supabase
-        console.log("⚠️ MODE TEST: Données Supabase ignorées temporairement");
-        console.log("✅ Application démarrée (mode vide)");
-        
-        // Décommente ces lignes une fois que tu m'auras montré tes colonnes:
-        /*
         const cleanData = JSON.parse(JSON.stringify(data));
-        cleanData.forEach(row => {
-          STATE[row.id] = {
-            flBySeason: row.fl_by_season ? normalizeFlData(row.fl_by_season).seasons : defaultFlBySeason(),
-            flCommande: row.fl_by_season?.meta?.commande || "",
-            waves: row.waves || {},
-            engagementByWave: normalizeEngagementByWave(row.engagement_by_wave || {}),
-            engNotesByWave: row.eng_notes_by_waves || {},
-            visits: row.visits || [],
-            buysEng: row.buys_eng || "",
-            notesEng: row.notes_eng || ""
-          };
-        });
-        console.log("✅ Chargé:", Object.keys(STATE).length, "magasins");
-        */
+cleanData.forEach(row => {
+  STATE[row.id] = {
+    flBySeason: row.fl_by_season
+      ? normalizeFlData(row.fl_by_season).seasons
+      : defaultFlBySeason(),
+
+    flCommande: row.fl_by_season?.meta?.commande || "",
+
+    waves: row.waves || {},
+
+    engagementByWave: normalizeEngagementByWave(
+      row.engagement_by_wave || {}
+    ),
+
+    engNotesByWave: row.eng_notes_by_waves || {},
+
+    visits: Array.isArray(row.visits) ? row.visits : [],
+
+    buysEng: row.buys_eng || "",
+
+    notesEng: row.notes_eng || ""
+  };
+});
+
+console.log("✅ Chargé:", Object.keys(STATE).length, "magasins");
         
       } catch (err) {
         console.error("❌ Erreur:", err.message);
