@@ -1092,11 +1092,11 @@ console.log("✅ Chargé:", Object.keys(STATE).length, "magasins");
         });
 
         right.querySelectorAll("[data-fl-season]").forEach(btn => {
-          btn.addEventListener("click", () => {
-            currentFlSeason = btn.dataset.flSeason;
-            renderApp();
-          });
-        });
+  btn.addEventListener("click", () => {
+    currentFlSeason = btn.dataset.flSeason;
+    renderFlRightPanel(right, currentStore);
+  });
+});
 
       } else {
         right.innerHTML = '<div class="subtext">Sélectionne un magasin dans la liste.</div>';
@@ -1211,10 +1211,10 @@ console.log("✅ Chargé:", Object.keys(STATE).length, "magasins");
 
       right.querySelectorAll("[data-eng-wave]").forEach(btn => {
         btn.addEventListener("click", e => {
-          e.preventDefault();
-          currentEngWave = btn.dataset.engWave;
-          renderApp();
-        });
+  e.preventDefault();
+  currentEngWave = btn.dataset.engWave;
+  renderEngRightPanel(right, currentStore);
+});
       });
 
       right.querySelector("#engStatus").addEventListener("change", e => {
@@ -1243,6 +1243,145 @@ console.log("✅ Chargé:", Object.keys(STATE).length, "magasins");
       container.appendChild(left);
       container.appendChild(right);
     }
+    function renderFlRightPanel(right, currentStore) {
+  const st = getStoreState(currentStore.id);
+
+  if (!SEASONS.includes(currentFlSeason)) currentFlSeason = "Printemps";
+  const data = st.flBySeason[currentFlSeason] || { ordered: "", amount: "", plan: "" };
+
+  const totalActuel = computeFLActualTotal(currentStore.id);
+  const totalTarget = getFlTarget(currentStore.id);
+  const progression = totalTarget > 0
+    ? Math.round((totalActuel / totalTarget) * 100) + " %"
+    : "—";
+
+  right.innerHTML = `
+    <div style="font-size:13px;font-weight:600;">${currentStore.name}</div>
+    <div class="card" style="margin-top:10px;padding:12px;">
+      <div class="subtext">
+        Objectif : <b>${euro(totalTarget)}</b> ·
+        Actuel : <b data-kpi-fl-actual>${euro(totalActuel)}</b> ·
+        Progression : <b>${progression}</b>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:10px;padding:12px;">
+      <div class="tabs">
+        ${SEASONS.map(season => `
+          <button class="tab-btn ${currentFlSeason === season ? "active" : ""}"
+                  data-fl-season="${season}">
+            ${season}
+          </button>
+        `).join("")}
+      </div>
+
+      <label>Commande F&L</label>
+      <select id="seasonOrdered">
+        <option value="">NC</option>
+        <option value="Oui" ${data.ordered === "Oui" ? "selected" : ""}>Oui</option>
+        <option value="Non" ${data.ordered === "Non" ? "selected" : ""}>Non</option>
+      </select>
+
+      <label>Montant (€)</label>
+      <input type="number" id="seasonAmount" value="${data.amount || ""}" />
+
+      <label>Plan d'action</label>
+      <textarea id="seasonPlan" rows="4">${data.plan || ""}</textarea>
+    </div>
+  `;
+
+  right.querySelector("#seasonOrdered").onchange = e => {
+    st.flBySeason[currentFlSeason].ordered = e.target.value;
+    saveWithDebounce(currentStore.id);
+  };
+
+  right.querySelector("#seasonAmount").onblur = e => {
+    st.flBySeason[currentFlSeason].amount = e.target.value;
+    updateFlKpisLive(currentStore.id);
+    saveWithDebounce(currentStore.id);
+  };
+
+  right.querySelector("#seasonPlan").onblur = e => {
+    st.flBySeason[currentFlSeason].plan = e.target.value;
+    saveWithDebounce(currentStore.id);
+  };
+
+  right.querySelectorAll("[data-fl-season]").forEach(btn => {
+    btn.onclick = () => {
+      currentFlSeason = btn.dataset.flSeason;
+      renderFlRightPanel(right, currentStore);
+    };
+  });
+}
+    function renderEngRightPanel(right, currentStore) {
+  const st = getStoreState(currentStore.id);
+  const wave = WAVES.find(w => w.id === currentEngWave);
+  const data = st.engagementByWave[currentEngWave] || { name: "", amount: "" };
+  const status = st.waves[currentEngWave] || "Non concerné";
+  const notes = st.engNotesByWave?.[currentEngWave] || "";
+
+  right.innerHTML = `
+    <div style="font-size:13px;font-weight:600;">${currentStore.name}</div>
+
+    <div class="card" style="margin-top:10px;padding:12px;">
+      <div class="tabs">
+        ${WAVES.map(w => `
+          <button class="tab-btn ${currentEngWave === w.id ? "active" : ""}"
+                  data-eng-wave="${w.id}">
+            ${w.label}
+          </button>
+        `).join("")}
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:10px;padding:12px;">
+      <label>Statut</label>
+      <select id="engStatus">
+        ${WAVE_STATUSES.map(s => `
+          <option ${s === status ? "selected" : ""}>${s}</option>
+        `).join("")}
+      </select>
+
+      <label>Nom</label>
+      <input id="engName" value="${data.name || ""}" />
+
+      <label>Montant</label>
+      <input type="number" id="engAmount" value="${data.amount || ""}" />
+
+      <label>Notes</label>
+      <textarea id="engNotes">${notes}</textarea>
+    </div>
+  `;
+
+  right.querySelectorAll("[data-eng-wave]").forEach(btn => {
+    btn.onclick = () => {
+      currentEngWave = btn.dataset.engWave;
+      renderEngRightPanel(right, currentStore);
+    };
+  });
+
+  right.querySelector("#engStatus").onchange = e => {
+    st.waves[currentEngWave] = e.target.value;
+    updateEngagementRow(currentStore.id);
+    saveWithDebounce(currentStore.id);
+  };
+
+  right.querySelector("#engName").onblur = e => {
+    st.engagementByWave[currentEngWave].name = e.target.value;
+    saveWithDebounce(currentStore.id);
+  };
+
+  right.querySelector("#engAmount").onblur = e => {
+    st.engagementByWave[currentEngWave].amount = e.target.value;
+    updateEngagementRow(currentStore.id);
+    saveWithDebounce(currentStore.id);
+  };
+
+  right.querySelector("#engNotes").onblur = e => {
+    st.engNotesByWave[currentEngWave] = e.target.value;
+    saveWithDebounce(currentStore.id);
+  };
+}
 
     async function init() {
       await loadStateFromSupabase();
