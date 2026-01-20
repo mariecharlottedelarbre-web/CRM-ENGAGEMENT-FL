@@ -831,12 +831,12 @@ console.log("✅ Chargé:", Object.keys(STATE).length, "magasins");
         renderLogin();
       });
 
-      mainCard.querySelectorAll(".tab-btn").forEach(btn => {
-        btn.addEventListener("click", () => {
-          currentTab = btn.dataset.tab;
-          renderApp();
-        });
-      });
+     mainCard.querySelectorAll(".tab-btn[data-tab]").forEach(btn => {
+  btn.addEventListener("click", () => {
+    currentTab = btn.dataset.tab;
+    renderApp();
+  });
+});
 
       shell.appendChild(sidebar);
       shell.appendChild(main);
@@ -1017,90 +1017,11 @@ console.log("✅ Chargé:", Object.keys(STATE).length, "magasins");
           saveStoreToSupabase(id);
         });
       });
-
-      if (currentStore) {
-        const st = getStoreState(currentStore.id);
-        const totalActuelStore = computeFLActualTotal(currentStore.id);
-        const total2025Store = getFlTarget(currentStore.id);
-        const n1 = Number(getFlTarget(currentStore.id) || 0);
-        const a = Number(totalActuelStore || 0);
-        const progressionVsN1 = n1 > 0 ? Math.round((a / n1) * 100) + " %" : "—";
-
-        if (!SEASONS.includes(currentFlSeason)) currentFlSeason = "Printemps";
-        const data = st.flBySeason?.[currentFlSeason] || { ordered: "", amount: "", plan: "" };
-
-        right.innerHTML = `
-          <div style="font-size:13px;font-weight:600;">${currentStore.name}</div>
-          <div class="subtext">Objectif 2025 figé + saisie du montant et plan d'action par saison (menu).</div>
-          <div class="card" style="margin-top:10px;padding:12px;">
-            <div style="font-size:13px;font-weight:600;margin-bottom:8px;">F&L – Référence N-1</div>
-            <div class="subtext">
-              N-1 : <b>${euro(getFlTarget(currentStore.id))}</b>
-              · Actuel : <b data-kpi-fl-actual>${euro(totalActuelStore)}</b>
-              · Progression : <b>${progressionVsN1}</b>
-            </div>
-          </div>
-          <div class="card" style="margin-top:10px;padding:12px;">
-            <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
-              <div style="font-size:13px;font-weight:600;">Saisonnalité</div>
-              <div class="tabs" style="padding:2px;">
-                ${SEASONS.map(season => `
-                  <button class="season-btn tab-btn ${currentFlSeason === season ? "active" : ""}" data-fl-season="${season}">${season}</button>
-                `).join("")}
-              </div>
-            </div>
-            <div style="margin-top:10px;">
-              <div style="font-size:13px;font-weight:600;margin-bottom:8px;" id="currentSeasonLabel">${currentFlSeason}</div>
-              <div style="margin-bottom:8px;">
-                <label>Commande Fruits & Légumes ?</label>
-                <select id="seasonOrdered">
-                  <option value="">NC</option>
-                  <option value="Oui" ${data.ordered === "Oui" ? "selected" : ""}>Oui</option>
-                  <option value="Non" ${data.ordered === "Non" ? "selected" : ""}>Non</option>
-                </select>
-              </div>
-              <div style="margin-bottom:8px;">
-                <label>Montant (€)</label>
-                <input type="number" id="seasonAmount" value="${data.amount || ""}" />
-              </div>
-              <div>
-                <label>Plan d'action</label>
-                <textarea rows="5" id="seasonPlan">${data.plan || ""}</textarea>
-              </div>
-            </div>
-          </div>
-        `;
-
-        const orderedSel = right.querySelector("#seasonOrdered");
-        const amountInp = right.querySelector("#seasonAmount");
-        const planTa = right.querySelector("#seasonPlan");
-
-        orderedSel.addEventListener("change", () => {
-          st.flBySeason[currentFlSeason].ordered = orderedSel.value;
-          saveWithDebounce(currentStore.id);
-        });
-
-        amountInp.addEventListener("blur", () => {
-          st.flBySeason[currentFlSeason].amount = amountInp.value;
-          updateFlKpisLive(currentStore.id);
-          saveWithDebounce(currentStore.id);
-        });
-
-        planTa.addEventListener("blur", () => {
-          st.flBySeason[currentFlSeason].plan = planTa.value;
-          saveWithDebounce(currentStore.id);
-        });
-
-        right.querySelectorAll("[data-fl-season]").forEach(btn => {
-  btn.addEventListener("click", () => {
-    currentFlSeason = btn.dataset.flSeason;
-    renderFlRightPanel(right, currentStore);
-  });
-});
-
-      } else {
-        right.innerHTML = '<div class="subtext">Sélectionne un magasin dans la liste.</div>';
-      }
+  if (currentStore) {
+  renderFlRightPanel(right, currentStore);
+} else {
+  right.innerHTML = '<div class="subtext">Sélectionne un magasin dans la liste.</div>';
+}
 
       container.appendChild(left);
       container.appendChild(right);
@@ -1165,80 +1086,11 @@ console.log("✅ Chargé:", Object.keys(STATE).length, "magasins");
         return;
       }
 
-      const st = getStoreState(currentStore.id);
-      if (!st.engagementByWave[currentEngWave]) {
-        st.engagementByWave[currentEngWave] = { name: "", amount: "" };
-      }
-
-      if (!WAVES.some(w => w.id === currentEngWave)) currentEngWave = "wave1";
-
-      const wave = WAVES.find(w => w.id === currentEngWave);
-      const waveData = st.engagementByWave[currentEngWave] || { name: "", amount: "" };
-      const waveStatus = st.waves[currentEngWave] || "Non concerné";
-      const waveNotes = (st.engNotesByWave && st.engNotesByWave[currentEngWave]) || "";
-
-      right.innerHTML = `
-        <div style="font-size:13px;font-weight:600;">${currentStore.name}</div>
-        <div class="subtext">Gestion par vague (menu comme Fruits & Légumes).</div>
-        <div class="card" style="margin-top:10px;padding:12px;">
-          <div style="display:flex;justify-content:space-between;align-items:center;">
-            <div style="font-size:13px;font-weight:600;">Vagues</div>
-            <div class="tabs">
-              ${WAVES.map(w => `
-                <button type="button" class="tab-btn ${currentEngWave === w.id ? "active" : ""}" data-eng-wave="${w.id}">
-                  ${w.label}
-                </button>
-              `).join("")}
-            </div>
-          </div>
-        </div>
-        <div class="card" style="margin-top:10px;padding:12px;">
-          <div style="font-size:13px;font-weight:600;margin-bottom:8px;">${wave.label}</div>
-          <label>Statut</label>
-          <select id="engStatus">
-            ${WAVE_STATUSES.map(s => `
-              <option value="${s}" ${s === waveStatus ? "selected" : ""}>${s}</option>
-            `).join("")}
-          </select>
-          <label style="margin-top:6px;">Nom de la vague</label>
-          <input type="text" id="engName" value="${waveData.name || ""}" />
-          <label style="margin-top:6px;">Montant engagé (€)</label>
-          <input type="number" id="engAmount" value="${waveData.amount || ""}" />
-          <label style="margin-top:6px;">Notes / actions</label>
-          <textarea rows="4" id="engNotes">${waveNotes}</textarea>
-        </div>
-      `;
-
-      right.querySelectorAll("[data-eng-wave]").forEach(btn => {
-        btn.addEventListener("click", e => {
-  e.preventDefault();
-  currentEngWave = btn.dataset.engWave;
+      if (currentStore) {
   renderEngRightPanel(right, currentStore);
-});
-      });
-
-      right.querySelector("#engStatus").addEventListener("change", e => {
-        st.waves[currentEngWave] = e.target.value;
-        updateEngagementRow(currentStore.id);
-        saveWithDebounce(currentStore.id);
-      });
-
-      right.querySelector("#engName").addEventListener("blur", e => {
-        st.engagementByWave[currentEngWave].name = e.target.value;
-        saveWithDebounce(currentStore.id);
-      });
-
-      right.querySelector("#engAmount").addEventListener("blur", e => {
-        st.engagementByWave[currentEngWave].amount = e.target.value;
-        updateEngagementRow(currentStore.id);
-        saveWithDebounce(currentStore.id);
-      });
-
-      right.querySelector("#engNotes").addEventListener("blur", e => {
-        if (!st.engNotesByWave) st.engNotesByWave = {};
-        st.engNotesByWave[currentEngWave] = e.target.value;
-        saveWithDebounce(currentStore.id);
-      });
+} else {
+  right.innerHTML = '<div class="subtext">Sélectionne un magasin.</div>';
+}
 
       container.appendChild(left);
       container.appendChild(right);
@@ -1307,10 +1159,11 @@ console.log("✅ Chargé:", Object.keys(STATE).length, "magasins");
   };
 
   right.querySelectorAll("[data-fl-season]").forEach(btn => {
-    btn.onclick = () => {
-      currentFlSeason = btn.dataset.flSeason;
-      renderFlRightPanel(right, currentStore);
-    };
+    btn.onclick = (e) => {
+  e.stopPropagation();
+  currentFlSeason = btn.dataset.flSeason;
+  renderFlRightPanel(right, currentStore);
+};
   });
 }
     function renderEngRightPanel(right, currentStore) {
@@ -1354,11 +1207,12 @@ console.log("✅ Chargé:", Object.keys(STATE).length, "magasins");
   `;
 
   right.querySelectorAll("[data-eng-wave]").forEach(btn => {
-    btn.onclick = () => {
-      currentEngWave = btn.dataset.engWave;
-      renderEngRightPanel(right, currentStore);
-    };
-  });
+  btn.onclick = (e) => {
+    e.stopPropagation();
+    currentEngWave = btn.dataset.engWave;
+    renderEngRightPanel(right, currentStore);
+  };
+});
 
   right.querySelector("#engStatus").onchange = e => {
     st.waves[currentEngWave] = e.target.value;
