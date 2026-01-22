@@ -302,10 +302,41 @@
     const SEASONS = ["Printemps", "Été", "Automne", "Hiver"];
     const WAVE_STATUSES = ["Non concerné", "À faire", "En cours", "Engagé", "Refusé"];
 
-    const FL_OBJECTIFS_2025 = {};
-    STORES.forEach(s => { FL_OBJECTIFS_2025[s.id] = 0; });
+  const FL_OBJECTIFS_2025 = { 
+  "saint-jean-du-gard": 43225,
+  "lus-la-croix-haute": 37705,
+  "moussac": 36587,
+  "st-ambroix": 18353,
+  "valras-plage": 12126,
+  "charols": 11500,
+  "vercheny": 807,
+  "poulx-chenes": 0,
+  "montpellier-delicie": 0,
+  "bouillargues": 0,
+  "colmars-les-alpes": 128444,
+  "bargemon": 97822, 
+  "la-palud-verdon": 60676, 
+  "moutiers-eglise": 60564,
+  "les-salles-verdon": 42004,
+  "greoux-les-bains": 29010,
+  "comps-artuby": 27510,
+  "frejus-anc-comb-afn": 690, 
+  "frejus-afrique-n3775": 136,
+  "callas": 0,
+  "tallard-dumont": 30259,
+  "ceillac-rue-ppl": 29028,
+  "mirabeau": 24925,
+  "savines-le-lac": 19488,
+  "l-ile-rousse": 19041,
+  "apt-marchand": 6890, 
+  "calacussia": 0,
+  "orcieres-merlette": 0,
+  "ajaccio-napoleon": 0,
+  "vacqueyras": 1120,
 
-    function getFlTarget(storeId) {
+  
+};
+      function getFlTarget(storeId) {
       const v = FL_OBJECTIFS_2025[storeId];
       const n = Number(v || 0);
       return Number.isNaN(n) ? 0 : n;
