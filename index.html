@@ -472,9 +472,13 @@
     }
 
     function normalizeVisits(raw) {
-      if (Array.isArray(raw)) return raw;
-      return [];
-    }
+  if (!Array.isArray(raw)) return [];
+  return raw.map(v =>
+    typeof v === "string"
+      ? { date: v, note: "" }
+      : { date: v.date, note: v.note || "" }
+  );
+}
 
     function updateFlKpisLive(storeId) {
       const totalActuel = computeFLActualTotal(storeId);
@@ -566,7 +570,7 @@ cleanData.forEach(row => {
 
     engNotesByWave: row.eng_notes_by_waves || {},
 
-    visits: Array.isArray(row.visits) ? row.visits : [],
+    visits: normalizeVisits(row.visits),
 
     buysEng: row.buys_eng || "",
 
@@ -604,13 +608,14 @@ console.log("✅ Chargé:", Object.keys(STATE).length, "magasins");
       return STATE[id];
     }
 
-    let saveTimeout = null;
-    function saveWithDebounce(storeId) {
-      clearTimeout(saveTimeout);
-      saveTimeout = setTimeout(() => {
-        saveStoreToSupabase(storeId);
-      }, 800);
-    }
+    const saveTimeouts = {};
+
+function saveWithDebounce(storeId) {
+  clearTimeout(saveTimeouts[storeId]);
+  saveTimeouts[storeId] = setTimeout(() => {
+    saveStoreToSupabase(storeId);
+  }, 800);
+}
 
     async function saveStoreToSupabase(id) {
       const st = getStoreState(id);
@@ -889,7 +894,33 @@ console.log("✅ Chargé:", Object.keys(STATE).length, "magasins");
       const currentStore = stores.find(s => s.id === currentStoreId);
 
       if (currentTab === "overview") {
-        content.innerHTML = `<div class="subtext">Sélectionne un onglet pour accéder aux données du CRM.</div>`;
+  content.innerHTML = `
+    <div>
+      <div style="font-size:13px;font-weight:600;">Vue d’ensemble · Magasins</div>
+      <table>
+        <thead>
+          <tr>
+            <th>Magasin</th>
+            <th>CA 2025</th>
+            <th>Visites</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${stores.map(s => {
+            const visitsCount = getStoreState(s.id).visits.length;
+            return `
+              <tr>
+  <td>${s.name}</td>
+  <td>${formatNumber(s.ca2024)} €</td>
+  <td>${visitsCount}</td>
+</tr>
+            `;
+          }).join("")}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
       } else if (currentTab === "list") {
         renderStoresTab(content, stores, currentStore);
       } else if (currentTab === "fl") {
@@ -929,25 +960,23 @@ console.log("✅ Chargé:", Object.keys(STATE).length, "magasins");
 
       left.innerHTML = `
         <div>
-          <div style="font-size:13px;font-weight:600;">Magasins · Vue CA</div>
+          <div style="font-size:13px;font-weight:600;">Magasins · Suivi terrain</div>
           <div class="subtext">Clique sur un magasin pour voir le détail.</div>
         </div>
         <table>
           <thead>
-            <tr>
-              <th>Magasin</th>
-              <th>CA 2025</th>
-              <th>Visites</th>
-            </tr>
-          </thead>
+          <tr>
+    <th>Magasin</th>
+    <th>Visites</th>
+  </tr>
+</thead>
           <tbody>
             ${stores.map(s => {
               const visitsCount = getStoreState(s.id).visits.length;
               return `
                 <tr data-id="${s.id}">
                   <td>${s.name}</td>
-                  <td>${formatNumber(s.ca2024)} €</td>
-                  <td>${visitsCount}</td>
+                 <td>${visitsCount}</td>
                 </tr>
               `;
             }).join("")}
@@ -976,18 +1005,23 @@ console.log("✅ Chargé:", Object.keys(STATE).length, "magasins");
         <div class="card" style="margin-top:10px;padding:12px;">
           <div style="font-size:13px;font-weight:600;">Visites terrain</div>
           <div style="margin-top:6px;">
-            ${st.visits.length
-              ? st.visits.slice().reverse().map((date, i) => {
-                  const idx = st.visits.length - 1 - i;
-                  return `
-                    <div style="display:flex;gap:6px;margin-bottom:4px;">
-                      <input type="date" value="${date}" data-edit-visit="${idx}" />
-                      <button class="secondary" data-delete-visit="${idx}">🗑️</button>
-                    </div>
-                  `;
-                }).join("")
-              : `<span class="subtext">Aucune visite renseignée</span>`
-            }
+          ${st.visits.length
+  ? st.visits.slice().reverse().map((visit, i) => {
+      const idx = st.visits.length - 1 - i;
+      return `
+        <div style="margin-bottom:8px;">
+          <input type="date" value="${visit.date}" data-edit-visit="${idx}" />
+          <textarea
+            rows="2"
+            placeholder="Commentaire de visite"
+            data-note-visit="${idx}"
+          >${visit.note || ""}</textarea>
+          <button class="secondary" data-delete-visit="${idx}">🗑️</button>
+        </div>
+      `;
+    }).join("")
+  : `<span class="subtext">Aucune visite renseignée</span>`
+}
           </div>
           <button id="addVisitBtn" style="margin-top:8px;">+ Ajouter une visite aujourd'hui</button>
         </div>
@@ -995,28 +1029,40 @@ console.log("✅ Chargé:", Object.keys(STATE).length, "magasins");
 
       right.querySelector("#addVisitBtn").addEventListener("click", () => {
         const today = new Date().toISOString().slice(0, 10);
-        if (!st.visits.includes(today)) {
-          st.visits.push(today);
+        if (!st.visits.some(v => v.date === today)) {
+        st.visits.push({
+  date: today,
+  note: ""
+});
           saveStoreToSupabase(currentStore.id);
           renderApp();
         }
       });
 
-      right.querySelectorAll("[data-edit-visit]").forEach(inp => {
-        inp.addEventListener("change", () => {
-          const index = Number(inp.dataset.editVisit);
-          const newDate = inp.value;
-          if (!newDate) return;
-          if (st.visits.includes(newDate)) {
-            alert("Une visite existe déjà à cette date.");
-            renderApp();
-            return;
-          }
-          st.visits[index] = newDate;
-          saveStoreToSupabase(currentStore.id);
-          renderApp();
-        });
-      });
+     right.querySelectorAll("[data-edit-visit]").forEach(inp => {
+  inp.addEventListener("change", () => {
+    const index = Number(inp.dataset.editVisit);
+    const newDate = inp.value;
+    if (!newDate) return;
+
+    if (st.visits.some((v, i) => v.date === newDate && i !== index)) {
+      alert("Une visite existe déjà à cette date.");
+      renderApp();
+      return;
+    }
+
+    st.visits[index].date = newDate; 
+    saveStoreToSupabase(currentStore.id);
+    renderApp();
+  });
+});
+right.querySelectorAll("[data-note-visit]").forEach(txt => {
+  txt.addEventListener("blur", () => {
+    const index = Number(txt.dataset.noteVisit);
+    st.visits[index].note = txt.value;
+    saveWithDebounce(currentStore.id);
+  });
+});
 
       right.querySelectorAll("[data-delete-visit]").forEach(btn => {
         btn.addEventListener("click", () => {
