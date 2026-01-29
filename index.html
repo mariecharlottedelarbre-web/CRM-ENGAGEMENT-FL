@@ -302,6 +302,60 @@
     const SEASONS = ["Printemps", "Été", "Automne", "Hiver"];
     const WAVE_STATUSES = ["Non concerné", "À faire", "En cours", "Engagé", "Refusé"];
 
+    const PROMOS = {
+  "2026-01": {
+    proxi: [
+      { id: "beurre-montfleuri-250g", label: "Beurre Montfleuri 250g" },
+      { id: "lait-bio-1l", label: "Lait 1L Bio CRF" },
+      { id: "oeufs-plein-air-6", label: "Œufs plein air x6" },
+      { id: "steak-hache-18", label: "Steak haché (lot 18)" },
+      { id: "jambon-paris-160g", label: "Jambon de Paris 160g" },
+      { id: "sucre-poudre-1kg", label: "Sucre poudre 1kg" },
+      { id: "farine-ble-t55-1kg", label: "Farine blé T55 1kg" },
+      { id: "nutella-825g", label: "Nutella 825g" },
+      { id: "confiture-fraise-370g", label: "Confiture fraise 370g" },
+      { id: "coca-1-75l", label: "Coca-Cola 1,75L" },
+      { id: "biere-goudale-75cl", label: "Bière Goudale 75cl" },
+      { id: "emmental-rape-500g", label: "Emmental râpé 500g" }
+    ],
+    proxi_super: [] // volontairement vide → même liste
+  }
+};
+    const PROXI_SUPER_STORES = [
+  "montpellier-delicie",
+  "moussac",
+  "saint-jean-du-gard",
+  "lus-la-croix-haute",
+  "poulx-chenes",
+  "bouillargues",
+  "la-palud-verdon",
+  "moutiers-eglise",
+  "frejus-anc-comb-afn",
+  "comps-artuby",
+  "les-salles-verdon",
+  "mirabeau",
+  "bormes-mimosas-plage",
+  "cunlhat-domaize",
+  "propieres",
+  "legny-tarrets",
+  "val-thorens-temple",
+  "le-bourget-du-lac",
+  "courchevel",
+  "auris-oisans",
+  "vals-les-bains",
+  "langogne-capucins",
+  "st-mamet-salvetat",
+  "chadrac-pm",
+  "espaly-st-marcel",
+  "le-cheylard"
+];
+
+function getStoreFormat(store) {
+  return PROXI_SUPER_STORES.includes(store.id)
+    ? "proxi_super"
+    : "proxi";
+}
+
   const FL_OBJECTIFS_2025 = { 
   "saint-jean-du-gard": 43225,
   "lus-la-croix-haute": 37705,
@@ -529,7 +583,24 @@
       });
       return total;
     }
+function getPromoState(storeId, month) {
+  const st = getStoreState(storeId);
+  if (!st.promoByMonth[month]) st.promoByMonth[month] = {};
+  return st.promoByMonth[month];
+}
 
+function getPromoList(store, month) {
+  const format = getStoreFormat(store);
+  return PROMOS?.[month]?.[format] || PROMOS?.[month]?.proxi || [];
+}
+
+function computePromoPercent(store, month) {
+  const list = getPromoList(store, month);
+  if (!list.length) return "—";
+  const state = getPromoState(store.id, month);
+  const ordered = list.filter(p => state[p.id]?.checked).length;
+  return Math.round((ordered / list.length) * 100);
+}
     let STATE = {};
 
     async function loadStateFromSupabase() {
@@ -556,26 +627,28 @@
         const cleanData = JSON.parse(JSON.stringify(data));
 cleanData.forEach(row => {
   STATE[row.id] = {
-    flBySeason: row.fl_by_season
-      ? normalizeFlData(row.fl_by_season).seasons
-      : defaultFlBySeason(),
+  flBySeason: row.fl_by_season
+    ? normalizeFlData(row.fl_by_season).seasons
+    : defaultFlBySeason(),
 
-    flCommande: row.fl_by_season?.meta?.commande || "",
+  flCommande: row.fl_by_season?.meta?.commande || "",
 
-    waves: row.waves || {},
+  waves: row.waves || {},
 
-    engagementByWave: normalizeEngagementByWave(
-      row.engagement_by_wave || {}
-    ),
+  engagementByWave: normalizeEngagementByWave(
+    row.engagement_by_wave || {}
+  ),
 
-    engNotesByWave: row.eng_notes_by_waves || {},
+  engNotesByWave: row.eng_notes_by_waves || {},
 
-    visits: normalizeVisits(row.visits),
+  visits: normalizeVisits(row.visits),
 
-    buysEng: row.buys_eng || "",
+  buysEng: row.buys_eng || "",
 
-    notesEng: row.notes_eng || ""
-  };
+  notesEng: row.notes_eng || "",
+
+  promoByMonth: row.promo_by_month || {} 
+};
 });
 
 console.log("✅ Chargé:", Object.keys(STATE).length, "magasins");
@@ -596,7 +669,8 @@ console.log("✅ Chargé:", Object.keys(STATE).length, "magasins");
           engNotesByWave: {},
           visits: [],
           buysEng: "",
-          notesEng: ""
+          notesEng: "",
+          promoByMonth: {},
         };
       } else {
         if (!STATE[id].flBySeason) STATE[id].flBySeason = defaultFlBySeason();
@@ -604,6 +678,7 @@ console.log("✅ Chargé:", Object.keys(STATE).length, "magasins");
         if (!STATE[id].engNotesByWave) STATE[id].engNotesByWave = {};
         if (STATE[id].flCommande === undefined) STATE[id].flCommande = "";
         if (!STATE[id].visits) STATE[id].visits = [];
+        if (!STATE[id].promoByMonth) STATE[id].promoByMonth = {};
       }
       return STATE[id];
     }
@@ -633,7 +708,8 @@ function saveWithDebounce(storeId) {
         eng_notes_by_waves: JSON.parse(JSON.stringify(st.engNotesByWave || {})),
         visits: JSON.parse(JSON.stringify(st.visits || [])),
         buys_eng: st.buysEng || "",
-        notes_eng: st.notesEng || ""
+        notes_eng: st.notesEng || "",
+        promo_by_month: JSON.parse(JSON.stringify(st.promoByMonth || {})),
       };
 
       try {
@@ -879,11 +955,12 @@ function saveWithDebounce(storeId) {
       mainCard.className = "card";
       mainCard.innerHTML = `
         <div class="tabs">
-          <button class="tab-btn ${currentTab === "overview" ? "active" : ""}" data-tab="overview">Vue d'ensemble</button>
-          <button class="tab-btn ${currentTab === "list" ? "active" : ""}" data-tab="list">Magasins</button>
-          <button class="tab-btn ${currentTab === "fl" ? "active" : ""}" data-tab="fl">Fruits & Légumes</button>
-          <button class="tab-btn ${currentTab === "eng" ? "active" : ""}" data-tab="eng">Engagement</button>
-        </div>
+  <button class="tab-btn ${currentTab === "overview" ? "active" : ""}" data-tab="overview">Vue d'ensemble</button>
+  <button class="tab-btn ${currentTab === "list" ? "active" : ""}" data-tab="list">Magasins</button>
+  <button class="tab-btn ${currentTab === "fl" ? "active" : ""}" data-tab="fl">Fruits & Légumes</button>
+  <button class="tab-btn ${currentTab === "eng" ? "active" : ""}" data-tab="eng">Engagement</button>
+  <button class="tab-btn ${currentTab === "promo" ? "active" : ""}" data-tab="promo">Promo</button>
+</div>
       `;
 
       const content = document.createElement("div");
@@ -927,6 +1004,9 @@ function saveWithDebounce(storeId) {
       } else if (currentTab === "eng") {
         renderEngagementTab(content, stores, currentStore);
       }
+      else if (currentTab === "promo") {
+  renderPromoTab(content, stores, currentStore);
+}
 
       mainCard.appendChild(content);
       main.appendChild(mainCard);
@@ -1360,6 +1440,106 @@ right.querySelectorAll("[data-note-visit]").forEach(txt => {
     st.engNotesByWave[currentEngWave] = e.target.value;
     saveWithDebounce(currentStore.id);
   };
+}
+ let currentPromoMonth = "2026-01";
+
+function renderPromoTab(container, stores, currentStore) {
+  container.innerHTML = "";
+
+  const left = document.createElement("div");
+  const right = document.createElement("div");
+
+  left.innerHTML = `
+    <div style="font-size:13px;font-weight:600;">Promotions · ${currentPromoMonth}</div>
+    <table>
+      <thead>
+        <tr>
+          <th>Magasin</th>
+          <th>% commandé</th>
+        </tr>
+      </thead>
+      <tbody>
+  ${stores.map(s => {
+    const percent = computePromoPercent(s, currentPromoMonth);
+    return `
+      <tr data-id="${s.id}">
+        <td>${s.name}</td>
+        <td>${percent === "—" ? "—" : percent + " %"}</td>
+      </tr>
+    `;
+  }).join("")}
+</tbody>
+    </table>
+  `;
+
+  left.querySelectorAll("tbody tr").forEach(tr => {
+    tr.addEventListener("click", () => {
+      currentStoreId = tr.dataset.id;
+      renderApp();
+    });
+  });
+
+  if (!currentStore) {
+    right.innerHTML = `<div class="subtext">Sélectionne un magasin</div>`;
+    container.appendChild(left);
+    container.appendChild(right);
+    return;
+  }
+
+  const promoList = getPromoList(currentStore, currentPromoMonth);
+  const promoState = getPromoState(currentStore.id, currentPromoMonth);
+
+  right.innerHTML = `
+    <div style="font-size:13px;font-weight:600;">${currentStore.name}</div>
+    <table>
+      <thead>
+        <tr>
+          <th>Produit</th>
+          <th>Commandé</th>
+          <th>Commentaire</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${promoList.map(p => `
+          <tr>
+            <td>${p.label}</td>
+            <td>
+              <input type="checkbox"
+                ${promoState[p.id]?.checked ? "checked" : ""}
+                data-check="${p.id}">
+            </td>
+            <td>
+              <input type="text"
+                value="${promoState[p.id]?.note || ""}"
+                data-note="${p.id}">
+            </td>
+          </tr>
+        `).join("")}
+      </tbody>
+    </table>
+  `;
+
+  right.querySelectorAll("[data-check]").forEach(cb => {
+    cb.addEventListener("change", () => {
+      const id = cb.dataset.check;
+      promoState[id] = promoState[id] || {};
+      promoState[id].checked = cb.checked;
+      saveWithDebounce(currentStore.id);
+      renderApp();
+    });
+  });
+
+  right.querySelectorAll("[data-note]").forEach(inp => {
+    inp.addEventListener("blur", () => {
+      const id = inp.dataset.note;
+      promoState[id] = promoState[id] || {};
+      promoState[id].note = inp.value;
+      saveWithDebounce(currentStore.id);
+    });
+  });
+
+  container.appendChild(left);
+  container.appendChild(right);
 }
 
     async function init() {
