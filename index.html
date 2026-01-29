@@ -591,7 +591,13 @@ function getPromoState(storeId, month) {
 
 function getPromoList(store, month) {
   const format = getStoreFormat(store);
-  return PROMOS?.[month]?.[format] || PROMOS?.[month]?.proxi || [];
+  const list = PROMOS?.[month]?.[format];
+
+  if (Array.isArray(list) && list.length > 0) {
+    return list;
+  }
+
+  return PROMOS?.[month]?.proxi || [];
 }
 
 function computePromoPercent(store, month) {
