@@ -1360,21 +1360,22 @@ right.querySelectorAll("[data-note-visit]").forEach(txt => {
 
 const amountInput = right.querySelector("#seasonAmount");
 
-amountInput.onchange = function () {
+amountInput.addEventListener("blur", function () {
 
-  const value = this.value.replace(/\s/g, "").replace(",", ".").trim();
+  const txt = this.value.trim();
+  if (!txt) return;
 
   const current = Number(st.flBySeason[currentFlSeason].amount || 0);
 
   let result;
 
-  if (value[0] === "+" || value[0] === "-") {
-    result = current + Number(value);
+  if (txt.startsWith("+") || txt.startsWith("-")) {
+    result = current + parseFloat(txt);
   } else {
-    result = Number(value);
+    result = parseFloat(txt);
   }
 
-  if (isNaN(result)) result = current;
+  if (isNaN(result)) return;
 
   st.flBySeason[currentFlSeason].amount = result;
 
@@ -1382,7 +1383,8 @@ amountInput.onchange = function () {
 
   updateFlKpisLive(currentStore.id);
   saveWithDebounce(currentStore.id);
-};
+});
+
 
   right.querySelectorAll("[data-fl-season]").forEach(btn => {
     btn.onclick = (e) => {
