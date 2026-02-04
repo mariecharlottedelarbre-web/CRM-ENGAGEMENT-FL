@@ -1369,7 +1369,14 @@ const amountInput = right.querySelector("#seasonAmount");
 amountInput.addEventListener("change", function () {
 
   const txt = this.value.trim();
-  if (!txt) return;
+  // si vide → on met 0
+if (!txt) {
+  st.flBySeason[currentFlSeason].amount = 0;
+  this.value = "";
+  updateFlKpisLive(currentStore.id);
+  saveWithDebounce(currentStore.id);
+  return;
+}
 
   const current = Number(st.flBySeason[currentFlSeason].amount || 0);
 
