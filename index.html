@@ -450,11 +450,17 @@ function getStoreFormat(store) {
     }
 
     function computeFLProgression(actual, target) {
-      const t = Number(target || 0);
-      const a = Number(actual || 0);
-      if (!t || t <= 0) return "—";
-      return Math.round((a / t) * 100) + " %";
-    }
+  const t = Number(target || 0);
+  const a = Number(actual || 0);
+
+  // Aucun objectif défini
+  if (t === 0) {
+    if (a === 0) return "0 %";
+    return "100 %";
+  }
+
+  return Math.round((a / t) * 100) + " %";
+}
 
     function defaultFlBySeason() {
       return {
