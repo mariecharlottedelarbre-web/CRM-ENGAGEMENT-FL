@@ -1361,29 +1361,26 @@ right.querySelectorAll("[data-note-visit]").forEach(txt => {
  right.querySelector("#seasonAmount").onblur = e => {
   let input = e.target.value.trim();
 
-  // nettoyage user friendly
-  input = input
-    .replace(/\s/g, "")   // enlève espaces
-    .replace(",", ".");   // virgule → point
+  input = input.replace(/\s/g, "").replace(",", ".");
 
   const current = Number(st.flBySeason[currentFlSeason].amount || 0);
 
   let newValue;
 
-  // ➜ +xxx ou -xxx (même avec espace avant nettoyé)
-  if (/^[+-]\d+(\.\d+)?$/.test(input)) {
+  // ➜ si + ou -, on ajoute/soustrait
+  if (input.startsWith("+") || input.startsWith("-")) {
     newValue = current + Number(input);
   }
-  // ➜ nombre normal
-  else if (/^\d+(\.\d+)?$/.test(input)) {
+  // ➜ sinon on remplace direct
+  else {
     newValue = Number(input);
   }
-  else {
-    newValue = current; // sécurité si truc bizarre
-  }
+
+  if (Number.isNaN(newValue)) newValue = 0;
 
   st.flBySeason[currentFlSeason].amount = newValue;
-  e.target.value = newValue.toLocaleString("fr-FR");
+
+  e.target.value = newValue;
 
   updateFlKpisLive(currentStore.id);
   saveWithDebounce(currentStore.id);
