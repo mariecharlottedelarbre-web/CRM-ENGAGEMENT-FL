@@ -1362,21 +1362,19 @@ const amountInput = right.querySelector("#seasonAmount");
 
 amountInput.onchange = function () {
 
-  const value = this.value.trim();
+  const value = this.value.replace(/\s/g, "").replace(",", ".").trim();
+
   const current = Number(st.flBySeason[currentFlSeason].amount || 0);
 
   let result;
 
-  // si commence par + ou -
   if (value[0] === "+" || value[0] === "-") {
     result = current + Number(value);
-  }
-  // sinon on remplace
-  else {
+  } else {
     result = Number(value);
   }
 
-  if (isNaN(result)) result = 0;
+  if (isNaN(result)) result = current;
 
   st.flBySeason[currentFlSeason].amount = result;
 
