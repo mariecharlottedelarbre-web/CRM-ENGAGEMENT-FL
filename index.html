@@ -1358,29 +1358,29 @@ right.querySelectorAll("[data-note-visit]").forEach(txt => {
     saveWithDebounce(currentStore.id);
   };
 
- right.querySelector("#seasonAmount").onblur = e => {
-  let input = e.target.value.trim();
+const amountInput = right.querySelector("#seasonAmount");
 
-  input = input.replace(/\s/g, "").replace(",", ".");
+amountInput.onchange = function () {
 
+  const value = this.value.trim();
   const current = Number(st.flBySeason[currentFlSeason].amount || 0);
 
-  let newValue;
+  let result;
 
-  // ➜ si + ou -, on ajoute/soustrait
-  if (input.startsWith("+") || input.startsWith("-")) {
-    newValue = current + Number(input);
+  // si commence par + ou -
+  if (value[0] === "+" || value[0] === "-") {
+    result = current + Number(value);
   }
-  // ➜ sinon on remplace direct
+  // sinon on remplace
   else {
-    newValue = Number(input);
+    result = Number(value);
   }
 
-  if (Number.isNaN(newValue)) newValue = 0;
+  if (isNaN(result)) result = 0;
 
-  st.flBySeason[currentFlSeason].amount = newValue;
+  st.flBySeason[currentFlSeason].amount = result;
 
-  e.target.value = newValue;
+  this.value = result;
 
   updateFlKpisLive(currentStore.id);
   saveWithDebounce(currentStore.id);
