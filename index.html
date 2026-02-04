@@ -1369,9 +1369,18 @@ amountInput.addEventListener("change", function () {
 
   let result;
 
+  // CAS 1 : commence par + ou -
   if (txt.startsWith("+") || txt.startsWith("-")) {
     result = current + Number(txt);
-  } else {
+  }
+
+  // CAS 2 : contient + ou - ailleurs (ex: 2250+1000)
+  else if (txt.includes("+") || txt.includes("-")) {
+    result = Function("return " + txt)(); // calcule proprement
+  }
+
+  // CAS 3 : valeur simple → remplace
+  else {
     result = Number(txt);
   }
 
@@ -1379,11 +1388,10 @@ amountInput.addEventListener("change", function () {
 
   st.flBySeason[currentFlSeason].amount = result;
 
-this.value = result;
+  this.value = result;
 
-updateFlKpisLive(currentStore.id);
-saveWithDebounce(currentStore.id);
-
+  updateFlKpisLive(currentStore.id);
+  saveWithDebounce(currentStore.id);
 });
 
 
