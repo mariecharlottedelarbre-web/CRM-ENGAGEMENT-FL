@@ -1360,9 +1360,9 @@ right.querySelectorAll("[data-note-visit]").forEach(txt => {
 
 const amountInput = right.querySelector("#seasonAmount");
 
-amountInput.addEventListener("blur", function () {
+function applyAmountChange() {
 
-  const txt = this.value.trim();
+  const txt = amountInput.value.trim();
   if (!txt) return;
 
   const current = Number(st.flBySeason[currentFlSeason].amount || 0);
@@ -1379,10 +1379,21 @@ amountInput.addEventListener("blur", function () {
 
   st.flBySeason[currentFlSeason].amount = result;
 
-  this.value = result;
+  amountInput.value = result;
 
   updateFlKpisLive(currentStore.id);
   saveWithDebounce(currentStore.id);
+}
+
+// 🔥 blur
+amountInput.addEventListener("blur", applyAmountChange);
+
+// 🔥 ENTER
+amountInput.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") {
+    e.preventDefault();
+    applyAmountChange();
+  }
 });
 
 
