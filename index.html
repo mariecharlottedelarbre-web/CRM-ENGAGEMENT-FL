@@ -1360,9 +1360,9 @@ right.querySelectorAll("[data-note-visit]").forEach(txt => {
 
 const amountInput = right.querySelector("#seasonAmount");
 
-function applyAmountChange() {
+amountInput.addEventListener("change", function () {
 
-  const txt = amountInput.value.trim();
+  const txt = this.value.trim();
   if (!txt) return;
 
   const current = Number(st.flBySeason[currentFlSeason].amount || 0);
@@ -1370,30 +1370,20 @@ function applyAmountChange() {
   let result;
 
   if (txt.startsWith("+") || txt.startsWith("-")) {
-    result = current + parseFloat(txt);
+    result = current + Number(txt);
   } else {
-    result = parseFloat(txt);
+    result = Number(txt);
   }
 
   if (isNaN(result)) return;
 
   st.flBySeason[currentFlSeason].amount = result;
 
-  amountInput.value = result;
+this.value = result;
 
-  updateFlKpisLive(currentStore.id);
-  saveWithDebounce(currentStore.id);
-}
+updateFlKpisLive(currentStore.id);
+saveWithDebounce(currentStore.id);
 
-// 🔥 blur
-amountInput.addEventListener("blur", applyAmountChange);
-
-// 🔥 ENTER
-amountInput.addEventListener("keydown", (e) => {
-  if (e.key === "Enter") {
-    e.preventDefault();
-    applyAmountChange();
-  }
 });
 
 
