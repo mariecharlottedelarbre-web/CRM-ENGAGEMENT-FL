@@ -1346,7 +1346,7 @@ right.querySelectorAll("[data-note-visit]").forEach(txt => {
       </select>
 
       <label>Montant (€)</label>
-      <input type="number" id="seasonAmount" value="${data.amount || ""}" />
+      <input id="seasonAmount" value="${data.amount || ""}" placeholder="+1000 ou 2500" />
 
       <label>Plan d'action</label>
       <textarea id="seasonPlan" rows="4">${data.plan || ""}</textarea>
@@ -1358,16 +1358,36 @@ right.querySelectorAll("[data-note-visit]").forEach(txt => {
     saveWithDebounce(currentStore.id);
   };
 
-  right.querySelector("#seasonAmount").onblur = e => {
-    st.flBySeason[currentFlSeason].amount = e.target.value;
-    updateFlKpisLive(currentStore.id);
-    saveWithDebounce(currentStore.id);
-  };
+ right.querySelector("#seasonAmount").onblur = e => {
+  let input = e.target.value.trim();
 
-  right.querySelector("#seasonPlan").onblur = e => {
-    st.flBySeason[currentFlSeason].plan = e.target.value;
-    saveWithDebounce(currentStore.id);
-  };
+  // nettoyage user friendly
+  input = input
+    .replace(/\s/g, "")   // enlève espaces
+    .replace(",", ".");   // virgule → point
+
+  const current = Number(st.flBySeason[currentFlSeason].amount || 0);
+
+  let newValue;
+
+  // ➜ +xxx ou -xxx (même avec espace avant nettoyé)
+  if (/^[+-]\d+(\.\d+)?$/.test(input)) {
+    newValue = current + Number(input);
+  }
+  // ➜ nombre normal
+  else if (/^\d+(\.\d+)?$/.test(input)) {
+    newValue = Number(input);
+  }
+  else {
+    newValue = current; // sécurité si truc bizarre
+  }
+
+  st.flBySeason[currentFlSeason].amount = newValue;
+  e.target.value = newValue.toLocaleString("fr-FR");
+
+  updateFlKpisLive(currentStore.id);
+  saveWithDebounce(currentStore.id);
+};
 
   right.querySelectorAll("[data-fl-season]").forEach(btn => {
     btn.onclick = (e) => {
