@@ -660,6 +660,7 @@ cleanData.forEach(row => {
   notesEng: row.notes_eng || "",
 
   promoByMonth: row.promo_by_month || {} 
+  detentionByPeriod: row.detention_by_period || {}
 };
 });
 
@@ -683,6 +684,7 @@ console.log("✅ Chargé:", Object.keys(STATE).length, "magasins");
           buysEng: "",
           notesEng: "",
           promoByMonth: {},
+          detentionByPeriod: {},
         };
       } else {
         if (!STATE[id].flBySeason) STATE[id].flBySeason = defaultFlBySeason();
@@ -691,6 +693,7 @@ console.log("✅ Chargé:", Object.keys(STATE).length, "magasins");
         if (STATE[id].flCommande === undefined) STATE[id].flCommande = "";
         if (!STATE[id].visits) STATE[id].visits = [];
         if (!STATE[id].promoByMonth) STATE[id].promoByMonth = {};
+        if (!STATE[id].detentionByPeriod) STATE[id].detentionByPeriod = {};
       }
       return STATE[id];
     }
@@ -722,6 +725,7 @@ function saveWithDebounce(storeId) {
         buys_eng: st.buysEng || "",
         notes_eng: st.notesEng || "",
         promo_by_month: JSON.parse(JSON.stringify(st.promoByMonth || {})),
+        detention_by_period: JSON.parse(JSON.stringify(st.detentionByPeriod || {})),
       };
 
       try {
@@ -972,6 +976,7 @@ function saveWithDebounce(storeId) {
   <button class="tab-btn ${currentTab === "fl" ? "active" : ""}" data-tab="fl">Fruits & Légumes</button>
   <button class="tab-btn ${currentTab === "eng" ? "active" : ""}" data-tab="eng">Engagement</button>
   <button class="tab-btn ${currentTab === "promo" ? "active" : ""}" data-tab="promo">Promo</button>
+  <button class="tab-btn ${currentTab === "detention" ? "active" : ""}" data-tab="detention">Détention</button>
 </div>
       `;
 
@@ -1018,6 +1023,9 @@ function saveWithDebounce(storeId) {
       }
       else if (currentTab === "promo") {
   renderPromoTab(content, stores, currentStore);
+}
+    else if (currentTab === "detention") {
+  renderDetentionTab(content, stores, currentStore);
 }
 
       mainCard.appendChild(content);
@@ -1582,6 +1590,153 @@ function renderPromoTab(container, stores, currentStore) {
       saveWithDebounce(currentStore.id);
     });
   });
+
+  container.appendChild(left);
+  container.appendChild(right);
+}
+
+    let currentDetentionPeriod = "2025-11_2026-01";
+
+function detentionColor(v){
+  v = Number(v||0);
+  if(v >= 80) return "🟢";
+  if(v >= 50) return "🟠";
+  return "🔴";
+}
+
+function getDetentionState(storeId, period) {
+  const st = getStoreState(storeId);
+
+  if (!st.detentionByPeriod[period]) {
+    st.detentionByPeriod[period] = {
+      rangA: "",
+      top200: "",
+      top300: "",
+      bio: ""
+    };
+  }
+
+  return st.detentionByPeriod[period];
+}
+
+function renderDetentionTab(container, stores, currentStore){
+
+  const left = document.createElement("div");
+  const right = document.createElement("div");
+
+  left.innerHTML = `
+    <div style="font-size:13px;font-weight:600;margin-bottom:8px;">
+      Détention · ${currentDetentionPeriod}
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Magasin</th>
+          <th>Rang A</th>
+          <th>TOP200</th>
+          <th>TOP300</th>
+          <th>BIO</th>
+          <th>Score</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${[...stores]
+.sort((a,b)=>{
+  const da = getDetentionState(a.id,currentDetentionPeriod);
+  const db = getDetentionState(b.id,currentDetentionPeriod);
+
+  const avgA = (Number(da.rangA||0)+Number(da.top200||0)+Number(da.top300||0)+Number(da.bio||0))/4;
+  const avgB = (Number(db.rangA||0)+Number(db.top200||0)+Number(db.top300||0)+Number(db.bio||0))/4;
+
+  const hasDataA = da.rangA||da.top200||da.top300||da.bio;
+  const hasDataB = db.rangA||db.top200||db.top300||db.bio;
+
+  if(!hasDataA && !hasDataB) return 0;
+  if(!hasDataA) return 1;
+  if(!hasDataB) return -1;
+
+  return avgB - avgA;
+})
+.map(s=>{
+  const d = getDetentionState(s.id,currentDetentionPeriod);
+
+  const avg = Math.round(
+    (
+      Number(d.rangA||0)+
+      Number(d.top200||0)+
+      Number(d.top300||0)+
+      Number(d.bio||0)
+    ) / 4
+  );
+
+  const hasData = d.rangA||d.top200||d.top300||d.bio;
+
+  return `
+  <tr data-id="${s.id}">
+    <td>${s.name}</td>
+    <td>${detentionColor(d.rangA)} ${d.rangA||0}%</td>
+    <td>${detentionColor(d.top200)} ${d.top200||0}%</td>
+    <td>${detentionColor(d.top300)} ${d.top300||0}%</td>
+    <td>${detentionColor(d.bio)} ${d.bio||0}%</td>
+    <td><b>${hasData ? detentionColor(avg)+" "+avg+"%" : "—"}</b></td>
+  </tr>`;
+}).join("")}
+      </tbody>
+    </table>
+  `;
+
+  left.querySelectorAll("tr[data-id]").forEach(tr=>{
+    tr.onclick = ()=>{
+      currentStoreId = tr.dataset.id;
+      renderApp();
+    }
+  });
+
+  if(!currentStore){
+    container.appendChild(left);
+    return;
+  }
+
+  const d = getDetentionState(currentStore.id,currentDetentionPeriod);
+
+  right.innerHTML = `
+    <div style="font-size:13px;font-weight:600;margin-bottom:10px;">${currentStore.name}</div>
+
+    <label>Rang A PGC</label>
+${currentUser.role === "admin"
+  ? `<input type="number" value="${d.rangA||""}" data-det="rangA">`
+  : `<div>${detentionColor(d.rangA)} ${d.rangA||0}%</div>`
+}
+
+<label>TOP 200 MDC</label>
+${currentUser.role === "admin"
+  ? `<input type="number" value="${d.top200||""}" data-det="top200">`
+  : `<div>${detentionColor(d.top200)} ${d.top200||0}%</div>`
+}
+
+<label>TOP 300 MN</label>
+${currentUser.role === "admin"
+  ? `<input type="number" value="${d.top300||""}" data-det="top300">`
+  : `<div>${detentionColor(d.top300)} ${d.top300||0}%</div>`
+}
+
+<label>TOP BIO MDC</label>
+${currentUser.role === "admin"
+  ? `<input type="number" value="${d.bio||""}" data-det="bio">`
+  : `<div>${detentionColor(d.bio)} ${d.bio||0}%</div>`
+}
+  `;
+
+  if (currentUser.role === "admin") {
+  right.querySelectorAll("[data-det]").forEach(inp=>{
+    inp.onblur = ()=>{
+      d[inp.dataset.det] = Number(inp.value||0);
+      saveWithDebounce(currentStore.id);
+      renderApp();
+    }
+  });
+}
 
   container.appendChild(left);
   container.appendChild(right);
