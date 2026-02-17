@@ -176,6 +176,31 @@
       .two-columns { grid-template-columns: minmax(0,1fr); }
       .kpi-row { grid-template-columns: repeat(2,minmax(0,1fr)); }
     }
+    .chart-grid{
+  display:grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap:12px;
+  margin-top:12px;
+}
+.chart-card{
+  background: rgba(15,23,42,0.7);
+  border: 1px solid rgba(249,250,251,0.12);
+  border-radius: 14px;
+  padding: 12px;
+}
+.chart-title{
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+.chart-wrap{
+  position: relative;
+  height: 260px;
+}
+@media (max-width: 900px){
+  .chart-grid{ grid-template-columns: 1fr; }
+  .chart-wrap{ height: 240px; }
+}
   </style>
 </head>
 
@@ -183,6 +208,7 @@
   <div id="root" style="width:100%"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
   <script>
     const SUPABASE_URL = "https://sytpnqayyyjdjhojafyi.supabase.co";
@@ -631,6 +657,53 @@ function computePromoPercent(store, month) {
   return Math.round((ordered / list.length) * 100);
 }
     let STATE = {};
+    // -------------------- CHARTS (Admin dashboard) --------------------
+let CHARTS = [];
+
+function destroyCharts(){
+  try { CHARTS.forEach(c => c?.destroy?.()); } catch {}
+  CHARTS = [];
+}
+
+function toNum(v){
+  const n = Number(v ?? 0);
+  return Number.isNaN(n) ? 0 : n;
+}
+function percent(part, total){
+  const t = toNum(total);
+  if (t <= 0) return 0;
+  return Math.round((toNum(part) / t) * 100);
+}
+function groupByCommercial(rows){
+  const map = {};
+  rows.forEach(r => {
+    const cid = r.commercialId || "—";
+    if (!map[cid]){
+      map[cid] = {
+        commercialId: cid,
+        commercialName: r.commercialName || cid,
+        stores: 0,
+        ca: 0,
+        visits: 0,
+        engagedStores: 0,
+        flActual: 0,
+        flTarget: 0
+      };
+    }
+    map[cid].stores += 1;
+    map[cid].ca += toNum(r.ca);
+    map[cid].visits += toNum(r.visitsCount);
+    map[cid].flActual += toNum(r.flActual);
+    map[cid].flTarget += toNum(r.flTarget);
+    if (toNum(r.engagedWaves) > 0) map[cid].engagedStores += 1;
+  });
+  return Object.values(map).sort((a,b)=> b.ca - a.ca);
+}
+function getSelectedCommercialName(){
+  if (!adminPilotCommercial) return "";
+  return USERS.commerciaux.find(c => c.id === adminPilotCommercial)?.name || adminPilotCommercial;
+}
+// -----------------------------------------------------------------
 
     async function loadStateFromSupabase() {
       STATE = {};
@@ -996,6 +1069,7 @@ function setAdminPilotSort(key){
 }
 
     function renderApp() {
+      destroyCharts();
       root.innerHTML = "";
       const shell = document.createElement("div");
       shell.className = "app-shell";
