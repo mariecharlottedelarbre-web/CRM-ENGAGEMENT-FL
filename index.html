@@ -753,6 +753,9 @@ function saveWithDebounce(storeId) {
     let currentSearch = "";
     let currentEngWave = "wave1";
     let currentFlSeason = "Printemps";
+    let adminPilotCommercial = "";   
+let adminPilotSearch = "";     
+let adminPilotSort = { key: "lastVisit", dir: "asc" }; 
 
     function getUserStores(user) {
       if (!user) return [];
@@ -841,15 +844,143 @@ function saveWithDebounce(storeId) {
         } else {
           currentUser = { ...USERS.commerciaux.find(c => c.id === id), role: "commercial" };
         }
+        
         currentCommercialFilter = null;
         currentTab = "overview";
         currentStoreId = null;
         currentSearch = "";
         currentFlSeason = "Printemps";
         currentEngWave = "wave1";
+        adminPilotCommercial = "";
+adminPilotSearch = "";
+adminPilotSort = { key: "lastVisit", dir: "asc" };
         renderApp();
       });
     }
+
+    function getCommercialName(id){
+  return USERS.commerciaux.find(c => c.id === id)?.name || id || "—";
+}
+
+function getLastVisitDate(storeId){
+  const st = getStoreState(storeId);
+  const visits = Array.isArray(st.visits) ? st.visits : [];
+  const dates = visits.map(v => (typeof v === "string" ? v : v?.date)).filter(Boolean).sort();
+  return dates.length ? dates[dates.length - 1] : "";
+}
+
+function getEngagedWavesCount(storeId){
+  const st = getStoreState(storeId);
+  return WAVES.filter(w => st.waves?.[w.id] === "Engagé").length;
+}
+
+function computePilotRow(store, promoMonth, detentionPeriod){
+  const st = getStoreState(store.id);
+
+  const lastVisit = getLastVisitDate(store.id);
+  const visitsCount = Array.isArray(st.visits) ? st.visits.length : 0;
+
+  const engagedWaves = getEngagedWavesCount(store.id);
+  const engagedTotal = computeEngagementTotal(store.id);
+
+  const flActual = computeFLActualTotal(store.id);
+  const flTarget = getFlTarget(store.id);
+  const flPct = (Number(flTarget || 0) > 0)
+    ? Math.round((Number(flActual || 0) / Number(flTarget)) * 100)
+    : (flActual > 0 ? 100 : 0);
+
+  const promoPct = computePromoPercent(store, promoMonth);
+
+  const det = getDetentionState(store.id, detentionPeriod);
+  const detAvg = Math.round((Number(det.rangA||0)+Number(det.top200||0)+Number(det.top300||0)+Number(det.bio||0))/4);
+  const detHas = det.rangA || det.top200 || det.top300 || det.bio;
+  const detentionAvg = detHas ? detAvg : "";
+
+  return {
+    id: store.id,
+    storeName: store.name,
+    commercialId: store.commercialId,
+    commercialName: getCommercialName(store.commercialId),
+    ca: Number(store.ca2024 || 0),
+
+    lastVisit,
+    visitsCount,
+
+    engagedWaves,
+    engagedTotal,
+
+    flActual,
+    flTarget,
+    flPct,
+
+    promoPct,          // number or "—"
+    detentionAvg       // number or ""
+  };
+}
+
+function computeAdminPilotData(){
+  const promoMonth = (typeof currentPromoMonth === "string" && currentPromoMonth) ? currentPromoMonth : "2026-01";
+  const detentionPeriod = (typeof currentDetentionPeriod === "string" && currentDetentionPeriod) ? currentDetentionPeriod : "2025-11_2026-01";
+
+  let rows = STORES.map(s => computePilotRow(s, promoMonth, detentionPeriod));
+
+  if (adminPilotCommercial) rows = rows.filter(r => r.commercialId === adminPilotCommercial);
+
+  if (adminPilotSearch.trim()){
+    const q = adminPilotSearch.trim().toLowerCase();
+    rows = rows.filter(r =>
+      r.storeName.toLowerCase().includes(q) ||
+      r.commercialName.toLowerCase().includes(q)
+    );
+  }
+
+  const { key, dir } = adminPilotSort || { key: "lastVisit", dir: "asc" };
+  const mult = dir === "desc" ? -1 : 1;
+
+  rows.sort((a,b) => {
+    const va = a[key];
+    const vb = b[key];
+
+    if (key === "lastVisit") return (String(va||"").localeCompare(String(vb||""))) * mult;
+
+    if (key === "promoPct"){
+      const na = typeof va === "number" ? va : -1;
+      const nb = typeof vb === "number" ? vb : -1;
+      return (na - nb) * mult;
+    }
+
+    const na = Number(va ?? 0);
+    const nb = Number(vb ?? 0);
+    return (na - nb) * mult;
+  });
+
+  const totalStores = rows.length;
+  const totalCA = rows.reduce((s,r)=> s + (r.ca||0), 0);
+
+  const totalFlActual = rows.reduce((s,r)=> s + (r.flActual||0), 0);
+  const totalFlTarget = rows.reduce((s,r)=> s + (r.flTarget||0), 0);
+  const flProgress = computeFLProgression(totalFlActual, totalFlTarget);
+
+  const totalVisits = rows.reduce((s,r)=> s + (r.visitsCount||0), 0);
+  const engagedStores = rows.filter(r => r.engagedWaves > 0).length;
+
+  return {
+    promoMonth,
+    detentionPeriod,
+    rows,
+    kpis: { totalStores, totalCA, totalFlActual, totalFlTarget, flProgress, totalVisits, engagedStores }
+  };
+}
+
+function setAdminPilotSort(key){
+  if (adminPilotSort.key === key){
+    adminPilotSort.dir = adminPilotSort.dir === "asc" ? "desc" : "asc";
+  } else {
+    adminPilotSort.key = key;
+    adminPilotSort.dir = "asc";
+  }
+  renderApp();
+}
 
     function renderApp() {
       root.innerHTML = "";
