@@ -448,6 +448,23 @@ function getStoreFormat(store) {
     function safeJsonParse(str, fallback) {
       try { return JSON.parse(str); } catch { return fallback; }
     }
+    function todayLocalISO() {
+  const d = new Date();
+  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+  return d.toISOString().slice(0, 10);
+}
+function safeCalcExpression(expr){
+  const s = String(expr).replace(/\s+/g, "");
+  // Autorise uniquement chiffres + . + + -
+  if (!/^[0-9.+-]+$/.test(s)) return NaN;
+
+  // "2250+1000-200" => ["2250","+1000","-200"]
+  const parts = s.match(/[+-]?\d+(\.\d+)?/g);
+  if (!parts) return NaN;
+
+  return parts.reduce((sum, p) => sum + Number(p), 0);
+}
+
 
     function computeFLProgression(actual, target) {
   const t = Number(target || 0);
@@ -638,30 +655,26 @@ function computePromoPercent(store, month) {
         
         const cleanData = JSON.parse(JSON.stringify(data));
 cleanData.forEach(row => {
+  const normalized = row.fl_by_season ? normalizeFlData(row.fl_by_season) : null;
+
   STATE[row.id] = {
-  flBySeason: row.fl_by_season
-    ? normalizeFlData(row.fl_by_season).seasons
-    : defaultFlBySeason(),
+    flBySeason: normalized ? normalized.seasons : defaultFlBySeason(),
+    flCommande: normalized ? (normalized.meta.commande || "") : "",
 
-  flCommande: row.fl_by_season?.meta?.commande || "",
+    waves: row.waves || {},
 
-  waves: row.waves || {},
+    engagementByWave: normalizeEngagementByWave(row.engagement_by_wave || {}),
 
-  engagementByWave: normalizeEngagementByWave(
-    row.engagement_by_wave || {}
-  ),
+    engNotesByWave: row.eng_notes_by_waves || {},
 
-  engNotesByWave: row.eng_notes_by_waves || {},
+    visits: normalizeVisits(row.visits),
 
-  visits: normalizeVisits(row.visits),
+    buysEng: row.buys_eng || "",
+    notesEng: row.notes_eng || "",
 
-  buysEng: row.buys_eng || "",
-
-  notesEng: row.notes_eng || "",
-
-  promoByMonth: row.promo_by_month || {}, 
-  detentionByPeriod: row.detention_by_period || {}
-};
+    promoByMonth: row.promo_by_month || {},
+    detentionByPeriod: row.detention_by_period || {}
+  };
 });
 
 console.log("✅ Chargé:", Object.keys(STATE).length, "magasins");
@@ -1119,45 +1132,262 @@ function setAdminPilotSort(key){
       const currentStore = stores.find(s => s.id === currentStoreId);
 
       if (currentTab === "overview") {
-  content.innerHTML = `
-    <div>
-      <div style="font-size:13px;font-weight:600;">Vue d’ensemble · Magasins</div>
-      <table>
-        <thead>
-          <tr>
-            <th>Magasin</th>
-            <th>CA 2025</th>
-            <th>Visites</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${stores.map(s => {
-            const visitsCount = getStoreState(s.id).visits.length;
-            return `
+
+  // ✅ ADMIN : pilotage global
+  if (currentUser?.role === "admin") {
+    const data = computeAdminPilotData();
+    const k = data.kpis;
+
+    const pctEng = k.totalStores ? Math.round((k.engagedStores / k.totalStores) * 100) : 0;
+
+    content.innerHTML = `
+      <div>
+        <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:10px;">
+          <div>
+            <div style="font-size:13px;font-weight:700;">Pilotage global</div>
+            <div class="subtext">Vue globale · filtres et tris disponibles.</div>
+          </div>
+
+          <div style="display:flex;gap:8px;align-items:center;">
+            <div style="min-width:220px;">
+              <label style="margin:0 0 4px;">Filtrer par commercial</label>
+              <select id="adminPilotCommercial">
+                <option value="">Tous</option>
+                ${USERS.commerciaux.map(c => `
+                  <option value="${c.id}" ${adminPilotCommercial===c.id ? "selected":""}>${c.name}</option>
+                `).join("")}
+              </select>
+            </div>
+
+            <div style="min-width:240px;">
+              <label style="margin:0 0 4px;">Rechercher</label>
+              <input id="adminPilotSearch" value="${adminPilotSearch || ""}" placeholder="magasin ou commercial" />
+            </div>
+          </div>
+        </div>
+
+        <div class="kpi-row" style="margin-top:12px;">
+          <div class="kpi-card">
+            <div class="kpi-label">Magasins</div>
+            <div class="kpi-value">${k.totalStores}</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">CA total</div>
+            <div class="kpi-value">${formatNumber(k.totalCA)} €</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">F&L (actuel / objectif)</div>
+            <div class="kpi-value">${euro(k.totalFlActual)} / ${euro(k.totalFlTarget)}</div>
+            <div class="subtext" style="margin-top:4px;">${k.flProgress}</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Engagement</div>
+            <div class="kpi-value">${k.engagedStores} / ${k.totalStores}</div>
+            <div class="subtext" style="margin-top:4px;">${pctEng} % magasins engagés</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Visites (total)</div>
+            <div class="kpi-value">${k.totalVisits}</div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:12px;padding:12px;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:10px;">
+            <div>
+              <div style="font-size:13px;font-weight:700;">Tableau magasins</div>
+              <div class="subtext">Clic ligne = ouvrir le magasin.</div>
+            </div>
+
+            <div style="display:flex;gap:8px;align-items:center;">
+              <div style="min-width:160px;">
+                <label style="margin:0 0 4px;">Mois promo</label>
+                <select id="adminPromoMonth">
+                  ${Object.keys(PROMOS || {}).map(m => `
+                    <option value="${m}" ${data.promoMonth===m ? "selected":""}>${m}</option>
+                  `).join("")}
+                </select>
+              </div>
+
+              <div style="min-width:200px;">
+                <label style="margin:0 0 4px;">Période détention</label>
+                <input id="adminDetPeriod" value="${data.detentionPeriod}" />
+              </div>
+            </div>
+          </div>
+
+          <table>
+            <thead>
               <tr>
-  <td>${s.name}</td>
-  <td>${formatNumber(s.ca2024)} €</td>
-  <td>${visitsCount}</td>
-</tr>
-            `;
-          }).join("")}
-        </tbody>
-      </table>
-    </div>
-  `;
-      } else if (currentTab === "list") {
-        renderStoresTab(content, stores, currentStore);
-      } else if (currentTab === "fl") {
-        renderFruitsLegumesTab(content, stores, currentStore);
-      } else if (currentTab === "eng") {
-        renderEngagementTab(content, stores, currentStore);
-      }
-      else if (currentTab === "promo") {
+                <th data-sort="storeName">Magasin</th>
+                <th data-sort="commercialName">Commercial</th>
+                <th data-sort="ca">CA</th>
+                <th data-sort="lastVisit">Dernière visite</th>
+                <th data-sort="visitsCount">Visites</th>
+                <th data-sort="engagedWaves">Vagues engagées</th>
+                <th data-sort="engagedTotal">Total engagé</th>
+                <th data-sort="flActual">F&L actuel</th>
+                <th data-sort="flTarget">F&L objectif</th>
+                <th data-sort="flPct">F&L %</th>
+                <th data-sort="promoPct">Promo %</th>
+                <th data-sort="detentionAvg">Détention moy.</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${data.rows.map(r => `
+                <tr data-open-store="${r.id}">
+                  <td><b>${r.storeName}</b></td>
+                  <td>${r.commercialName}</td>
+                  <td>${formatNumber(r.ca)} €</td>
+                  <td>${r.lastVisit || "—"}</td>
+                  <td>${r.visitsCount}</td>
+                  <td>${r.engagedWaves}</td>
+                  <td>${euro(r.engagedTotal)}</td>
+                  <td>${euro(r.flActual)}</td>
+                  <td>${euro(r.flTarget)}</td>
+                  <td>${r.flTarget ? (r.flPct + " %") : "—"}</td>
+                  <td>${typeof r.promoPct === "number" ? (r.promoPct + " %") : "—"}</td>
+                  <td>${r.detentionAvg !== "" ? (r.detentionAvg + " %") : "—"}</td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="card" style="margin-top:12px;padding:12px;">
+          <div style="font-size:13px;font-weight:700;">Tableau commerciaux</div>
+          <table>
+            <thead>
+              <tr>
+                <th>Commercial</th>
+                <th>Magasins</th>
+                <th>CA cumulé</th>
+                <th>Visites</th>
+                <th>Magasins engagés</th>
+                <th>F&L actuel</th>
+                <th>F&L objectif</th>
+                <th>F&L %</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${USERS.commerciaux.map(c => {
+                const rows = data.rows.filter(r => r.commercialId === c.id);
+                const count = rows.length;
+                const ca = rows.reduce((s,r)=>s+(r.ca||0),0);
+                const visits = rows.reduce((s,r)=>s+(r.visitsCount||0),0);
+                const engStores = rows.filter(r => r.engagedWaves>0).length;
+                const flA = rows.reduce((s,r)=>s+(r.flActual||0),0);
+                const flT = rows.reduce((s,r)=>s+(r.flTarget||0),0);
+                const flP = computeFLProgression(flA, flT);
+                return `
+                  <tr>
+                    <td><b>${c.name}</b></td>
+                    <td>${count}</td>
+                    <td>${formatNumber(ca)} €</td>
+                    <td>${visits}</td>
+                    <td>${engStores}</td>
+                    <td>${euro(flA)}</td>
+                    <td>${euro(flT)}</td>
+                    <td>${flP}</td>
+                  </tr>
+                `;
+              }).join("")}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div>
+        <div class="subtext">Clique sur un magasin pour ouvrir sa fiche (onglet “Magasins”).</div>
+      </div>
+    `;
+
+    // Filtre commercial
+    content.querySelector("#adminPilotCommercial").addEventListener("change", (e) => {
+      adminPilotCommercial = e.target.value;
+      renderApp();
+    });
+
+    // Recherche
+    content.querySelector("#adminPilotSearch").addEventListener("input", (e) => {
+      adminPilotSearch = e.target.value;
+      renderApp();
+    });
+
+    // Mois promo
+    const promoSel = content.querySelector("#adminPromoMonth");
+    if (promoSel){
+      promoSel.addEventListener("change", (e) => {
+        currentPromoMonth = e.target.value;
+        renderApp();
+      });
+    }
+
+    // Période détention
+    const detInp = content.querySelector("#adminDetPeriod");
+    if (detInp){
+      detInp.addEventListener("change", (e) => {
+        currentDetentionPeriod = e.target.value.trim() || currentDetentionPeriod;
+        renderApp();
+      });
+    }
+
+    // Tri colonnes
+    content.querySelectorAll("th[data-sort]").forEach(th => {
+      th.style.cursor = "pointer";
+      th.addEventListener("click", () => setAdminPilotSort(th.dataset.sort));
+    });
+
+    // Clic ligne magasin
+    content.querySelectorAll("[data-open-store]").forEach(tr => {
+      tr.addEventListener("click", () => {
+        currentStoreId = tr.dataset.openStore;
+        currentTab = "list";
+        renderApp();
+      });
+    });
+
+  } else {
+    // ✅ COMMERCIAL : overview simple
+    content.innerHTML = `
+      <div>
+        <div style="font-size:13px;font-weight:600;">Vue d’ensemble · Magasins</div>
+        <table>
+          <thead>
+            <tr>
+              <th>Magasin</th>
+              <th>CA 2025</th>
+              <th>Visites</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${stores.map(s => {
+              const visitsCount = getStoreState(s.id).visits.length;
+              return `
+                <tr>
+                  <td>${s.name}</td>
+                  <td>${formatNumber(s.ca2024)} €</td>
+                  <td>${visitsCount}</td>
+                </tr>
+              `;
+            }).join("")}
+          </tbody>
+        </table>
+      </div>
+    `;
+  }
+
+} else if (currentTab === "list") {
+  renderStoresTab(content, stores, currentStore);
+} else if (currentTab === "fl") {
+  renderFruitsLegumesTab(content, stores, currentStore);
+} else if (currentTab === "eng") {
+  renderEngagementTab(content, stores, currentStore);
+} else if (currentTab === "promo") {
   renderPromoTab(content, stores, currentStore);
-}
-    else if (currentTab === "detention") {
+} else if (currentTab === "detention") {
   renderDetentionTab(content, stores, currentStore);
 }
+  
 
       mainCard.appendChild(content);
       main.appendChild(mainCard);
@@ -1258,7 +1488,7 @@ function setAdminPilotSort(key){
       `;
 
       right.querySelector("#addVisitBtn").addEventListener("click", () => {
-        const today = new Date().toISOString().slice(0, 10);
+        const today = todayLocalISO();
         if (!st.visits.some(v => v.date === today)) {
         st.visits.push({
   date: today,
@@ -1459,9 +1689,7 @@ right.querySelectorAll("[data-note-visit]").forEach(txt => {
 
   const totalActuel = computeFLActualTotal(currentStore.id);
   const totalTarget = getFlTarget(currentStore.id);
-  const progression = totalTarget > 0
-    ? Math.round((totalActuel / totalTarget) * 100) + " %"
-    : "—";
+  const progression = computeFLProgression(totalActuel, totalTarget);
 
   right.innerHTML = `
     <div style="font-size:13px;font-weight:600;">${currentStore.name}</div>
@@ -1502,44 +1730,44 @@ right.querySelectorAll("[data-note-visit]").forEach(txt => {
     st.flBySeason[currentFlSeason].ordered = e.target.value;
     saveWithDebounce(currentStore.id);
   };
+      right.querySelector("#seasonPlan").addEventListener("input", (e) => {
+  st.flBySeason[currentFlSeason].plan = e.target.value;
+  saveWithDebounce(currentStore.id);
+});
 
 const amountInput = right.querySelector("#seasonAmount");
 
 amountInput.addEventListener("change", function () {
-
   const txt = this.value.trim();
+
   // si vide → on met 0
-if (!txt) {
-  st.flBySeason[currentFlSeason].amount = 0;
-  this.value = "";
-  updateFlKpisLive(currentStore.id);
-  saveWithDebounce(currentStore.id);
-  return;
-}
+  if (!txt) {
+    st.flBySeason[currentFlSeason].amount = 0;
+    this.value = "";
+    updateFlKpisLive(currentStore.id);
+    saveWithDebounce(currentStore.id);
+    return;
+  }
 
   const current = Number(st.flBySeason[currentFlSeason].amount || 0);
-
   let result;
 
   // CAS 1 : commence par + ou -
   if (txt.startsWith("+") || txt.startsWith("-")) {
     result = current + Number(txt);
   }
-
-  // CAS 2 : contient + ou - ailleurs (ex: 2250+1000)
+  // CAS 2 : expression du type 2250+1000-200
   else if (txt.includes("+") || txt.includes("-")) {
-    result = Function("return " + txt)(); // calcule proprement
+    result = safeCalcExpression(txt);
   }
-
   // CAS 3 : valeur simple → remplace
   else {
     result = Number(txt);
   }
 
-  if (isNaN(result)) return;
+  if (Number.isNaN(result)) return;
 
   st.flBySeason[currentFlSeason].amount = result;
-
   this.value = result;
 
   updateFlKpisLive(currentStore.id);
@@ -1729,10 +1957,7 @@ function renderPromoTab(container, stores, currentStore) {
     let currentDetentionPeriod = "2025-11_2026-01";
 
 function detentionColor(v){
-  v = Number(v||0);
-  if(v >= 80) return "🟢";
-  if(v >= 50) return "🟠";
-  return "🔴";
+  return "";
 }
 
 function getDetentionState(storeId, period) {
@@ -1806,11 +2031,11 @@ function renderDetentionTab(container, stores, currentStore){
   return `
   <tr data-id="${s.id}">
     <td>${s.name}</td>
-    <td>${detentionColor(d.rangA)} ${d.rangA||0}%</td>
-    <td>${detentionColor(d.top200)} ${d.top200||0}%</td>
-    <td>${detentionColor(d.top300)} ${d.top300||0}%</td>
-    <td>${detentionColor(d.bio)} ${d.bio||0}%</td>
-    <td><b>${hasData ? detentionColor(avg)+" "+avg+"%" : "—"}</b></td>
+    <td>${d.rangA||0}%</td>
+    <td>${d.top200||0}%</td>
+    <td>${d.top300||0}%</td>
+    <td>${d.bio||0}%</td>
+    <td><b>${hasData ? (avg + "%") : "—"}</b></td>
   </tr>`;
 }).join("")}
       </tbody>
