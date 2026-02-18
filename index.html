@@ -703,6 +703,100 @@ function getSelectedCommercialName(){
   if (!adminPilotCommercial) return "";
   return USERS.commerciaux.find(c => c.id === adminPilotCommercial)?.name || adminPilotCommercial;
 }
+    function renderAdminCharts(rows){
+  // rows = data.rows (déjà filtrées / triées par computeAdminPilotData)
+  destroyCharts();
+
+  const grouped = groupByCommercial(rows);
+  const labels = grouped.map(g => g.commercialName);
+
+  // 1) FL Actuel vs Objectif
+  const flActual = grouped.map(g => Math.round(g.flActual));
+  const flTarget = grouped.map(g => Math.round(g.flTarget));
+
+  const c1 = document.getElementById("chartFlByCommercial");
+  if (c1){
+    CHARTS.push(new Chart(c1, {
+      type: "bar",
+      data: {
+        labels,
+        datasets: [
+          { label: "FL actuel", data: flActual },
+          { label: "FL objectif", data: flTarget }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: "bottom" } },
+        scales: { y: { beginAtZero: true } }
+      }
+    }));
+  }
+
+  // 2) Engagement — magasins engagés / total
+  const engagedStores = grouped.map(g => g.engagedStores);
+  const totalStores = grouped.map(g => g.stores);
+
+  const c2 = document.getElementById("chartEngagedByCommercial");
+  if (c2){
+    CHARTS.push(new Chart(c2, {
+      type: "bar",
+      data: {
+        labels,
+        datasets: [
+          { label: "Magasins engagés", data: engagedStores },
+          { label: "Magasins (total)", data: totalStores }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: "bottom" } },
+        scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+      }
+    }));
+  }
+
+  // 3) Visites — total par commercial
+  const visits = grouped.map(g => g.visits);
+
+  const c3 = document.getElementById("chartVisitsByCommercial");
+  if (c3){
+    CHARTS.push(new Chart(c3, {
+      type: "bar",
+      data: {
+        labels,
+        datasets: [{ label: "Visites (total)", data: visits }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: "bottom" } },
+        scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+      }
+    }));
+  }
+
+  // 4) CA — répartition (doughnut)
+  const ca = grouped.map(g => Math.round(g.ca));
+
+  const c4 = document.getElementById("chartCaShare");
+  if (c4){
+    CHARTS.push(new Chart(c4, {
+      type: "doughnut",
+      data: {
+        labels,
+        datasets: [{ label: "CA", data: ca }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: "bottom" } }
+      }
+    }));
+  }
+}
 // -----------------------------------------------------------------
 
     async function loadStateFromSupabase() {
@@ -1264,7 +1358,40 @@ function setAdminPilotSort(key){
             <div class="kpi-value">${k.totalVisits}</div>
           </div>
         </div>
+   
+       
+        <div id="adminCharts" class="chart-grid">
 
+          <div class="chart-card">
+            <div class="chart-title">F&L — Actuel vs Objectif (par commercial)</div>
+            <div class="chart-wrap">
+              <canvas id="chartFlByCommercial"></canvas>
+            </div>
+          </div>
+
+          <div class="chart-card">
+            <div class="chart-title">Engagement — Magasins engagés (par commercial)</div>
+            <div class="chart-wrap">
+              <canvas id="chartEngagedByCommercial"></canvas>
+            </div>
+          </div>
+
+          <div class="chart-card">
+            <div class="chart-title">Visites — Nombre total (par commercial)</div>
+            <div class="chart-wrap">
+              <canvas id="chartVisitsByCommercial"></canvas>
+            </div>
+          </div>
+
+          <div class="chart-card">
+            <div class="chart-title">Répartition du CA (par commercial)</div>
+            <div class="chart-wrap">
+              <canvas id="chartCaShare"></canvas>
+            </div>
+          </div>
+
+        </div>
+       
         <div class="card" style="margin-top:12px;padding:12px;">
           <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:10px;">
             <div>
@@ -1364,6 +1491,7 @@ function setAdminPilotSort(key){
                     <td>${flP}</td>
                   </tr>
                 `;
+
               }).join("")}
             </tbody>
           </table>
@@ -1374,6 +1502,9 @@ function setAdminPilotSort(key){
         <div class="subtext">Clique sur un magasin pour ouvrir sa fiche (onglet “Magasins”).</div>
       </div>
     `;
+requestAnimationFrame(() => {
+  renderAdminCharts(data.rows);
+});
 
     // Filtre commercial
     content.querySelector("#adminPilotCommercial").addEventListener("change", (e) => {
@@ -1381,11 +1512,12 @@ function setAdminPilotSort(key){
       renderApp();
     });
 
-    // Recherche
-    content.querySelector("#adminPilotSearch").addEventListener("input", (e) => {
-      adminPilotSearch = e.target.value;
-      renderApp();
-    });
+    let adminSearchT;
+content.querySelector("#adminPilotSearch").addEventListener("input", (e) => {
+  adminPilotSearch = e.target.value;
+  clearTimeout(adminSearchT);
+  adminSearchT = setTimeout(() => renderApp(), 250);
+});
 
     // Mois promo
     const promoSel = content.querySelector("#adminPromoMonth");
