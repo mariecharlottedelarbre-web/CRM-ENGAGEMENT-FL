@@ -781,14 +781,30 @@ function getSelectedCommercialName(){
   // 4) CA — répartition (doughnut)
   const ca = grouped.map(g => Math.round(g.ca));
 
-  const c4 = document.getElementById("chartCaShare");
-  if (c4){
-    CHARTS.push(new Chart(c4, {
-      type: "doughnut",
-      data: {
-        labels,
-        datasets: [{ label: "CA", data: ca }]
-      },
+  const colors = [
+  "#60a5fa", // Dominique
+  "#f87171", // Nevin
+  "#fbbf24", // Olivier
+  "#34d399", // Armand
+  "#a78bfa", // Benoit
+  "#fb923c", // Damien
+  "#94a3b8", // Yves
+  "#22d3ee"  // Séverine
+];
+
+const c4 = document.getElementById("chartCaShare");
+if (c4){
+  CHARTS.push(new Chart(c4, {
+    type: "doughnut",
+    data: {
+      labels,
+      datasets: [{
+        label: "CA",
+        data: ca,
+        backgroundColor: colors
+      }]
+    },
+    
       options: {
         responsive: true,
         maintainAspectRatio: false,
