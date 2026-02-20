@@ -220,6 +220,50 @@ td.score-cell b{
   border-radius: 999px;
   background: rgba(248,148,56,0.18);
 }
+  
+
+/* --- GLOBAL SAVE STATUS --- */
+.topbar{
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  border-radius: 16px;
+  border: 1px solid rgba(249,250,251,0.10);
+  background: rgba(15,23,42,0.72);
+  backdrop-filter: blur(10px);
+}
+
+.save-status{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:6px 12px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:700;
+  border:1px solid rgba(249,250,251,0.14);
+}
+
+.save-status[data-status="saving"]{
+  background: rgba(248,148,56,0.16);
+  border-color: rgba(248,148,56,0.28);
+}
+
+.save-status[data-status="saved"]{
+  background: rgba(34,197,94,0.14);
+  border-color: rgba(34,197,94,0.28);
+}
+
+.save-status[data-status="error"]{
+  background: rgba(248,113,113,0.14);
+  border-color: rgba(248,113,113,0.28);
+}
   </style>
 </head>
 
@@ -676,6 +720,19 @@ function computePromoPercent(store, month) {
   return Math.round((ordered / list.length) * 100);
 }
     let STATE = {};
+
+  // -------------------- GLOBAL SAVE STATUS --------------------
+function setGlobalSaveStatus(status){
+  const el = document.getElementById("globalSaveStatus");
+  if (!el) return;
+
+  el.dataset.status = status;
+
+  if (status === "saving") el.textContent = "⏳ Enregistrement…";
+  else if (status === "saved") el.textContent = "✅ Enregistré";
+  else if (status === "error") el.textContent = "⚠️ Erreur";
+}
+// -----------------------------------------------------------
     // -------------------- CHARTS (Admin dashboard) --------------------
 let CHARTS = [];
 
@@ -923,7 +980,8 @@ function saveWithDebounce(storeId) {
 }
 
     async function saveStoreToSupabase(id) {
-      const st = getStoreState(id);
+  setGlobalSaveStatus("saving"); 
+  const st = getStoreState(id);
       const flPayload = {
         meta: { commande: st.flCommande || "" },
         seasons: st.flBySeason || defaultFlBySeason()
@@ -948,16 +1006,17 @@ function saveWithDebounce(storeId) {
           .from("store_state")
           .upsert(payload, { onConflict: 'id' });
 
-        if (error) {
-          console.error("❌ Erreur de sauvegarde Supabase :", error.message || error);
-          alert("Erreur de sauvegarde : " + (error.message || "Vérifiez la console"));
-        } else {
-          console.log("✅ Données sauvegardées pour :", id);
-        }
+if (error) {
+  console.error("❌ Erreur de sauvegarde Supabase :", error.message || error);
+  setGlobalSaveStatus("error"); // 👈 AJOUT
+} else {
+  console.log("✅ Données sauvegardées pour :", id);
+  setGlobalSaveStatus("saved"); // 👈 AJOUT
+}
       } catch (err) {
-        console.error("❌ Erreur lors de la sauvegarde :", err);
-        alert("Erreur critique lors de la sauvegarde. Consultez la console.");
-      }
+  console.error("❌ Erreur lors de la sauvegarde :", err);
+  setGlobalSaveStatus("error");
+}
     }
 
     const root = document.getElementById("root");
@@ -1006,11 +1065,29 @@ let adminPilotSort = { key: "lastVisit", dir: "asc" };
       const progression = computeFLProgression(totalActual, totalTarget);
       return { totalTarget, totalActual, progression };
     }
+    function renderTopbar(title){
+  const topbar = document.createElement("div");
+  topbar.className = "topbar";
+
+  topbar.innerHTML = `
+    <div style="font-size:13px;font-weight:600;">
+      ${title}
+    </div>
+    <div id="globalSaveStatus" class="save-status" data-status="saved">
+      ✅ Enregistré
+    </div>
+  `;
+
+  return topbar;
+}
 
     function renderLogin() {
       root.innerHTML = "";
       const wrap = document.createElement("div");
       wrap.className = "app-shell";
+      wrap.style.flexDirection = "column";
+wrap.style.alignItems = "stretch";
+      wrap.appendChild(renderTopbar("CRM PROXI · Connexion"));
       const card = document.createElement("div");
       card.className = "card login-card";
       card.innerHTML = `
@@ -1259,6 +1336,9 @@ function setAdminPilotSort(key){
 
       const main = document.createElement("div");
       main.className = "main";
+      // --- GLOBAL SAVE BAR ---
+main.appendChild(renderTopbar(currentUser.name));
+setGlobalSaveStatus("saved");
 
       const kpiCard = document.createElement("div");
       kpiCard.className = "card";
