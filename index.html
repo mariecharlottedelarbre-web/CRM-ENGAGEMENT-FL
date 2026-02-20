@@ -201,6 +201,25 @@
   .chart-grid{ grid-template-columns: 1fr; }
   .chart-wrap{ height: 240px; }
 }
+
+/* --- Détention : SCORE plus visible --- */
+th.score-cell, td.score-cell{
+  text-align: right;
+  font-weight: 800;
+}
+
+td.score-cell{
+  font-size: 13px;
+  background: rgba(248,148,56,0.10);
+  border-left: 1px solid rgba(248,148,56,0.25);
+}
+
+td.score-cell b{
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(248,148,56,0.18);
+}
   </style>
 </head>
 
@@ -1993,6 +2012,7 @@ function getDetentionState(storeId, period) {
 }
 
 function renderDetentionTab(container, stores, currentStore){
+    container.innerHTML = "";
 
   const left = document.createElement("div");
   const right = document.createElement("div");
@@ -2010,7 +2030,7 @@ function renderDetentionTab(container, stores, currentStore){
           <th>TOP200</th>
           <th>TOP300</th>
           <th>BIO</th>
-          <th>Score</th>
+          <th class="score-cell">Score</th>
         </tr>
       </thead>
       <tbody>
@@ -2052,7 +2072,7 @@ function renderDetentionTab(container, stores, currentStore){
     <td>${d.top200||0}%</td>
     <td>${d.top300||0}%</td>
     <td>${d.bio||0}%</td>
-    <td><b>${hasData ? (avg + "%") : "—"}</b></td>
+    <td class="score-cell"><b>${hasData ? (avg + "%") : "—"}</b></td>
   </tr>`;
 }).join("")}
       </tbody>
