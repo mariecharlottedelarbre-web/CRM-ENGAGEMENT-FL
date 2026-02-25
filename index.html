@@ -654,19 +654,21 @@ function safeCalcExpression(expr){
 }
 
     function updateFlKpisLive(storeId) {
-      const totalActuel = computeFLActualTotal(storeId);
-      const row = document.querySelector(`tr[data-id="${storeId}"]`);
-      if (row) {
-        const tds = row.querySelectorAll("td");
-        if (tds[3]) tds[3].textContent = euro(totalActuel);
-        if (tds[4]) {
-          const target = getFlTarget(storeId);
-          tds[4].textContent = computeFLProgression(totalActuel, target);
-        }
-      }
-      const kpiActual = document.querySelector("[data-kpi-fl-actual]");
-      if (kpiActual) kpiActual.textContent = euro(totalActuel);
-    }
+  const totalActuel = computeFLActualTotal(storeId);   // total 2026
+  const total2025 = computeFL2025Total(storeId);       // total 2025 saisi
+
+  const row = document.querySelector(`tr[data-id="${storeId}"]`);
+  if (row) {
+    const tds = row.querySelectorAll("td");
+    // Colonnes du tableau F&L : 0 magasin, 1 commande, 2 total 2025, 3 total 2026, 4 progression
+    if (tds[2]) tds[2].textContent = euro(total2025);
+    if (tds[3]) tds[3].textContent = euro(totalActuel);
+    if (tds[4]) tds[4].textContent = computeFLProgression(totalActuel, total2025);
+  }
+
+  const kpiActual = document.querySelector("[data-kpi-fl-actual]");
+  if (kpiActual) kpiActual.textContent = euro(totalActuel);
+}
 
     function formatNumber(n) {
       if (n == null) return "-";
@@ -690,7 +692,18 @@ function safeCalcExpression(expr){
   });
   return total;
 }
+function computeFL2025Total(storeId) {
+  const st = getStoreState(storeId);
+  let total = 0;
+  const months = st.flBySeason || defaultFlBySeason();
 
+  Object.values(months).forEach(m => {
+    const val = Number(m?.amount2025 || 0);
+    if (!Number.isNaN(val)) total += val;
+  });
+
+  return total;
+}
     function computeEngagementTotal(storeId) {
       const st = getStoreState(storeId);
       let total = 0;
@@ -1066,7 +1079,7 @@ let adminPilotSort = { key: "lastVisit", dir: "asc" };
       let totalTarget = 0;
       let totalActual = 0;
       stores.forEach(s => {
-        totalTarget += getFlTarget(s.id);
+totalTarget += computeFL2025Total(s.id);
         totalActual += computeFLActualTotal(s.id);
       });
       const progression = computeFLProgression(totalActual, totalTarget);
@@ -1687,7 +1700,7 @@ right.querySelectorAll("[data-note-visit]").forEach(txt => {
             ${stores.map(s => {
               const st = getStoreState(s.id);
               const commande = st.flCommande || "";
-              const total2025 = getFlTarget(s.id);
+              const total2025 = computeFL2025Total(s.id);
               const totalActuel = computeFLActualTotal(s.id);
               const progression = computeFLProgression(totalActuel, total2025);
               return `
@@ -1835,8 +1848,8 @@ right.querySelectorAll("[data-note-visit]").forEach(txt => {
  const data = ensureMonth(st, currentFlSeason);
 
   const totalActuel = computeFLActualTotal(currentStore.id); // somme 2026
-  const totalTarget = getFlTarget(currentStore.id);          // objectif magasin (global)
-  const progression = computeFLProgression(totalActuel, totalTarget);
+  const totalTarget = computeFL2025Total(currentStore.id);
+const progression = computeFLProgression(totalActuel, totalTarget);
 
   function computeDeltaPct(v2026, v2025){
     const a = Number(v2026 || 0);
@@ -1932,6 +1945,7 @@ right.querySelectorAll("[data-note-visit]").forEach(txt => {
       const v = Number(input2025.value || 0);
       st.flBySeason[currentFlSeason].amount2025 = Number.isNaN(v) ? 0 : v;
       saveWithDebounce(currentStore.id);
+      updateFlKpisLive(currentStore.id);
       refreshDelta();
     });
   }
