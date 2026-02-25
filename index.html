@@ -391,6 +391,60 @@ td.score-cell b{
     const SEASONS = ["Printemps", "Été", "Automne", "Hiver"];
     const WAVE_STATUSES = ["Non concerné", "À faire", "En cours", "Engagé", "Refusé"];
 
+    // ===================== FL — Mois (menu de droite) + CA mensuels 2025 =====================
+const FL_MONTHS = [
+  { key: "jan", label: "Janvier" },
+  { key: "feb", label: "Février" },
+  { key: "mar", label: "Mars" },
+  { key: "apr", label: "Avril" },
+  { key: "may", label: "Mai" },
+  { key: "jun", label: "Juin" },
+  { key: "jul", label: "Juillet" },
+  { key: "aug", label: "Août" },
+  { key: "sep", label: "Septembre" },
+  { key: "oct", label: "Octobre" },
+  { key: "nov", label: "Novembre" },
+  { key: "dec", label: "Décembre" },
+];
+
+const FL_EMPTY_MONTHS = { jan:0,feb:0,mar:0,apr:0,may:0,jun:0,jul:0,aug:0,sep:0,oct:0,nov:0,dec:0 };
+const flSafeNum = (v) => (Number.isFinite(+v) ? +v : 0);
+
+function flYoy(v2025, v2026){
+  const a = flSafeNum(v2025), b = flSafeNum(v2026);
+  if (a === 0 && b === 0) return 0;
+  if (a === 0 && b > 0) return null; // affichage "—"
+  return (b / a) - 1;
+}
+function flSumMonths(obj){
+  const o = obj || {};
+  return Object.keys(FL_EMPTY_MONTHS).reduce((s,k)=> s + flSafeNum(o[k]), 0);
+}
+
+/**
+ * CA mensuels 2025 (Excel) MAIS indexés par tes store.id (donc aucun changement de nom)
+ * -> Tu complètes au fur et à mesure si besoin, mais ça marche déjà sans erreur.
+ */
+const FL_CA_2025_BY_STOREID = {
+  "auris-oisans":     { jan:5008.24, feb:8848.61, mar:0,     apr:0,     may:0,     jun:0,     jul:0,     aug:0,     sep:0,     oct:0,     nov:0,     dec:0 },
+  "cunlhat-domaize":  { jan:1935.95, feb:2192.28, mar:1954.73, apr:3455.64, may:3010.72, jun:2841.99, jul:3593.64, aug:3872.66, sep:1843.98, oct:2370.34, nov:1949.43, dec:1923.84 },
+  "colmars-les-alpes":{ jan:7044.37, feb:9896.18, mar:8832.66, apr:10074.29, may:10543.36, jun:11496.76, jul:17652.10, aug:18598.31, sep:7437.27, oct:10301.66, nov:6105.03, dec:10461.79 },
+  "savines-le-lac":   { jan:460.02,  feb:597.32,  mar:822.92,  apr:812.06,  may:1779.88, jun:2590.46, jul:3850.53, aug:4878.50, sep:1380.22, oct:903.93,  nov:675.42,  dec:736.65 },
+  "issy-l-eveque":    { jan:2288.38, feb:1705.84, mar:1787.73, apr:2244.16, may:2665.01, jun:2475.70, jul:2672.13, aug:2467.72, sep:1323.16, oct:2131.55, nov:1869.52, dec:1882.54 },
+  "areches":          { jan:2507.70, feb:7475.73, mar:3419.74, apr:931.32,  may:660.91,  jun:2255.68, jul:6547.91, aug:6730.03, sep:678.97,  oct:1165.87, nov:0,      dec:3891.83 },
+  "st-sorlin-d-arves":{ jan:11205.48,feb:15972.43,mar:7531.79, apr:234.25,  may:0,      jun:1677.83, jul:8933.93, aug:8868.84, sep:0,      oct:0,      nov:0,      dec:11049.95 },
+  "l-ile-rousse":     { jan:1109.37, feb:1408.62, mar:1891.48, apr:1345.98, may:1248.66, jun:1712.75, jul:2118.96, aug:1845.21, sep:1010.91, oct:1344.97, nov:2651.09, dec:1352.72 },
+  "saint-jean-du-gard":{jan:2707.41, feb:2376.19, mar:2960.05, apr:4147.33, may:5603.94, jun:5311.49, jul:5147.07, aug:4985.34, sep:2542.54, oct:2892.19, nov:2244.99, dec:2306.21 },
+  "les-salles-verdon":{ jan:491.89,  feb:562.91,  mar:576.12,  apr:1823.79, may:3016.35, jun:7073.36, jul:11010.74,aug:10358.06,sep:5213.69, oct:1297.68, nov:280.15,  dec:299.20 },
+  "vercheny":         { jan:1319.42, feb:1219.70, mar:1379.96, apr:1647.29, may:462.24,  jun:0,      jul:0,      aug:0,      sep:0,      oct:0,      nov:0,      dec:0 },
+  "st-ambroix":       { jan:1455.91, feb:1409.77, mar:1278.79, apr:1445.14, may:1615.06, jun:1312.25, jul:2043.38, aug:1474.37, sep:1653.50, oct:1989.77, nov:1373.27, dec:1301.82 },
+};
+
+function getFl2025MonthsForStore(store){
+  return FL_CA_2025_BY_STOREID[store.id] || FL_EMPTY_MONTHS;
+}
+
+
     const PROMOS = {
   "2026-01": {
     proxi: [
@@ -589,23 +643,33 @@ function safeCalcExpression(expr){
     }
 
     function normalizeFlData(any) {
-      if (!any || typeof any !== "object") {
-        return {
-          meta: { commande: "" },
-          seasons: defaultFlBySeason()
-        };
-      }
-      if (any.seasons && typeof any.seasons === "object") {
-        return {
-          meta: { commande: (any.meta && typeof any.meta === "object") ? (any.meta.commande || "") : "" },
-          seasons: ensureAllSeasons(any.seasons)
-        };
-      }
-      return {
-        meta: { commande: "" },
-        seasons: ensureAllSeasons(any)
-      };
-    }
+  if (!any || typeof any !== "object") {
+    return {
+      meta: { commande: "", months2026: { ...FL_EMPTY_MONTHS } },
+      seasons: defaultFlBySeason()
+    };
+  }
+
+  // format { meta, seasons }
+  if (any.seasons && typeof any.seasons === "object") {
+    const meta = (any.meta && typeof any.meta === "object") ? any.meta : {};
+    return {
+      meta: {
+        commande: meta.commande || "",
+        months2026: meta.months2026 && typeof meta.months2026 === "object"
+          ? { ...FL_EMPTY_MONTHS, ...meta.months2026 }
+          : { ...FL_EMPTY_MONTHS }
+      },
+      seasons: ensureAllSeasons(any.seasons)
+    };
+  }
+
+  // ancien format (seasons direct)
+  return {
+    meta: { commande: "", months2026: { ...FL_EMPTY_MONTHS } },
+    seasons: ensureAllSeasons(any)
+  };
+}
 
     function ensureAllSeasons(obj) {
       const base = defaultFlBySeason();
@@ -614,9 +678,9 @@ function safeCalcExpression(expr){
         const d = obj?.[s];
         if (d && typeof d === "object") {
           out[s] = {
-            ordered: d.ordered || "",
-            amount: d.amount || "",
-            plan: d.plan || ""
+            ordered: d.ordered ?? "",
+amount: d.amount ?? "",
+plan: d.plan ?? ""
           };
         }
       });
@@ -672,17 +736,11 @@ function safeCalcExpression(expr){
       if (n == null || n === "" || Number.isNaN(Number(n))) return "—";
       return `${formatNumber(Number(n))} €`;
     }
-
-    function computeFLActualTotal(storeId) {
-      const st = getStoreState(storeId);
-      let total = 0;
-      const seasons = st.flBySeason || defaultFlBySeason();
-      Object.values(seasons).forEach(season => {
-        const val = Number(season?.amount || 0);
-        if (!Number.isNaN(val)) total += val;
-      });
-      return total;
-    }
+function computeFLActualTotal(storeId) {
+  const st = getStoreState(storeId);
+  const seasons = st.flBySeason || defaultFlBySeason();
+  return SEASONS.reduce((sum, s) => sum + flSafeNum(seasons?.[s]?.amount), 0);
+}
 
     function computeEngagementTotal(storeId) {
       const st = getStoreState(storeId);
@@ -919,6 +977,7 @@ cleanData.forEach(row => {
   STATE[row.id] = {
     flBySeason: normalized ? normalized.seasons : defaultFlBySeason(),
     flCommande: normalized ? (normalized.meta.commande || "") : "",
+    flMonths2026: normalized ? (normalized.meta.months2026 || { ...FL_EMPTY_MONTHS }) : { ...FL_EMPTY_MONTHS },
 
     waves: row.waves || {},
 
@@ -949,6 +1008,7 @@ console.log("✅ Chargé:", Object.keys(STATE).length, "magasins");
         STATE[id] = {
           flBySeason: defaultFlBySeason(),
           flCommande: "",
+          flMonths2026: { ...FL_EMPTY_MONTHS },
           waves: {},
           engagementByWave: defaultEngagementByWave(),
           engNotesByWave: {},
@@ -966,6 +1026,7 @@ console.log("✅ Chargé:", Object.keys(STATE).length, "magasins");
         if (!STATE[id].visits) STATE[id].visits = [];
         if (!STATE[id].promoByMonth) STATE[id].promoByMonth = {};
         if (!STATE[id].detentionByPeriod) STATE[id].detentionByPeriod = {};
+        if (!STATE[id].flMonths2026) STATE[id].flMonths2026 = { ...FL_EMPTY_MONTHS };
       }
       return STATE[id];
     }
@@ -983,9 +1044,12 @@ function saveWithDebounce(storeId) {
   setGlobalSaveStatus("saving"); 
   const st = getStoreState(id);
       const flPayload = {
-        meta: { commande: st.flCommande || "" },
-        seasons: st.flBySeason || defaultFlBySeason()
-      };
+  meta: {
+    commande: st.flCommande || "",
+    months2026: st.flMonths2026 || { ...FL_EMPTY_MONTHS }
+  },
+  seasons: st.flBySeason || defaultFlBySeason()
+};
 
       // ✅ Conversion explicite en JSON pur (pas d'objets non-sérialisables)
       const payload = {
@@ -1026,6 +1090,7 @@ if (error) {
     let currentStoreId = null;
     let currentSearch = "";
     let currentEngWave = "wave1";
+    let currentFlMonth = "jan";
     let currentFlSeason = "Printemps";
     let adminPilotCommercial = "";   
 let adminPilotSearch = "";     
@@ -1141,7 +1206,7 @@ wrap.style.alignItems = "stretch";
         currentTab = "overview";
         currentStoreId = null;
         currentSearch = "";
-        currentFlSeason = "Printemps";
+        currentFlMonth = "jan";
         currentEngWave = "wave1";
         adminPilotCommercial = "";
 adminPilotSearch = "";
@@ -1325,7 +1390,7 @@ function setAdminPilotSort(key){
             currentStoreId = null;
             currentTab = "overview";
             currentSearch = "";
-            currentFlSeason = "Printemps";
+            currentFlMonth = "jan";
             renderApp();
           }
         });
@@ -1513,7 +1578,7 @@ setGlobalSaveStatus("saved");
         currentCommercialFilter = null;
         currentStoreId = null;
         currentTab = "overview";
-        currentFlSeason = "Printemps";
+        currentFlMonth = "jan";
         currentEngWave = "wave1";
         renderLogin();
       });
@@ -1870,8 +1935,9 @@ amountInput.addEventListener("change", function () {
 
   // CAS 1 : commence par + ou -
   if (txt.startsWith("+") || txt.startsWith("-")) {
-    result = current + Number(txt);
-  }
+  const delta = safeCalcExpression(txt); // gère +1000-200 etc.
+  result = current + delta;
+}
   // CAS 2 : expression du type 2250+1000-200
   else if (txt.includes("+") || txt.includes("-")) {
     result = safeCalcExpression(txt);
