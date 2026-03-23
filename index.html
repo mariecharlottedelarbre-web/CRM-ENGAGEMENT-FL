@@ -956,6 +956,15 @@ cleanData.forEach(row => {
   };
 });
 
+const periodsSet = new Set(DETENTION_PERIODS);
+
+cleanData.forEach(row => {
+  const det = row.detention_by_period || {};
+  Object.keys(det).forEach(period => periodsSet.add(period));
+});
+
+DETENTION_PERIODS = Array.from(periodsSet).sort();
+
 console.log("✅ Chargé:", Object.keys(STATE).length, "magasins");
         
       } catch (err) {
@@ -1006,8 +1015,7 @@ function saveWithDebounce(storeId) {
         meta: { commande: st.flCommande || "" },
         seasons: st.flBySeason || defaultFlBySeason()
       };
-
-      // ✅ Conversion explicite en JSON pur (pas d'objets non-sérialisables)
+      
       const payload = {
         id: id,
         fl_by_season: JSON.parse(JSON.stringify(flPayload)),
@@ -1039,6 +1047,44 @@ if (error) {
 }
     }
 
+async function saveDetentionPeriodForAllStores(period) {
+  setGlobalSaveStatus("saving");
+
+  try {
+    const rows = STORES.map(store => {
+      const st = getStoreState(store.id);
+
+      if (!st.detentionByPeriod[period]) {
+        st.detentionByPeriod[period] = {
+          rangA: "",
+          top200: "",
+          top300: "",
+          bio: ""
+        };
+      }
+
+      return {
+        id: store.id,
+        detention_by_period: JSON.parse(JSON.stringify(st.detentionByPeriod || {}))
+      };
+    });
+
+    const { error } = await sb
+      .from("store_state")
+      .upsert(rows, { onConflict: "id" });
+
+    if (error) {
+      console.error("❌ Erreur sauvegarde période détention :", error.message || error);
+      setGlobalSaveStatus("error");
+    } else {
+      console.log("✅ Période détention sauvegardée pour tous les magasins :", period);
+      setGlobalSaveStatus("saved");
+    }
+  } catch (err) {
+    console.error("❌ Erreur saveDetentionPeriodForAllStores :", err);
+    setGlobalSaveStatus("error");
+  }
+}
     const root = document.getElementById("root");
     let currentUser = null;
     let currentCommercialFilter = null;
@@ -2162,6 +2208,10 @@ function renderPromoTab(container, stores, currentStore) {
 
     let currentDetentionPeriod = "2025-11_2026-01";
 
+let DETENTION_PERIODS = [
+  "2025-11_2026-01"
+];
+
 function detentionColor(v){
   return "";
 }
@@ -2181,6 +2231,45 @@ function getDetentionState(storeId, period) {
   return st.detentionByPeriod[period];
 }
 
+function computeDetentionScore(det) {
+  const values = [
+    Number(det?.rangA || 0),
+    Number(det?.top200 || 0),
+    Number(det?.top300 || 0),
+    Number(det?.bio || 0)
+  ];
+
+  const hasData = values.some(v => v > 0);
+  if (!hasData) return null;
+
+  return Math.round(values.reduce((a, b) => a + b, 0) / 4);
+}
+
+function getPreviousDetentionPeriod(period) {
+  const sorted = [...DETENTION_PERIODS].sort();
+  const idx = sorted.indexOf(period);
+  if (idx <= 0) return null;
+  return sorted[idx - 1];
+}
+
+function computeDetentionProgress(storeId, period) {
+  const previousPeriod = getPreviousDetentionPeriod(period);
+  if (!previousPeriod) return "—";
+
+  const currentDet = getDetentionState(storeId, period);
+  const previousDet = getDetentionState(storeId, previousPeriod);
+
+  const currentScore = computeDetentionScore(currentDet);
+  const previousScore = computeDetentionScore(previousDet);
+
+  if (currentScore == null || previousScore == null) return "—";
+
+  const diff = currentScore - previousScore;
+  if (diff > 0) return `+${diff} %`;
+  if (diff < 0) return `${diff} %`;
+  return "0 %";
+}
+
 function renderDetentionTab(container, stores, currentStore){
     container.innerHTML = "";
 
@@ -2188,21 +2277,46 @@ function renderDetentionTab(container, stores, currentStore){
   const right = document.createElement("div");
 
   left.innerHTML = `
-    <div style="font-size:13px;font-weight:600;margin-bottom:8px;">
-      Détention · ${currentDetentionPeriod}
+  <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:12px;margin-bottom:12px;flex-wrap:wrap;">
+    <div>
+      <div style="font-size:13px;font-weight:600;">Détention</div>
+      <div class="subtext">Consultation et suivi par période.</div>
     </div>
 
-    <table>
-      <thead>
-        <tr>
-          <th>Magasin</th>
-          <th>Rang A</th>
-          <th>TOP200</th>
-          <th>TOP300</th>
-          <th>BIO</th>
-          <th class="score-cell">Score</th>
-        </tr>
-      </thead>
+    <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;">
+      <div style="min-width:220px;">
+        <label>Période</label>
+        <select id="detentionPeriodSelect">
+          ${DETENTION_PERIODS.map(period => `
+            <option value="${period}" ${period === currentDetentionPeriod ? "selected" : ""}>
+              ${period}
+            </option>
+          `).join("")}
+        </select>
+      </div>
+
+      ${currentUser.role === "admin" ? `
+        <div style="min-width:220px;">
+          <label>Nouvelle période</label>
+          <input id="newDetentionPeriod" placeholder="Ex: 2026-02_2026-04" />
+        </div>
+        <button id="addDetentionPeriodBtn">+ Ajouter</button>
+      ` : ""}
+    </div>
+  </div>
+
+  <table>
+    <thead>
+  <tr>
+    <th>Magasin</th>
+    <th>Rang A</th>
+    <th>TOP200</th>
+    <th>TOP300</th>
+    <th>BIO</th>
+    <th class="score-cell">Score</th>
+    <th>Progression</th>
+  </tr>
+</thead>
       <tbody>
         ${[...stores]
 .sort((a,b)=>{
@@ -2222,27 +2336,19 @@ function renderDetentionTab(container, stores, currentStore){
   return avgB - avgA;
 })
 .map(s=>{
-  const d = getDetentionState(s.id,currentDetentionPeriod);
-
-  const avg = Math.round(
-    (
-      Number(d.rangA||0)+
-      Number(d.top200||0)+
-      Number(d.top300||0)+
-      Number(d.bio||0)
-    ) / 4
-  );
-
-  const hasData = d.rangA||d.top200||d.top300||d.bio;
+  const d = getDetentionState(s.id, currentDetentionPeriod);
+  const score = computeDetentionScore(d);
+  const progression = computeDetentionProgress(s.id, currentDetentionPeriod);
 
   return `
   <tr data-id="${s.id}">
     <td>${s.name}</td>
-    <td>${d.rangA||0}%</td>
-    <td>${d.top200||0}%</td>
-    <td>${d.top300||0}%</td>
-    <td>${d.bio||0}%</td>
-    <td class="score-cell"><b>${hasData ? (avg + "%") : "—"}</b></td>
+    <td>${d.rangA || 0}%</td>
+    <td>${d.top200 || 0}%</td>
+    <td>${d.top300 || 0}%</td>
+    <td>${d.bio || 0}%</td>
+    <td class="score-cell"><b>${score != null ? (score + "%") : "—"}</b></td>
+    <td>${progression}</td>
   </tr>`;
 }).join("")}
       </tbody>
@@ -2255,6 +2361,50 @@ function renderDetentionTab(container, stores, currentStore){
       renderApp();
     }
   });
+  const periodSelect = left.querySelector("#detentionPeriodSelect");
+if (periodSelect) {
+  periodSelect.addEventListener("change", () => {
+    currentDetentionPeriod = periodSelect.value;
+    renderApp();
+  });
+}
+
+if (currentUser.role === "admin") {
+  const addBtn = left.querySelector("#addDetentionPeriodBtn");
+  const input = left.querySelector("#newDetentionPeriod");
+
+  if (addBtn && input) {
+    addBtn.addEventListener("click", async () => {
+      const newPeriod = input.value.trim();
+      if (!newPeriod) return;
+
+      if (!DETENTION_PERIODS.includes(newPeriod)) {
+        DETENTION_PERIODS.push(newPeriod);
+        DETENTION_PERIODS.sort();
+      }
+
+      currentDetentionPeriod = newPeriod;
+
+      STORES.forEach(store => {
+        const st = getStoreState(store.id);
+        if (!st.detentionByPeriod[newPeriod]) {
+          st.detentionByPeriod[newPeriod] = {
+            rangA: "",
+            top200: "",
+            top300: "",
+            bio: ""
+          };
+        }
+      });
+
+      input.value = "";
+
+      await saveDetentionPeriodForAllStores(newPeriod);
+
+      renderApp();
+    });
+  }
+}
 
   if(!currentStore){
     container.appendChild(left);
