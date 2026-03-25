@@ -382,6 +382,180 @@ function slugifyStoreName(name) {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
 }
+    function slugifyPromoLabel(label) {
+  return String(label || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+function rebuildPromoCatalog(rows) {
+  const catalog = {};
+  const monthsSet = new Set();
+
+  (rows || []).forEach(row => {
+    const month = row.month_key;
+    const format = row.store_format;
+
+    monthsSet.add(month);
+
+    if (!catalog[month]) catalog[month] = {};
+    if (!catalog[month][format]) catalog[month][format] = [];
+
+    // ligne technique pour créer le mois sans afficher un faux produit
+    if (row.product_id === "__month__" && row.label === "__month__") {
+      return;
+    }
+
+    catalog[month][format].push({
+      id: row.product_id,
+      label: row.label
+    });
+  });
+
+  Object.keys(catalog).forEach(month => {
+    Object.keys(catalog[month]).forEach(format => {
+      catalog[month][format].sort((a, b) => a.label.localeCompare(b.label, "fr"));
+    });
+  });
+
+  PROMOS = catalog;
+  PROMO_MONTHS = Array.from(monthsSet).sort();
+
+  if (!PROMO_MONTHS.length) PROMO_MONTHS = ["2026-01"];
+}
+
+async function loadPromoCatalogFromSupabase() {
+  try {
+    const { data, error } = await sb
+      .from("promo_catalog")
+      .select("*")
+      .order("month_key", { ascending: true })
+      .order("store_format", { ascending: true })
+      .order("label", { ascending: true });
+
+    if (error) {
+      console.error("❌ Erreur chargement promo_catalog :", error.message || error);
+      return;
+    }
+
+    rebuildPromoCatalog(data || []);
+    console.log("✅ Promo catalog chargé");
+  } catch (err) {
+    console.error("❌ Erreur loadPromoCatalogFromSupabase :", err);
+  }
+}
+
+async function addPromoProductToSupabase({ monthKey, storeFormat, label }) {
+  if (!currentUser || currentUser.role !== "admin") return false;
+
+  const productId = slugifyPromoLabel(label);
+
+  setGlobalSaveStatus("saving");
+
+  try {
+    const payload = {
+      month_key: monthKey,
+      store_format: storeFormat,
+      product_id: productId,
+      label
+    };
+
+    const { error } = await sb.from("promo_catalog").insert(payload);
+
+    if (error) {
+      console.error("❌ Erreur ajout produit promo :", error.message || error);
+      setGlobalSaveStatus("error");
+      return false;
+    }
+
+    await loadPromoCatalogFromSupabase();
+    setGlobalSaveStatus("saved");
+    return true;
+  } catch (err) {
+    console.error("❌ Erreur addPromoProductToSupabase :", err);
+    setGlobalSaveStatus("error");
+    return false;
+  }
+}
+
+async function deletePromoProductFromSupabase({ monthKey, storeFormat, productId }) {
+  if (!currentUser || currentUser.role !== "admin") return false;
+
+  setGlobalSaveStatus("saving");
+
+  try {
+    const { error } = await sb
+      .from("promo_catalog")
+      .delete()
+      .eq("month_key", monthKey)
+      .eq("store_format", storeFormat)
+      .eq("product_id", productId);
+
+    if (error) {
+      console.error("❌ Erreur suppression produit promo :", error.message || error);
+      setGlobalSaveStatus("error");
+      return false;
+    }
+
+    await loadPromoCatalogFromSupabase();
+    setGlobalSaveStatus("saved");
+    return true;
+  } catch (err) {
+    console.error("❌ Erreur deletePromoProductFromSupabase :", err);
+    setGlobalSaveStatus("error");
+    return false;
+  }
+}
+    async function createPromoMonthInSupabase(monthKey) {
+  if (!currentUser || currentUser.role !== "admin") return false;
+
+  const cleanMonth = String(monthKey || "").trim();
+
+  // format attendu : 2026-02
+  if (!/^\d{4}-\d{2}$/.test(cleanMonth)) {
+    alert("Format attendu : AAAA-MM (ex: 2026-02)");
+    return false;
+  }
+
+  // si déjà présent en mémoire
+  if (PROMO_MONTHS.includes(cleanMonth)) {
+    currentPromoMonth = cleanMonth;
+    renderApp();
+    return true;
+  }
+
+  setGlobalSaveStatus("saving");
+
+  try {
+    // ligne technique pour créer le mois dans Supabase
+    const payload = {
+      month_key: cleanMonth,
+      store_format: "proxi",
+      product_id: "__month__",
+      label: "__month__"
+    };
+
+    const { error } = await sb.from("promo_catalog").insert(payload);
+
+    if (error) {
+      console.error("❌ Erreur création mois promo :", error.message || error);
+      setGlobalSaveStatus("error");
+      return false;
+    }
+
+    await loadPromoCatalogFromSupabase();
+    currentPromoMonth = cleanMonth;
+    setGlobalSaveStatus("saved");
+    return true;
+  } catch (err) {
+    console.error("❌ Erreur createPromoMonthInSupabase :", err);
+    setGlobalSaveStatus("error");
+    return false;
+  }
+}
     const USERS = {
       admins: [
         { id: "admin-marie-charlotte", name: "Marie-Charlotte", role: "admin" },
@@ -497,25 +671,8 @@ function slugifyStoreName(name) {
 ];
     const WAVE_STATUSES = ["Non concerné", "À faire", "En cours", "Engagé", "Refusé"];
 
-    const PROMOS = {
-  "2026-01": {
-    proxi: [
-      { id: "beurre-montfleuri-250g", label: "Beurre Montfleuri 250g" },
-      { id: "lait-bio-1l", label: "Lait 1L Bio CRF" },
-      { id: "oeufs-plein-air-6", label: "Œufs plein air x6" },
-      { id: "steak-hache-18", label: "Steak haché (lot 18)" },
-      { id: "jambon-paris-160g", label: "Jambon de Paris 160g" },
-      { id: "sucre-poudre-1kg", label: "Sucre poudre 1kg" },
-      { id: "farine-ble-t55-1kg", label: "Farine blé T55 1kg" },
-      { id: "nutella-825g", label: "Nutella 825g" },
-      { id: "confiture-fraise-370g", label: "Confiture fraise 370g" },
-      { id: "coca-1-75l", label: "Coca-Cola 1,75L" },
-      { id: "biere-goudale-75cl", label: "Bière Goudale 75cl" },
-      { id: "emmental-rape-500g", label: "Emmental râpé 500g" }
-    ],
-    proxi_super: [] // volontairement vide → même liste
-  }
-};
+    let PROMOS = {};
+let PROMO_MONTHS = ["2026-01"];
     const PROXI_SUPER_STORES = [
   "montpellier-delicie",
   "moussac",
@@ -1784,6 +1941,7 @@ setGlobalSaveStatus("saved");
         }
 
         const id = slugifyStoreName(name);
+      
 
         if (STORES.some(s => s.id === id)) {
           alert("Un magasin avec cet identifiant existe déjà.");
@@ -2314,8 +2472,28 @@ function renderPromoTab(container, stores, currentStore) {
   const left = document.createElement("div");
   const right = document.createElement("div");
 
+  if (!PROMO_MONTHS.includes(currentPromoMonth)) {
+    currentPromoMonth = PROMO_MONTHS[0] || "2026-01";
+  }
+
   left.innerHTML = `
-    <div style="font-size:13px;font-weight:600;">Promotions · ${currentPromoMonth}</div>
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;">
+      <div>
+        <div style="font-size:13px;font-weight:600;">Promotions</div>
+        <div class="subtext">Suivi promo par mois.</div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:10px;padding:12px;">
+      <div class="tabs" style="flex-wrap:wrap;">
+        ${PROMO_MONTHS.map(month => `
+          <button class="tab-btn ${currentPromoMonth === month ? "active" : ""}" data-promo-month="${month}">
+            ${month}
+          </button>
+        `).join("")}
+      </div>
+    </div>
+
     <table>
       <thead>
         <tr>
@@ -2324,18 +2502,25 @@ function renderPromoTab(container, stores, currentStore) {
         </tr>
       </thead>
       <tbody>
-  ${stores.map(s => {
-    const percent = computePromoPercent(s, currentPromoMonth);
-    return `
-      <tr data-id="${s.id}">
-        <td>${s.name}</td>
-        <td>${percent === "—" ? "—" : percent + " %"}</td>
-      </tr>
-    `;
-  }).join("")}
-</tbody>
+        ${stores.map(s => {
+          const percent = computePromoPercent(s, currentPromoMonth);
+          return `
+            <tr data-id="${s.id}">
+              <td>${s.name}</td>
+              <td>${percent === "—" ? "—" : percent + " %"}</td>
+            </tr>
+          `;
+        }).join("")}
+      </tbody>
     </table>
   `;
+
+  left.querySelectorAll("[data-promo-month]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      currentPromoMonth = btn.dataset.promoMonth;
+      renderApp();
+    });
+  });
 
   left.querySelectorAll("tbody tr").forEach(tr => {
     tr.addEventListener("click", () => {
@@ -2353,35 +2538,73 @@ function renderPromoTab(container, stores, currentStore) {
 
   const promoList = getPromoList(currentStore, currentPromoMonth);
   const promoState = getPromoState(currentStore.id, currentPromoMonth);
+  const currentFormat = getStoreFormat(currentStore);
 
   right.innerHTML = `
     <div style="font-size:13px;font-weight:600;">${currentStore.name}</div>
-    <table>
-      <thead>
-        <tr>
-          <th>Produit</th>
-          <th>Commandé</th>
-          <th>Commentaire</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${promoList.map(p => `
-          <tr>
-            <td>${p.label}</td>
-            <td>
-              <input type="checkbox"
-                ${promoState[p.id]?.checked ? "checked" : ""}
-                data-check="${p.id}">
-            </td>
-            <td>
-              <input type="text"
-                value="${promoState[p.id]?.note || ""}"
-                data-note="${p.id}">
-            </td>
-          </tr>
-        `).join("")}
-      </tbody>
-    </table>
+
+    <div class="card" style="margin-top:10px;padding:12px;">
+      <div class="subtext">Mois sélectionné : <b>${currentPromoMonth}</b> · Format : <b>${currentFormat}</b></div>
+    </div>
+
+    ${currentUser.role === "admin" ? `
+  <div class="card" style="margin-top:10px;padding:12px;">
+    <div style="font-size:12px;font-weight:700;margin-bottom:8px;">Admin · Ajouter un mois promo</div>
+
+    <label>Nouveau mois</label>
+    <input id="newPromoMonth" placeholder="Ex: 2026-02" />
+
+    <button id="addPromoMonthBtn" style="margin-top:10px;">+ Ajouter le mois</button>
+  </div>
+
+  <div class="card" style="margin-top:10px;padding:12px;">
+    <div style="font-size:12px;font-weight:700;margin-bottom:8px;">Admin · Ajouter un produit promo</div>
+
+    <label>Produit</label>
+    <input id="newPromoLabel" placeholder="Ex: Coca-Cola 33cl" />
+
+    <label>Format</label>
+    <select id="newPromoFormat">
+      <option value="proxi">proxi</option>
+      <option value="proxi_super">proxi_super</option>
+    </select>
+
+    <button id="addPromoProductBtn" style="margin-top:10px;">+ Ajouter</button>
+  </div>
+` : ""}
+
+    <div class="card" style="margin-top:10px;padding:12px;">
+      <div style="font-size:13px;font-weight:600;margin-bottom:8px;">Produits promo</div>
+
+      ${promoList.length ? `
+        <table>
+          <thead>
+            <tr>
+              <th>Produit</th>
+              <th>Commandé</th>
+              ${currentUser.role === "admin" ? `<th>Action admin</th>` : ""}
+            </tr>
+          </thead>
+          <tbody>
+            ${promoList.map(p => `
+              <tr>
+                <td>${p.label}</td>
+                <td>
+                  <input type="checkbox"
+                    ${promoState[p.id]?.checked ? "checked" : ""}
+                    data-check="${p.id}">
+                </td>
+                ${currentUser.role === "admin" ? `
+                  <td>
+                    <button class="secondary" data-delete-promo="${p.id}">Supprimer</button>
+                  </td>
+                ` : ""}
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      ` : `<div class="subtext">Aucun produit promo sur ce mois.</div>`}
+    </div>
   `;
 
   right.querySelectorAll("[data-check]").forEach(cb => {
@@ -2394,14 +2617,77 @@ function renderPromoTab(container, stores, currentStore) {
     });
   });
 
-  right.querySelectorAll("[data-note]").forEach(inp => {
-    inp.addEventListener("blur", () => {
-      const id = inp.dataset.note;
-      promoState[id] = promoState[id] || {};
-      promoState[id].note = inp.value;
-      saveWithDebounce(currentStore.id);
-    });
+  if (currentUser.role === "admin") {
+    const addBtn = right.querySelector("#addPromoProductBtn");
+    const labelInput = right.querySelector("#newPromoLabel");
+    const formatSelect = right.querySelector("#newPromoFormat");
+
+    if (addBtn && labelInput && formatSelect) {
+      addBtn.addEventListener("click", async () => {
+        const label = labelInput.value.trim();
+        const storeFormat = formatSelect.value;
+
+        if (!label) {
+          alert("Renseigne un produit promo.");
+          return;
+        }
+
+        const ok = await addPromoProductToSupabase({
+          monthKey: currentPromoMonth,
+          storeFormat,
+          label
+        });
+
+        if (!ok) {
+          alert("Impossible d'ajouter le produit promo.");
+          return;
+        }
+
+        labelInput.value = "";
+        renderApp();
+      });
+    }
+const addMonthBtn = right.querySelector("#addPromoMonthBtn");
+const monthInput = right.querySelector("#newPromoMonth");
+
+if (addMonthBtn && monthInput) {
+  addMonthBtn.addEventListener("click", async () => {
+    const monthKey = monthInput.value.trim();
+
+    if (!monthKey) {
+      alert("Renseigne un mois au format AAAA-MM.");
+      return;
+    }
+
+    const ok = await createPromoMonthInSupabase(monthKey);
+
+    if (!ok) {
+      alert("Impossible de créer le mois promo.");
+      return;
+    }
+
+    monthInput.value = "";
+    renderApp();
   });
+}
+    right.querySelectorAll("[data-delete-promo]").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        const productId = btn.dataset.deletePromo;
+        const ok = await deletePromoProductFromSupabase({
+          monthKey: currentPromoMonth,
+          storeFormat: currentFormat,
+          productId
+        });
+
+        if (!ok) {
+          alert("Impossible de supprimer le produit promo.");
+          return;
+        }
+
+        renderApp();
+      });
+    });
+  }
 
   container.appendChild(left);
   container.appendChild(right);
@@ -2656,8 +2942,9 @@ container.appendChild(left);
 container.appendChild(right);
 }
 
-    async function init() {
+   async function init() {
   await loadStoresFromSupabase();
+  await loadPromoCatalogFromSupabase();
   await loadStateFromSupabase();
   renderLogin();
 }
