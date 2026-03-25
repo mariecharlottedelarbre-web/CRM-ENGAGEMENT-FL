@@ -278,7 +278,110 @@ td.score-cell b{
     const SUPABASE_KEY = "sb_publishable_5ernJ3tbCW3XnAdx983E8A_ASPSKBVx";
     const { createClient } = supabase;
     const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+async function loadStoresFromSupabase() {
+  try {
+    const { data, error } = await sb
+      .from("stores")
+      .select("*")
+      .order("commercial_id", { ascending: true })
+      .order("name", { ascending: true });
 
+    if (error) {
+      console.error("❌ Erreur chargement stores :", error.message || error);
+      return;
+    }
+
+    STORES = (data || []).map(row => ({
+      id: row.id,
+      name: row.name,
+      ca2024: Number(row.ca2024 || 0),
+      commercialId: row.commercial_id
+    }));
+
+    console.log("✅ Stores chargés :", STORES.length);
+  } catch (err) {
+    console.error("❌ Erreur loadStoresFromSupabase :", err);
+  }
+}
+
+async function addStoreToSupabase(store) {
+  if (!currentUser || currentUser.role !== "admin") return false;
+
+  setGlobalSaveStatus("saving");
+
+  try {
+    const payload = {
+      id: store.id,
+      name: store.name,
+      ca2024: Number(store.ca2024 || 0),
+      commercial_id: store.commercialId
+    };
+
+    const { error } = await sb.from("stores").insert(payload);
+
+    if (error) {
+      console.error("❌ Erreur ajout magasin :", error.message || error);
+      setGlobalSaveStatus("error");
+      return false;
+    }
+
+    STORES.push({
+      id: store.id,
+      name: store.name,
+      ca2024: Number(store.ca2024 || 0),
+      commercialId: store.commercialId
+    });
+
+    setGlobalSaveStatus("saved");
+    return true;
+  } catch (err) {
+    console.error("❌ Erreur addStoreToSupabase :", err);
+    setGlobalSaveStatus("error");
+    return false;
+  }
+}
+
+async function deleteStoreFromSupabase(storeId) {
+  if (!currentUser || currentUser.role !== "admin") return false;
+
+  setGlobalSaveStatus("saving");
+
+  try {
+    const { error } = await sb
+      .from("stores")
+      .delete()
+      .eq("id", storeId);
+
+    if (error) {
+      console.error("❌ Erreur suppression magasin :", error.message || error);
+      setGlobalSaveStatus("error");
+      return false;
+    }
+
+    STORES = STORES.filter(s => s.id !== storeId);
+    delete STATE[storeId];
+
+    if (currentStoreId === storeId) {
+      currentStoreId = null;
+    }
+
+    setGlobalSaveStatus("saved");
+    return true;
+  } catch (err) {
+    console.error("❌ Erreur deleteStoreFromSupabase :", err);
+    setGlobalSaveStatus("error");
+    return false;
+  }
+}
+
+function slugifyStoreName(name) {
+  return String(name || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
     const USERS = {
       admins: [
         { id: "admin-marie-charlotte", name: "Marie-Charlotte", role: "admin" },
@@ -296,7 +399,7 @@ td.score-cell b{
       ]
     };
 
-    const STORES = [
+  let STORES = [
       { id:"montpellier-delicie", name:"Montpellier Delicie", ca2024:503033, commercialId:"costanza-damien" },
       { id:"moussac", name:"Moussac", ca2024:378503, commercialId:"costanza-damien" },
       { id:"saint-jean-du-gard", name:"Saint Jean du Gard", ca2024:361924, commercialId:"costanza-damien" },
@@ -1597,128 +1700,226 @@ setGlobalSaveStatus("saved");
     }
 
     function renderStoresTab(container, stores, currentStore) {
-      const left = document.createElement("div");
-      const right = document.createElement("div");
+  const left = document.createElement("div");
+  const right = document.createElement("div");
 
-      left.innerHTML = `
-        <div>
-          <div style="font-size:13px;font-weight:600;">Magasins · Suivi terrain</div>
-          <div class="subtext">Clique sur un magasin pour voir le détail.</div>
+  left.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;">
+      <div>
+        <div style="font-size:13px;font-weight:600;">Magasins · Suivi terrain</div>
+        <div class="subtext">Clique sur un magasin pour voir le détail.</div>
+      </div>
+
+      ${currentUser.role === "admin" ? `
+        <div class="card" style="padding:10px;min-width:280px;">
+          <div style="font-size:12px;font-weight:700;margin-bottom:8px;">Ajouter un magasin</div>
+
+          <label>Nom du magasin</label>
+          <input id="newStoreName" placeholder="Ex: Besse St Anastasie" />
+
+          <label>CA 2024</label>
+          <input id="newStoreCa" type="number" placeholder="Ex: 120000" />
+
+          <label>Commercial</label>
+          <select id="newStoreCommercial">
+            ${USERS.commerciaux.map(c => `
+              <option value="${c.id}">${c.name}</option>
+            `).join("")}
+          </select>
+
+          <button id="addStoreBtn" style="margin-top:10px;">+ Ajouter</button>
         </div>
-        <table>
-          <thead>
-          <tr>
-    <th>Magasin</th>
-    <th>Visites</th>
-  </tr>
-</thead>
-          <tbody>
-            ${stores.map(s => {
-              const visitsCount = getStoreState(s.id).visits.length;
-              return `
-                <tr data-id="${s.id}">
-                  <td>${s.name}</td>
-                 <td>${visitsCount}</td>
-                </tr>
-              `;
-            }).join("")}
-          </tbody>
-        </table>
-      `;
+      ` : ""}
+    </div>
 
-      left.querySelectorAll("tbody tr").forEach(tr => {
-        tr.addEventListener("click", () => {
-          currentStoreId = tr.dataset.id;
-          renderApp();
+    <table>
+      <thead>
+        <tr>
+          <th>Magasin</th>
+          <th>Visites</th>
+          ${currentUser.role === "admin" ? `<th>Action</th>` : ""}
+        </tr>
+      </thead>
+      <tbody>
+        ${stores.map(s => {
+          const visitsCount = getStoreState(s.id).visits.length;
+          return `
+            <tr data-id="${s.id}">
+              <td>${s.name}</td>
+              <td>${visitsCount}</td>
+              ${currentUser.role === "admin" ? `
+                <td>
+                  <button class="secondary" data-delete-store="${s.id}">Supprimer</button>
+                </td>
+              ` : ""}
+            </tr>
+          `;
+        }).join("")}
+      </tbody>
+    </table>
+  `;
+
+  left.querySelectorAll("tbody tr").forEach(tr => {
+    tr.addEventListener("click", () => {
+      currentStoreId = tr.dataset.id;
+      renderApp();
+    });
+  });
+
+  if (currentUser.role === "admin") {
+    const addBtn = left.querySelector("#addStoreBtn");
+    const nameInput = left.querySelector("#newStoreName");
+    const caInput = left.querySelector("#newStoreCa");
+    const commercialSelect = left.querySelector("#newStoreCommercial");
+
+    if (addBtn && nameInput && caInput && commercialSelect) {
+      addBtn.addEventListener("click", async () => {
+        const name = nameInput.value.trim();
+        const ca2024 = Number(caInput.value || 0);
+        const commercialId = commercialSelect.value;
+
+        if (!name) {
+          alert("Renseigne le nom du magasin.");
+          return;
+        }
+
+        const id = slugifyStoreName(name);
+
+        if (STORES.some(s => s.id === id)) {
+          alert("Un magasin avec cet identifiant existe déjà.");
+          return;
+        }
+
+        const ok = await addStoreToSupabase({
+          id,
+          name,
+          ca2024,
+          commercialId
         });
-      });
 
-      if (!currentStore) {
-        right.innerHTML = `<div class="subtext">Sélectionne un magasin.</div>`;
-        container.appendChild(left);
-        container.appendChild(right);
+        if (!ok) {
+          alert("Impossible d'ajouter le magasin.");
+          return;
+        }
+
+        nameInput.value = "";
+        caInput.value = "";
+        currentStoreId = id;
+        renderApp();
+      });
+    }
+
+    left.querySelectorAll("[data-delete-store]").forEach(btn => {
+      btn.addEventListener("click", async (e) => {
+        e.stopPropagation();
+
+        const storeId = btn.dataset.deleteStore;
+        const store = STORES.find(s => s.id === storeId);
+        if (!store) return;
+
+        const confirmDelete = confirm(
+          `Supprimer le magasin "${store.name}" ? Cette action supprimera aussi ses données de suivi.`
+        );
+        if (!confirmDelete) return;
+
+        const ok = await deleteStoreFromSupabase(storeId);
+        if (!ok) {
+          alert("Impossible de supprimer le magasin.");
+          return;
+        }
+
+        renderApp();
+      });
+    });
+  }
+
+  if (!currentStore) {
+    right.innerHTML = `<div class="subtext">Sélectionne un magasin.</div>`;
+    container.appendChild(left);
+    container.appendChild(right);
+    return;
+  }
+
+  const st = getStoreState(currentStore.id);
+
+  right.innerHTML = `
+    <div style="font-size:13px;font-weight:600;">${currentStore.name}</div>
+    <div class="card" style="margin-top:10px;padding:12px;">
+      <div style="font-size:13px;font-weight:600;">Visites terrain</div>
+      <div style="margin-top:6px;">
+        ${st.visits.length
+          ? st.visits.slice().reverse().map((visit, i) => {
+              const idx = st.visits.length - 1 - i;
+              return `
+                <div style="margin-bottom:8px;">
+                  <input type="date" value="${visit.date}" data-edit-visit="${idx}" />
+                  <textarea
+                    rows="2"
+                    placeholder="Commentaire de visite"
+                    data-note-visit="${idx}"
+                  >${visit.note || ""}</textarea>
+                  <button class="secondary" data-delete-visit="${idx}">🗑️</button>
+                </div>
+              `;
+            }).join("")
+          : `<span class="subtext">Aucune visite renseignée</span>`
+        }
+      </div>
+      <button id="addVisitBtn" style="margin-top:8px;">+ Ajouter une visite aujourd'hui</button>
+    </div>
+  `;
+
+  right.querySelector("#addVisitBtn").addEventListener("click", () => {
+    const today = todayLocalISO();
+    if (!st.visits.some(v => v.date === today)) {
+      st.visits.push({
+        date: today,
+        note: ""
+      });
+      saveStoreToSupabase(currentStore.id);
+      renderApp();
+    }
+  });
+
+  right.querySelectorAll("[data-edit-visit]").forEach(inp => {
+    inp.addEventListener("change", () => {
+      const index = Number(inp.dataset.editVisit);
+      const newDate = inp.value;
+      if (!newDate) return;
+
+      if (st.visits.some((v, i) => v.date === newDate && i !== index)) {
+        alert("Une visite existe déjà à cette date.");
+        renderApp();
         return;
       }
 
-      const st = getStoreState(currentStore.id);
-
-      right.innerHTML = `
-        <div style="font-size:13px;font-weight:600;">${currentStore.name}</div>
-        <div class="card" style="margin-top:10px;padding:12px;">
-          <div style="font-size:13px;font-weight:600;">Visites terrain</div>
-          <div style="margin-top:6px;">
-          ${st.visits.length
-  ? st.visits.slice().reverse().map((visit, i) => {
-      const idx = st.visits.length - 1 - i;
-      return `
-        <div style="margin-bottom:8px;">
-          <input type="date" value="${visit.date}" data-edit-visit="${idx}" />
-          <textarea
-            rows="2"
-            placeholder="Commentaire de visite"
-            data-note-visit="${idx}"
-          >${visit.note || ""}</textarea>
-          <button class="secondary" data-delete-visit="${idx}">🗑️</button>
-        </div>
-      `;
-    }).join("")
-  : `<span class="subtext">Aucune visite renseignée</span>`
-}
-          </div>
-          <button id="addVisitBtn" style="margin-top:8px;">+ Ajouter une visite aujourd'hui</button>
-        </div>
-      `;
-
-      right.querySelector("#addVisitBtn").addEventListener("click", () => {
-        const today = todayLocalISO();
-        if (!st.visits.some(v => v.date === today)) {
-        st.visits.push({
-  date: today,
-  note: ""
-});
-          saveStoreToSupabase(currentStore.id);
-          renderApp();
-        }
-      });
-
-     right.querySelectorAll("[data-edit-visit]").forEach(inp => {
-  inp.addEventListener("change", () => {
-    const index = Number(inp.dataset.editVisit);
-    const newDate = inp.value;
-    if (!newDate) return;
-
-    if (st.visits.some((v, i) => v.date === newDate && i !== index)) {
-      alert("Une visite existe déjà à cette date.");
+      st.visits[index].date = newDate;
+      saveStoreToSupabase(currentStore.id);
       renderApp();
-      return;
-    }
-
-    st.visits[index].date = newDate; 
-    saveStoreToSupabase(currentStore.id);
-    renderApp();
+    });
   });
-});
-right.querySelectorAll("[data-note-visit]").forEach(txt => {
-  txt.addEventListener("blur", () => {
-    const index = Number(txt.dataset.noteVisit);
-    st.visits[index].note = txt.value;
-    saveWithDebounce(currentStore.id);
+
+  right.querySelectorAll("[data-note-visit]").forEach(txt => {
+    txt.addEventListener("blur", () => {
+      const index = Number(txt.dataset.noteVisit);
+      st.visits[index].note = txt.value;
+      saveWithDebounce(currentStore.id);
+    });
   });
-});
 
-      right.querySelectorAll("[data-delete-visit]").forEach(btn => {
-        btn.addEventListener("click", () => {
-          const index = Number(btn.dataset.deleteVisit);
-          if (!confirm("Supprimer cette visite ?")) return;
-          st.visits.splice(index, 1);
-          saveStoreToSupabase(currentStore.id);
-          renderApp();
-        });
-      });
+  right.querySelectorAll("[data-delete-visit]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const index = Number(btn.dataset.deleteVisit);
+      if (!confirm("Supprimer cette visite ?")) return;
+      st.visits.splice(index, 1);
+      saveStoreToSupabase(currentStore.id);
+      renderApp();
+    });
+  });
 
-      container.appendChild(left);
-      container.appendChild(right);
-    }
+  container.appendChild(left);
+  container.appendChild(right);
+}
 
     function renderFruitsLegumesTab(container, stores, currentStore) {
       container.innerHTML = "";
@@ -2456,9 +2657,10 @@ container.appendChild(right);
 }
 
     async function init() {
-      await loadStateFromSupabase();
-      renderLogin();
-    }
+  await loadStoresFromSupabase();
+  await loadStateFromSupabase();
+  renderLogin();
+}
 
     init();
   </script>
