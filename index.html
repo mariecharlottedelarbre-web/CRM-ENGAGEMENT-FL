@@ -410,9 +410,10 @@ function rebuildPromoCatalog(rows) {
     }
 
     catalog[month][format].push({
-      id: row.product_id,
-      label: row.label
-    });
+  rowId: row.id,
+  id: row.product_id,
+  label: row.label
+});
   });
 
   Object.keys(catalog).forEach(month => {
@@ -481,7 +482,7 @@ async function addPromoProductToSupabase({ monthKey, storeFormat, label }) {
   }
 }
 
-async function deletePromoProductFromSupabase({ monthKey, storeFormat, productId }) {
+async function deletePromoProductFromSupabase(rowId) {
   if (!currentUser || currentUser.role !== "admin") return false;
 
   setGlobalSaveStatus("saving");
@@ -490,9 +491,7 @@ async function deletePromoProductFromSupabase({ monthKey, storeFormat, productId
     const { error } = await sb
       .from("promo_catalog")
       .delete()
-      .eq("month_key", monthKey)
-      .eq("store_format", storeFormat)
-      .eq("product_id", productId);
+      .eq("id", rowId);
 
     if (error) {
       console.error("❌ Erreur suppression produit promo :", error.message || error);
@@ -514,13 +513,11 @@ async function deletePromoProductFromSupabase({ monthKey, storeFormat, productId
 
   const cleanMonth = String(monthKey || "").trim();
 
-  // format attendu : 2026-02
   if (!/^\d{4}-\d{2}$/.test(cleanMonth)) {
     alert("Format attendu : AAAA-MM (ex: 2026-02)");
     return false;
   }
 
-  // si déjà présent en mémoire
   if (PROMO_MONTHS.includes(cleanMonth)) {
     currentPromoMonth = cleanMonth;
     renderApp();
@@ -530,7 +527,6 @@ async function deletePromoProductFromSupabase({ monthKey, storeFormat, productId
   setGlobalSaveStatus("saving");
 
   try {
-    // ligne technique pour créer le mois dans Supabase
     const payload = {
       month_key: cleanMonth,
       store_format: "proxi",
@@ -2548,30 +2544,30 @@ function renderPromoTab(container, stores, currentStore) {
     </div>
 
     ${currentUser.role === "admin" ? `
-  <div class="card" style="margin-top:10px;padding:12px;">
-    <div style="font-size:12px;font-weight:700;margin-bottom:8px;">Admin · Ajouter un mois promo</div>
+      <div class="card" style="margin-top:10px;padding:12px;">
+        <div style="font-size:12px;font-weight:700;margin-bottom:8px;">Admin · Ajouter un mois promo</div>
 
-    <label>Nouveau mois</label>
-    <input id="newPromoMonth" placeholder="Ex: 2026-02" />
+        <label>Nouveau mois</label>
+        <input id="newPromoMonth" placeholder="Ex: 2026-02" />
 
-    <button id="addPromoMonthBtn" style="margin-top:10px;">+ Ajouter le mois</button>
-  </div>
+        <button id="addPromoMonthBtn" style="margin-top:10px;">+ Ajouter le mois</button>
+      </div>
 
-  <div class="card" style="margin-top:10px;padding:12px;">
-    <div style="font-size:12px;font-weight:700;margin-bottom:8px;">Admin · Ajouter un produit promo</div>
+      <div class="card" style="margin-top:10px;padding:12px;">
+        <div style="font-size:12px;font-weight:700;margin-bottom:8px;">Admin · Ajouter un produit promo</div>
 
-    <label>Produit</label>
-    <input id="newPromoLabel" placeholder="Ex: Coca-Cola 33cl" />
+        <label>Produit</label>
+        <input id="newPromoLabel" placeholder="Ex: Coca-Cola 33cl" />
 
-    <label>Format</label>
-    <select id="newPromoFormat">
-      <option value="proxi">proxi</option>
-      <option value="proxi_super">proxi_super</option>
-    </select>
+        <label>Format</label>
+        <select id="newPromoFormat">
+          <option value="proxi">proxi</option>
+          <option value="proxi_super">proxi_super</option>
+        </select>
 
-    <button id="addPromoProductBtn" style="margin-top:10px;">+ Ajouter</button>
-  </div>
-` : ""}
+        <button id="addPromoProductBtn" style="margin-top:10px;">+ Ajouter</button>
+      </div>
+    ` : ""}
 
     <div class="card" style="margin-top:10px;padding:12px;">
       <div style="font-size:13px;font-weight:600;margin-bottom:8px;">Produits promo</div>
@@ -2596,7 +2592,7 @@ function renderPromoTab(container, stores, currentStore) {
                 </td>
                 ${currentUser.role === "admin" ? `
                   <td>
-                    <button class="secondary" data-delete-promo="${p.id}">Supprimer</button>
+                    <button class="secondary" data-delete-promo="${p.rowId}">Supprimer</button>
                   </td>
                 ` : ""}
               </tr>
@@ -2647,37 +2643,36 @@ function renderPromoTab(container, stores, currentStore) {
         renderApp();
       });
     }
-const addMonthBtn = right.querySelector("#addPromoMonthBtn");
-const monthInput = right.querySelector("#newPromoMonth");
 
-if (addMonthBtn && monthInput) {
-  addMonthBtn.addEventListener("click", async () => {
-    const monthKey = monthInput.value.trim();
+    const addMonthBtn = right.querySelector("#addPromoMonthBtn");
+    const monthInput = right.querySelector("#newPromoMonth");
 
-    if (!monthKey) {
-      alert("Renseigne un mois au format AAAA-MM.");
-      return;
+    if (addMonthBtn && monthInput) {
+      addMonthBtn.addEventListener("click", async () => {
+        const monthKey = monthInput.value.trim();
+
+        if (!monthKey) {
+          alert("Renseigne un mois au format AAAA-MM.");
+          return;
+        }
+
+        const ok = await createPromoMonthInSupabase(monthKey);
+
+        if (!ok) {
+          alert("Impossible de créer le mois promo.");
+          return;
+        }
+
+        monthInput.value = "";
+        renderApp();
+      });
     }
 
-    const ok = await createPromoMonthInSupabase(monthKey);
-
-    if (!ok) {
-      alert("Impossible de créer le mois promo.");
-      return;
-    }
-
-    monthInput.value = "";
-    renderApp();
-  });
-}
     right.querySelectorAll("[data-delete-promo]").forEach(btn => {
       btn.addEventListener("click", async () => {
-        const productId = btn.dataset.deletePromo;
-        const ok = await deletePromoProductFromSupabase({
-          monthKey: currentPromoMonth,
-          storeFormat: currentFormat,
-          productId
-        });
+        const rowId = btn.dataset.deletePromo;
+
+        const ok = await deletePromoProductFromSupabase(rowId);
 
         if (!ok) {
           alert("Impossible de supprimer le produit promo.");
