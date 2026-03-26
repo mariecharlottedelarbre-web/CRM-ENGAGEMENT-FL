@@ -264,6 +264,12 @@ td.score-cell b{
   background: rgba(248,113,113,0.14);
   border-color: rgba(248,113,113,0.28);
 }
+    .visit-note {
+  min-height: 140px;
+  font-size: 15px;
+  line-height: 1.45;
+  padding: 12px 14px;
+}
   </style>
 </head>
 
@@ -2008,10 +2014,10 @@ setGlobalSaveStatus("saved");
                 <div style="margin-bottom:8px;">
                   <input type="date" value="${visit.date}" data-edit-visit="${idx}" />
                   <textarea
-                    rows="2"
-                    placeholder="Commentaire de visite"
-                    data-note-visit="${idx}"
-                  >${visit.note || ""}</textarea>
+  class="visit-note"
+  placeholder="Commentaire de visite"
+  data-note-visit="${idx}"
+>${visit.note || ""}</textarea>
                   <button class="secondary" data-delete-visit="${idx}">🗑️</button>
                 </div>
               `;
