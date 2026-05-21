@@ -1829,12 +1829,11 @@ setGlobalSaveStatus("saved");
       const mainCard = document.createElement("div");
       mainCard.className = "card";
       mainCard.innerHTML = `
-        <div class="tabs">
+    <div class="tabs">
   <button class="tab-btn ${currentTab === "overview" ? "active" : ""}" data-tab="overview">Vue d'ensemble</button>
   <button class="tab-btn ${currentTab === "list" ? "active" : ""}" data-tab="list">Magasins</button>
   <button class="tab-btn ${currentTab === "fl" ? "active" : ""}" data-tab="fl">Fruits & Légumes</button>
   <button class="tab-btn ${currentTab === "eng" ? "active" : ""}" data-tab="eng">Engagement</button>
-  <button class="tab-btn ${currentTab === "promo" ? "active" : ""}" data-tab="promo">Promo</button>
   <button class="tab-btn ${currentTab === "detention" ? "active" : ""}" data-tab="detention">Détention</button>
 </div>
       `;
@@ -1929,10 +1928,12 @@ setGlobalSaveStatus("saved");
   renderFruitsLegumesTab(content, stores, currentStore);
 } else if (currentTab === "eng") {
   renderEngagementTab(content, stores, currentStore);
-} else if (currentTab === "promo") {
-  renderPromoTab(content, stores, currentStore);
 } else if (currentTab === "detention") {
   renderDetentionTab(content, stores, currentStore);
+} else {
+  currentTab = "overview";
+  renderApp();
+  return;
 }
   
 
