@@ -1563,6 +1563,12 @@ function computeEngagementTotal(storeId) {
 
 function computeEngagementEvolution(storeId, year = currentEngYear) {
   const current = computeEngagementYearTotal(storeId, year);
+
+  // On ne compare pas 2026 à 2025, car l'outil commence en 2026.
+  if (Number(year) <= 2026) {
+    return "—";
+  }
+
   const previous = computeEngagementYearTotal(storeId, year - 1);
 
   if (!previous) {
@@ -2496,14 +2502,12 @@ function updateEngagementRow(storeId) {
   if (!row) return;
 
   const monthsCount = getEngagedMonthsCount(storeId, currentEngYear);
-  const total = computeEngagementYearTotal(storeId, currentEngYear);
   const evolution = computeEngagementEvolution(storeId, currentEngYear);
 
   const tds = row.querySelectorAll("td");
 
   if (tds[1]) tds[1].textContent = monthsCount;
-  if (tds[2]) tds[2].textContent = euro(total);
-  if (tds[3]) tds[3].textContent = evolution;
+  if (tds[2]) tds[2].textContent = evolution;
 }
 
 function renderEngagementTab(container, stores, currentStore) {
@@ -2523,29 +2527,27 @@ function renderEngagementTab(container, stores, currentStore) {
     </div>
 
     <table>
-      <thead>
-        <tr>
-          <th>Magasin</th>
-          <th>Mois renseignés</th>
-          <th>Total engagé ${currentEngYear}</th>
-          <th>Évolution vs ${currentEngYear - 1}</th>
-        </tr>
-      </thead>
+  <thead>
+    <tr>
+      <th>Magasin</th>
+      <th>Mois renseignés</th>
+      <th>% évolution ${currentEngYear > 2026 ? `${currentEngYear} vs ${currentEngYear - 1}` : ""}</th>
+    </tr>
+  </thead>
       <tbody>
+      
         ${stores.map(s => {
-          const monthsCount = getEngagedMonthsCount(s.id, currentEngYear);
-          const total = computeEngagementYearTotal(s.id, currentEngYear);
-          const evolution = computeEngagementEvolution(s.id, currentEngYear);
+  const monthsCount = getEngagedMonthsCount(s.id, currentEngYear);
+  const evolution = computeEngagementEvolution(s.id, currentEngYear);
 
-          return `
-            <tr data-id="${s.id}">
-              <td>${s.name}</td>
-              <td>${monthsCount}</td>
-              <td>${euro(total)}</td>
-              <td>${evolution}</td>
-            </tr>
-          `;
-        }).join("")}
+  return `
+    <tr data-id="${s.id}">
+      <td>${s.name}</td>
+      <td>${monthsCount}</td>
+      <td>${evolution}</td>
+    </tr>
+  `;
+}).join("")}
       </tbody>
     </table>
   `;
@@ -2621,22 +2623,24 @@ function renderEngRightPanel(right, currentStore) {
     </div>
 
     <div class="card" style="margin-top:10px;padding:12px;">
-      <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:12px;">
-        <div class="kpi-card">
-          <div class="kpi-label">Total ${currentEngYear}</div>
-          <div class="kpi-value">${euro(currentYearTotal)}</div>
-        </div>
+    <div style="display:grid;grid-template-columns:${currentEngYear > 2026 ? "repeat(3,minmax(0,1fr))" : "repeat(2,minmax(0,1fr))"};gap:10px;margin-bottom:12px;">
+  <div class="kpi-card">
+    <div class="kpi-label">Total ${currentEngYear}</div>
+    <div class="kpi-value">${euro(currentYearTotal)}</div>
+  </div>
 
-        <div class="kpi-card">
-          <div class="kpi-label">Total ${currentEngYear - 1}</div>
-          <div class="kpi-value">${euro(previousYearTotal)}</div>
-        </div>
+  ${currentEngYear > 2026 ? `
+    <div class="kpi-card">
+      <div class="kpi-label">Total ${currentEngYear - 1}</div>
+      <div class="kpi-value">${euro(previousYearTotal)}</div>
+    </div>
+  ` : ""}
 
-        <div class="kpi-card">
-          <div class="kpi-label">Évolution</div>
-          <div class="kpi-value">${evolution}</div>
-        </div>
-      </div>
+  <div class="kpi-card">
+    <div class="kpi-label">% évolution ${currentEngYear > 2026 ? `vs ${currentEngYear - 1}` : ""}</div>
+    <div class="kpi-value">${evolution}</div>
+  </div>
+</div>
 
       <label>Montant engagé · ${selectedMonth?.label || ""} ${currentEngYear}</label>
       <input type="number" id="engAmount" value="${data.amount || ""}" placeholder="Ex : 2500" />
