@@ -658,20 +658,27 @@ async function deletePromoProductFromSupabase(rowId) {
       { id:"allanche", name:"Allanche", ca2025:168103, commercialId:"vernay-benoit" }
     ];
 
-    const WAVES = [
-      { id: "wave1", label: "Vague 1" },
-      { id: "wave2", label: "Vague 2" },
-      { id: "wave3", label: "Vague 3" },
-      { id: "wave4", label: "Vague 4" },
-      { id: "wave5", label: "Vague 5" },
-      { id: "wave6", label: "Vague 6" }
-    ];
+    const ENG_MONTHS = [
+  { id: "01", label: "Janvier" },
+  { id: "02", label: "Février" },
+  { id: "03", label: "Mars" },
+  { id: "04", label: "Avril" },
+  { id: "05", label: "Mai" },
+  { id: "06", label: "Juin" },
+  { id: "07", label: "Juillet" },
+  { id: "08", label: "Août" },
+  { id: "09", label: "Septembre" },
+  { id: "10", label: "Octobre" },
+  { id: "11", label: "Novembre" },
+  { id: "12", label: "Décembre" }
+];
+
+let ENG_YEARS = [2026];
 
     const SEASONS = [
   "Janvier","Février","Mars","Avril","Mai","Juin",
   "Juillet","Août","Septembre","Octobre","Novembre","Décembre"
 ];
-    const WAVE_STATUSES = ["Non concerné", "À faire", "En cours", "Engagé", "Refusé"];
 
     let PROMOS = {};
 let PROMO_MONTHS = ["2026-01"];
@@ -841,16 +848,7 @@ function safeCalcExpression(expr){
   return out;
 }
 
-    function defaultEngagementByWave() {
-      return {
-        wave1: { name: "", amount: "" },
-        wave2: { name: "", amount: "" },
-        wave3: { name: "", amount: "" },
-        wave4: { name: "", amount: "" },
-        wave5: { name: "", amount: "" },
-        wave6: { name: "", amount: "" }
-      };
-    }
+    
 
     function normalizeFlData(any) {
       if (!any || typeof any !== "object") {
@@ -892,19 +890,6 @@ function safeCalcExpression(expr){
   return out;
 }
 
-    function normalizeEngagementByWave(raw) {
-      const base = defaultEngagementByWave();
-      if (!raw || typeof raw !== "object") return base;
-      Object.keys(base).forEach(waveId => {
-        if (!raw[waveId] || typeof raw[waveId] !== "object") {
-          raw[waveId] = { name: "", amount: "" };
-        } else {
-          raw[waveId].name = raw[waveId].name || "";
-          raw[waveId].amount = raw[waveId].amount || "";
-        }
-      });
-      return raw;
-    }
 
     function normalizeVisits(raw) {
   if (!Array.isArray(raw)) return [];
@@ -966,17 +951,7 @@ function computeFL2025Total(storeId) {
 
   return total;
 }
-    function computeEngagementTotal(storeId) {
-      const st = getStoreState(storeId);
-      let total = 0;
-      Object.entries(st.engagementByWave || {}).forEach(([waveId, data]) => {
-        if (st.waves?.[waveId] === "Engagé") {
-          const val = Number(data?.amount || 0);
-          if (!Number.isNaN(val)) total += val;
-        }
-      });
-      return total;
-    }
+  
 function getPromoState(storeId, month) {
   const st = getStoreState(storeId);
   if (!st.promoByMonth[month]) st.promoByMonth[month] = {};
@@ -1241,7 +1216,7 @@ console.log("✅ Chargé:", Object.keys(STATE).length, "magasins");
           flBySeason: defaultFlBySeason(),
           flCommande: "",
           waves: {},
-          engagementByWave: defaultEngagementByWave(),
+          engagementByWave: defaultEngagementByYear(2026),
           engNotesByWave: {},
           visits: [],
           buysEng: "",
@@ -1251,7 +1226,7 @@ console.log("✅ Chargé:", Object.keys(STATE).length, "magasins");
         };
       } else {
         if (!STATE[id].flBySeason) STATE[id].flBySeason = defaultFlBySeason();
-        if (!STATE[id].engagementByWave) STATE[id].engagementByWave = defaultEngagementByWave();
+        if (!STATE[id].engagementByWave) STATE[id].engagementByWave = defaultEngagementByYear(2026);
         if (!STATE[id].engNotesByWave) STATE[id].engNotesByWave = {};
         if (STATE[id].flCommande === undefined) STATE[id].flCommande = "";
         if (!STATE[id].visits) STATE[id].visits = [];
@@ -1353,7 +1328,8 @@ async function saveDetentionPeriodForAllStores(period) {
     let currentTab = "overview";
     let currentStoreId = null;
     let currentSearch = "";
-    let currentEngWave = "wave1";
+    let currentEngYear = 2026;
+let currentEngMonth = "01";
     let currentFlSeason = "Janvier";
     let adminPilotCommercial = "";   
 let adminPilotSearch = "";     
@@ -1372,12 +1348,12 @@ let adminPilotSort = { key: "lastVisit", dir: "asc" };
       const stores = getUserStores(user);
       const totalStores = stores.length;
       const totalCA = stores.reduce((sum, s) => sum + (s.ca2025 || 0), 0);
-      let engagedStores = 0;
-      stores.forEach(s => {
-        const st = getStoreState(s.id);
-        const hasEng = WAVES.some(w => st.waves[w.id] === "Engagé");
-        if (hasEng) engagedStores++;
-      });
+     let engagedStores = 0;
+stores.forEach(s => {
+  if (hasEngagementInYear(s.id, currentEngYear)) {
+    engagedStores++;
+  }
+});
       const avgCA = totalStores ? Math.round(totalCA / totalStores) : 0;
       return { totalStores, totalCA, avgCA, engagedStores };
     }
@@ -1470,7 +1446,8 @@ wrap.style.alignItems = "stretch";
         currentStoreId = null;
         currentSearch = "";
         currentFlSeason = "Janvier";
-        currentEngWave = "wave1";
+        currentEngYear = 2026;
+currentEngMonth = "01";
         adminPilotCommercial = "";
 adminPilotSearch = "";
 adminPilotSort = { key: "lastVisit", dir: "asc" };
@@ -1488,10 +1465,130 @@ function getLastVisitDate(storeId){
   const dates = visits.map(v => (typeof v === "string" ? v : v?.date)).filter(Boolean).sort();
   return dates.length ? dates[dates.length - 1] : "";
 }
+function defaultEngagementByYear(year = 2026) {
+  const out = {};
+  ENG_MONTHS.forEach(m => {
+    out[`${year}-${m.id}`] = {
+      amount: "",
+      text: ""
+    };
+  });
+  return out;
+}
 
-function getEngagedWavesCount(storeId){
+function normalizeEngagementByWave(raw) {
+  const out = {};
+
+  if (raw && typeof raw === "object") {
+    Object.keys(raw).forEach(key => {
+      const d = raw[key];
+
+      if (d && typeof d === "object") {
+        out[key] = {
+          amount: d.amount ?? "",
+          text: d.text ?? d.name ?? ""
+        };
+      }
+    });
+  }
+
+  return {
+    ...defaultEngagementByYear(2026),
+    ...out
+  };
+}
+
+function refreshEngYearsFromState() {
+  const years = new Set([2026]);
+
+  Object.values(STATE || {}).forEach(st => {
+    const data = st.engagementByWave || {};
+    Object.keys(data).forEach(key => {
+      const match = String(key).match(/^(\d{4})-\d{2}$/);
+      if (match) years.add(Number(match[1]));
+    });
+  });
+
+  ENG_YEARS = Array.from(years).sort((a, b) => a - b);
+
+  if (!ENG_YEARS.includes(currentEngYear)) {
+    currentEngYear = ENG_YEARS[0] || 2026;
+  }
+}
+
+function ensureEngagementMonth(st, year, month) {
+  if (!st.engagementByWave || typeof st.engagementByWave !== "object") {
+    st.engagementByWave = {};
+  }
+
+  const key = `${year}-${month}`;
+
+  if (!st.engagementByWave[key] || typeof st.engagementByWave[key] !== "object") {
+    st.engagementByWave[key] = {
+      amount: "",
+      text: ""
+    };
+  }
+
+  if (st.engagementByWave[key].amount == null) {
+    st.engagementByWave[key].amount = "";
+  }
+
+  if (st.engagementByWave[key].text == null) {
+    st.engagementByWave[key].text = st.engagementByWave[key].name || "";
+  }
+
+  return st.engagementByWave[key];
+}
+
+function computeEngagementYearTotal(storeId, year = currentEngYear) {
   const st = getStoreState(storeId);
-  return WAVES.filter(w => st.waves?.[w.id] === "Engagé").length;
+  let total = 0;
+
+  ENG_MONTHS.forEach(m => {
+    const key = `${year}-${m.id}`;
+    const val = Number(st.engagementByWave?.[key]?.amount || 0);
+
+    if (!Number.isNaN(val)) {
+      total += val;
+    }
+  });
+
+  return total;
+}
+
+function computeEngagementTotal(storeId) {
+  return computeEngagementYearTotal(storeId, currentEngYear);
+}
+
+function computeEngagementEvolution(storeId, year = currentEngYear) {
+  const current = computeEngagementYearTotal(storeId, year);
+  const previous = computeEngagementYearTotal(storeId, year - 1);
+
+  if (!previous) {
+    return current ? "+100 %" : "—";
+  }
+
+  const evolution = Math.round(((current - previous) / previous) * 100);
+  return `${evolution > 0 ? "+" : ""}${evolution} %`;
+}
+
+function getEngagedMonthsCount(storeId, year = currentEngYear) {
+  const st = getStoreState(storeId);
+
+  return ENG_MONTHS.filter(m => {
+    const key = `${year}-${m.id}`;
+    const data = st.engagementByWave?.[key];
+    return Number(data?.amount || 0) > 0 || String(data?.text || "").trim() !== "";
+  }).length;
+}
+
+function getEngagedWavesCount(storeId) {
+  return getEngagedMonthsCount(storeId, currentEngYear);
+}
+
+function hasEngagementInYear(storeId, year = currentEngYear) {
+  return getEngagedMonthsCount(storeId, year) > 0;
 }
 
 function computePilotRow(store, promoMonth, detentionPeriod){
@@ -1500,8 +1597,8 @@ function computePilotRow(store, promoMonth, detentionPeriod){
   const lastVisit = getLastVisitDate(store.id);
   const visitsCount = Array.isArray(st.visits) ? st.visits.length : 0;
 
-  const engagedWaves = getEngagedWavesCount(store.id);
-  const engagedTotal = computeEngagementTotal(store.id);
+  const engagedWaves = getEngagedMonthsCount(store.id, currentEngYear);
+const engagedTotal = computeEngagementYearTotal(store.id, currentEngYear);
 
   const flActual = computeFLActualTotal(store.id);
   const flTarget = getFlTarget(store.id);
@@ -1842,7 +1939,8 @@ setGlobalSaveStatus("saved");
         currentStoreId = null;
         currentTab = "overview";
         currentFlSeason = "Janvier";
-        currentEngWave = "wave1";
+        currentEngYear = 2026;
+currentEngMonth = "01";
         renderLogin();
       });
 
@@ -2156,74 +2254,6 @@ setGlobalSaveStatus("saved");
       container.appendChild(right);
     }
 
-    function updateEngagementRow(storeId) {
-      const row = document.querySelector(`tr[data-id="${storeId}"]`);
-      if (!row) return;
-      const st = getStoreState(storeId);
-      const engagedCount = WAVES.filter(w => st.waves[w.id] === "Engagé").length;
-      const total = computeEngagementTotal(storeId);
-      const tds = row.querySelectorAll("td");
-      if (tds[1]) tds[1].textContent = engagedCount;
-      if (tds[2]) tds[2].textContent = euro(total);
-    }
-
-    function renderEngagementTab(container, stores, currentStore) {
-      const left = document.createElement("div");
-      const right = document.createElement("div");
-
-      left.innerHTML = `
-        <div>
-          <div style="font-size:13px;font-weight:600;">Magasins · Engagement</div>
-          <div class="subtext">Suivi des vagues d'engagement.</div>
-        </div>
-        <table>
-          <thead>
-            <tr>
-              <th>Magasin</th>
-              <th>Vagues engagées</th>
-              <th>Total engagé</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${stores.map(s => {
-              const st = getStoreState(s.id);
-              const engagedCount = WAVES.filter(w => st.waves[w.id] === "Engagé").length;
-              const total = computeEngagementTotal(s.id);
-              return `
-                <tr data-id="${s.id}">
-                  <td>${s.name}</td>
-                  <td>${engagedCount}</td>
-                  <td>${euro(total)}</td>
-                </tr>
-              `;
-            }).join("")}
-          </tbody>
-        </table>
-      `;
-
-      left.querySelectorAll("tbody tr").forEach(tr => {
-        tr.addEventListener("click", () => {
-          currentStoreId = tr.dataset.id;
-          renderApp();
-        });
-      });
-
-      if (!currentStore) {
-        right.innerHTML = `<div class="subtext">Sélectionne un magasin.</div>`;
-        container.appendChild(left);
-        container.appendChild(right);
-        return;
-      }
-
-      if (currentStore) {
-  renderEngRightPanel(right, currentStore);
-} else {
-  right.innerHTML = '<div class="subtext">Sélectionne un magasin.</div>';
-}
-
-      container.appendChild(left);
-      container.appendChild(right);
-    }
     function renderFlRightPanel(right, currentStore) {
   const st = getStoreState(currentStore.id);
 
@@ -2396,78 +2426,268 @@ const progression = computeFLProgression(totalActuel, totalTarget);
 
   refreshDelta();
 }
-    function renderEngRightPanel(right, currentStore) {
+    
+function addEngagementYear() {
+  refreshEngYearsFromState();
+
+  const nextYear = Math.max(...ENG_YEARS) + 1;
+
+  ENG_YEARS.push(nextYear);
+  ENG_YEARS = Array.from(new Set(ENG_YEARS)).sort((a, b) => a - b);
+
+  STORES.forEach(store => {
+    const st = getStoreState(store.id);
+
+    ENG_MONTHS.forEach(m => {
+      ensureEngagementMonth(st, nextYear, m.id);
+    });
+
+    saveWithDebounce(store.id);
+  });
+
+  currentEngYear = nextYear;
+  currentEngMonth = "01";
+
+  renderApp();
+}
+
+async function deleteEngagementYear(year) {
+  refreshEngYearsFromState();
+
+  if (ENG_YEARS.length <= 1) {
+    alert("Tu dois conserver au moins une année.");
+    return;
+  }
+
+  const ok = confirm(`Supprimer l'année ${year} pour tous les magasins ?`);
+  if (!ok) return;
+
+  setGlobalSaveStatus("saving");
+
+  try {
+    for (const store of STORES) {
+      const st = getStoreState(store.id);
+
+      ENG_MONTHS.forEach(m => {
+        const key = `${year}-${m.id}`;
+
+        if (st.engagementByWave) delete st.engagementByWave[key];
+        if (st.waves) delete st.waves[key];
+        if (st.engNotesByWave) delete st.engNotesByWave[key];
+      });
+
+      await saveStoreToSupabase(store.id);
+    }
+
+    ENG_YEARS = ENG_YEARS.filter(y => Number(y) !== Number(year));
+    currentEngYear = ENG_YEARS[0] || 2026;
+    currentEngMonth = "01";
+
+    setGlobalSaveStatus("saved");
+    renderApp();
+  } catch (err) {
+    console.error("❌ Erreur suppression année engagement :", err);
+    setGlobalSaveStatus("error");
+  }
+}
+
+function updateEngagementRow(storeId) {
+  const row = document.querySelector(`tr[data-id="${storeId}"]`);
+  if (!row) return;
+
+  const monthsCount = getEngagedMonthsCount(storeId, currentEngYear);
+  const total = computeEngagementYearTotal(storeId, currentEngYear);
+  const evolution = computeEngagementEvolution(storeId, currentEngYear);
+
+  const tds = row.querySelectorAll("td");
+
+  if (tds[1]) tds[1].textContent = monthsCount;
+  if (tds[2]) tds[2].textContent = euro(total);
+  if (tds[3]) tds[3].textContent = evolution;
+}
+
+function renderEngagementTab(container, stores, currentStore) {
+  container.innerHTML = "";
+
+  refreshEngYearsFromState();
+
+  const left = document.createElement("div");
+  const right = document.createElement("div");
+
+  left.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;">
+      <div>
+        <div style="font-size:13px;font-weight:600;">Magasins · Engagement ${currentEngYear}</div>
+        <div class="subtext">Suivi des engagements mensuels par magasin.</div>
+      </div>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Magasin</th>
+          <th>Mois renseignés</th>
+          <th>Total engagé ${currentEngYear}</th>
+          <th>Évolution vs ${currentEngYear - 1}</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${stores.map(s => {
+          const monthsCount = getEngagedMonthsCount(s.id, currentEngYear);
+          const total = computeEngagementYearTotal(s.id, currentEngYear);
+          const evolution = computeEngagementEvolution(s.id, currentEngYear);
+
+          return `
+            <tr data-id="${s.id}">
+              <td>${s.name}</td>
+              <td>${monthsCount}</td>
+              <td>${euro(total)}</td>
+              <td>${evolution}</td>
+            </tr>
+          `;
+        }).join("")}
+      </tbody>
+    </table>
+  `;
+
+  left.querySelectorAll("tbody tr").forEach(tr => {
+    tr.addEventListener("click", () => {
+      currentStoreId = tr.dataset.id;
+      renderApp();
+    });
+  });
+
+  if (!currentStore) {
+    right.innerHTML = `<div class="subtext">Sélectionne un magasin.</div>`;
+  } else {
+    renderEngRightPanel(right, currentStore);
+  }
+
+  container.appendChild(left);
+  container.appendChild(right);
+}
+
+function renderEngRightPanel(right, currentStore) {
+  refreshEngYearsFromState();
+
   const st = getStoreState(currentStore.id);
-  const wave = WAVES.find(w => w.id === currentEngWave);
-  const data = st.engagementByWave[currentEngWave] || { name: "", amount: "" };
-  const status = st.waves[currentEngWave] || "Non concerné";
-  const notes = st.engNotesByWave?.[currentEngWave] || "";
+
+  if (!ENG_YEARS.includes(currentEngYear)) {
+    currentEngYear = ENG_YEARS[0] || 2026;
+  }
+
+  if (!ENG_MONTHS.some(m => m.id === currentEngMonth)) {
+    currentEngMonth = "01";
+  }
+
+  const data = ensureEngagementMonth(st, currentEngYear, currentEngMonth);
+  const selectedMonth = ENG_MONTHS.find(m => m.id === currentEngMonth);
+
+  const previousYearTotal = computeEngagementYearTotal(currentStore.id, currentEngYear - 1);
+  const currentYearTotal = computeEngagementYearTotal(currentStore.id, currentEngYear);
+  const evolution = computeEngagementEvolution(currentStore.id, currentEngYear);
 
   right.innerHTML = `
     <div style="font-size:13px;font-weight:600;">${currentStore.name}</div>
 
     <div class="card" style="margin-top:10px;padding:12px;">
-      <div class="tabs">
-        ${WAVES.map(w => `
-          <button class="tab-btn ${currentEngWave === w.id ? "active" : ""}"
-                  data-eng-wave="${w.id}">
-            ${w.label}
+      <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+        <div style="min-width:160px;">
+          <label>Année d'engagement</label>
+          <select id="engYearSelect">
+            ${ENG_YEARS.map(y => `
+              <option value="${y}" ${Number(y) === Number(currentEngYear) ? "selected" : ""}>
+                ${y}
+              </option>
+            `).join("")}
+          </select>
+        </div>
+
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <button type="button" id="addEngYearBtn">+ Ajouter une année</button>
+          <button type="button" class="secondary" id="deleteEngYearBtn">Supprimer l'année</button>
+        </div>
+      </div>
+
+      <div class="tabs eng-month-tabs" style="margin-top:12px;display:flex;flex-wrap:wrap;gap:6px;border-radius:18px;">
+        ${ENG_MONTHS.map(m => `
+          <button class="tab-btn ${currentEngMonth === m.id ? "active" : ""}"
+                  data-eng-month="${m.id}"
+                  style="min-width:92px;justify-content:center;">
+            ${m.label}
           </button>
         `).join("")}
       </div>
     </div>
 
     <div class="card" style="margin-top:10px;padding:12px;">
-      <label>Statut</label>
-      <select id="engStatus">
-        ${WAVE_STATUSES.map(s => `
-          <option ${s === status ? "selected" : ""}>${s}</option>
-        `).join("")}
-      </select>
+      <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:12px;">
+        <div class="kpi-card">
+          <div class="kpi-label">Total ${currentEngYear}</div>
+          <div class="kpi-value">${euro(currentYearTotal)}</div>
+        </div>
 
-      <label>Nom</label>
-      <input id="engName" value="${data.name || ""}" />
+        <div class="kpi-card">
+          <div class="kpi-label">Total ${currentEngYear - 1}</div>
+          <div class="kpi-value">${euro(previousYearTotal)}</div>
+        </div>
 
-      <label>Montant</label>
-      <input type="number" id="engAmount" value="${data.amount || ""}" />
+        <div class="kpi-card">
+          <div class="kpi-label">Évolution</div>
+          <div class="kpi-value">${evolution}</div>
+        </div>
+      </div>
 
-      <label>Notes</label>
-      <textarea id="engNotes">${notes}</textarea>
+      <label>Montant engagé · ${selectedMonth?.label || ""} ${currentEngYear}</label>
+      <input type="number" id="engAmount" value="${data.amount || ""}" placeholder="Ex : 2500" />
+
+      <label style="margin-top:10px;">Engagements du mois</label>
+      <textarea id="engText" class="visit-note" placeholder="Écrire ici les engagements du magasin pour ce mois...">${data.text || ""}</textarea>
     </div>
   `;
 
-  right.querySelectorAll("[data-eng-wave]").forEach(btn => {
-  btn.onclick = (e) => {
-    e.stopPropagation();
-    currentEngWave = btn.dataset.engWave;
+  right.querySelector("#engYearSelect").onchange = e => {
+    currentEngYear = Number(e.target.value);
+    currentEngMonth = "01";
     renderEngRightPanel(right, currentStore);
-  };
-});
-
-  right.querySelector("#engStatus").onchange = e => {
-    st.waves[currentEngWave] = e.target.value;
     updateEngagementRow(currentStore.id);
-    saveWithDebounce(currentStore.id);
   };
 
-  right.querySelector("#engName").onblur = e => {
-    st.engagementByWave[currentEngWave].name = e.target.value;
-    saveWithDebounce(currentStore.id);
+  right.querySelector("#addEngYearBtn").onclick = () => {
+    addEngagementYear();
   };
+
+  right.querySelector("#deleteEngYearBtn").onclick = () => {
+    deleteEngagementYear(currentEngYear);
+  };
+
+  right.querySelectorAll("[data-eng-month]").forEach(btn => {
+    btn.onclick = e => {
+      e.stopPropagation();
+      currentEngMonth = btn.dataset.engMonth;
+      renderEngRightPanel(right, currentStore);
+    };
+  });
 
   right.querySelector("#engAmount").onblur = e => {
-    st.engagementByWave[currentEngWave].amount = e.target.value;
+    const d = ensureEngagementMonth(st, currentEngYear, currentEngMonth);
+    d.amount = e.target.value;
+
     updateEngagementRow(currentStore.id);
     saveWithDebounce(currentStore.id);
+    renderEngRightPanel(right, currentStore);
   };
 
-  right.querySelector("#engNotes").onblur = e => {
-    st.engNotesByWave[currentEngWave] = e.target.value;
+  right.querySelector("#engText").onblur = e => {
+    const d = ensureEngagementMonth(st, currentEngYear, currentEngMonth);
+    d.text = e.target.value;
+
+    updateEngagementRow(currentStore.id);
     saveWithDebounce(currentStore.id);
   };
 }
- let currentPromoMonth = "2026-01";
 
+let currentPromoMonth = "2026-01";
 function renderPromoTab(container, stores, currentStore) {
   container.innerHTML = "";
 
