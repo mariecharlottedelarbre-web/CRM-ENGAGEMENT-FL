@@ -3,990 +3,2954 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CRM Magasins</title>
-
+  <title>CRM PROXI</title>
   <style>
-    * {
-      box-sizing: border-box;
+    :root {
+      --bg: #1c1917;
+      --card: #111827;
+      --card-soft: #0f172a;
+      --accent: #f97316;
+      --accent-soft: rgba(248, 148, 56, 0.18);
+      --text: #f9fafb;
+      --muted: #e5e7eb;
+      --border: #374151;
     }
-
+    * { box-sizing: border-box; }
     body {
       margin: 0;
-      font-family: Arial, sans-serif;
-      background: #f4f5f7;
-      color: #111827;
-    }
-
-    .app {
-      max-width: 1180px;
-      margin: 0 auto;
-      padding: 32px 18px;
-    }
-
-    .topbar {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(248, 148, 56, 0.35), transparent 55%),
+        radial-gradient(circle at bottom right, rgba(34,197,94,0.22), transparent 55%),
+        linear-gradient(145deg, #0b1120, #111827);
+      color: var(--text);
+      min-height: 100vh;
       display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 16px;
-      margin-bottom: 26px;
+      align-items: stretch;
+      justify-content: center;
     }
-
-    h1, h2, h3 {
-      margin: 0;
-    }
-
-    .subtitle {
-      color: #6b7280;
-      margin-top: 6px;
-    }
-
-    .home-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 18px;
-      margin-top: 30px;
-    }
-
-    .commercial-card {
-      background: white;
-      border: 1px solid #e5e7eb;
-      border-radius: 18px;
-      padding: 28px;
-      cursor: pointer;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.05);
-      transition: 0.2s;
-    }
-
-    .commercial-card:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 12px 28px rgba(0,0,0,0.08);
-    }
-
-    .commercial-card h2 {
-      font-size: 22px;
-      margin-bottom: 10px;
-    }
-
-    .card {
-      background: white;
-      border: 1px solid #e5e7eb;
-      border-radius: 18px;
-      padding: 20px;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.04);
-    }
-
-    .filters {
-      display: grid;
-      grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
-      gap: 12px;
-      margin-bottom: 18px;
-    }
-
-    input, select, textarea {
+    .app-shell {
       width: 100%;
-      padding: 11px 12px;
-      border: 1px solid #d1d5db;
+      max-width: 1400px;
+      display: flex;
+      gap: 16px;
+      padding: 16px;
+    }
+    .card {
+      background: linear-gradient(145deg, rgba(15,23,42,0.96), rgba(15,23,42,0.9));
+      border-radius: 18px;
+      padding: 18px 20px;
+      border: 1px solid rgba(249,250,251,0.08);
+      box-shadow: 0 18px 50px rgba(15,23,42,0.9);
+    }
+    .sidebar { width: 260px; display: flex; flex-direction: column; gap: 12px; }
+    .main { flex: 1; display: flex; flex-direction: column; gap: 16px; }
+    h1 {
+      margin: 0 0 4px;
+      font-size: 22px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .logo-dot {
+      width: 9px; height: 9px;
+      border-radius: 999px;
+      background: radial-gradient(circle at 30% 20%, #fed7aa, #f97316);
+      box-shadow: 0 0 18px rgba(248,148,56,0.9);
+    }
+    .subtext { font-size: 13px; color: var(--muted); opacity: .85; }
+    .login-card { width: 100%; max-width: 420px; margin: auto; }
+    .field { margin-bottom: 12px; }
+    label { display: block; margin-bottom: 4px; font-size: 13px; color: var(--muted); opacity: .9; }
+    select, input, textarea {
+      width: 100%;
+      padding: 8px 10px;
       border-radius: 10px;
-      font-size: 14px;
-      font-family: Arial, sans-serif;
-      background: white;
-    }
-
-    textarea {
+      border: 1px solid var(--border);
+      background: rgba(15,23,42,0.9);
+      color: var(--text);
+      font-size: 13px;
       resize: vertical;
-      min-height: 90px;
     }
-
+    select:focus, input:focus, textarea:focus {
+      outline: 1px solid var(--accent);
+      border-color: var(--accent);
+    }
     button {
       border: none;
-      border-radius: 10px;
-      padding: 11px 15px;
+      border-radius: 999px;
+      padding: 8px 16px;
+      background: radial-gradient(circle at 30% 0, #fed7aa, #f97316);
+      color: #1c1917;
+      font-weight: 600;
       font-size: 14px;
       cursor: pointer;
-      background: #111827;
-      color: white;
-    }
-
-    button:hover {
-      background: #374151;
-    }
-
-    .btn-secondary {
-      background: #e5e7eb;
-      color: #111827;
-    }
-
-    .btn-secondary:hover {
-      background: #d1d5db;
-    }
-
-    .btn-light {
-      background: white;
-      color: #111827;
-      border: 1px solid #d1d5db;
-    }
-
-    .btn-light:hover {
-      background: #f3f4f6;
-    }
-    .btn-danger {
-  background: #b91c1c;
-  color: white;
-}
-
-.btn-danger:hover {
-  background: #991b1b;
-}
-
-    .actions {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
+      display: inline-flex;
       align-items: center;
+      gap: 6px;
+      box-shadow: 0 12px 30px rgba(248,148,56,0.55);
     }
-
-    .store-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 14px;
-      margin-top: 18px;
-    }
-
-    .store-card {
-      background: white;
-      border: 1px solid #e5e7eb;
-      border-radius: 16px;
-      padding: 16px;
-      cursor: pointer;
-      transition: 0.2s;
-    }
-
-    .store-card:hover {
-      border-color: #111827;
-      transform: translateY(-2px);
-    }
-
-    .store-name {
-      font-weight: bold;
-      font-size: 17px;
-      margin-bottom: 8px;
-    }
-
-    .store-meta {
-      color: #6b7280;
-      font-size: 13px;
-      line-height: 1.6;
-    }
-
-    .badge {
-      display: inline-block;
-      padding: 5px 9px;
+    button.secondary {
+      background: transparent;
+      color: var(--muted);
+      box-shadow: none;
       border-radius: 999px;
+      padding: 6px 10px;
       font-size: 12px;
-      margin-top: 10px;
     }
-
-    .badge-green {
-      background: #dcfce7;
-      color: #166534;
-    }
-
-    .badge-gray {
-      background: #f3f4f6;
-      color: #374151;
-    }
-
-    .detail-layout {
-      display: grid;
-      grid-template-columns: 360px 1fr;
-      gap: 20px;
-      align-items: start;
-    }
-
-    .photo-box {
-      width: 100%;
-      height: 260px;
-      border-radius: 16px;
-      overflow: hidden;
-      background: #e5e7eb;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      color: #6b7280;
-      text-align: center;
-    }
-
-    .photo-box img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    .info-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 12px;
-      margin-top: 18px;
-    }
-
-    .info-item {
-      background: #f9fafb;
-      border: 1px solid #e5e7eb;
-      border-radius: 12px;
-      padding: 13px;
-    }
-
-    .info-label {
-      font-size: 12px;
-      color: #6b7280;
-      margin-bottom: 5px;
-    }
-
-    .info-value {
-      font-weight: bold;
-    }
-
-    .visit-list {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      margin-top: 14px;
-    }
-
-    .visit-item {
-      background: #f9fafb;
-      border: 1px solid #e5e7eb;
-      border-radius: 12px;
-      padding: 12px;
-    }
-
-    .visit-date {
-      font-weight: bold;
-      margin-bottom: 4px;
-    }
-
-    .modal-bg {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.35);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-      z-index: 50;
-    }
-
-    .modal {
-      background: white;
-      width: 100%;
-      max-width: 760px;
-      border-radius: 18px;
-      padding: 24px;
-      max-height: 92vh;
-      overflow: auto;
-    }
-
-    .modal-header {
+    .commercial-row {
+      padding: 8px 10px;
+      border-radius: 10px;
+      margin-bottom: 6px;
+      cursor: pointer;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 18px;
+      background: rgba(15,23,42,0.88);
+      border: 1px solid transparent;
     }
+    .commercial-row.active { border-color: var(--accent); background: rgba(248,148,56,0.14); }
+    .commercial-row:hover { border-color: rgba(249,250,251,0.32); }
+    .commercial-name { font-size: 14px; }
+    .commercial-meta { font-size: 11px; color: var(--muted); opacity: .8; }
+    .list { margin-top: 10px; max-height: calc(100vh - 230px); overflow: auto; }
 
-    .form-grid {
+    .kpi-row {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 14px;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .kpi-card {
+      padding: 10px 12px;
+      border-radius: 14px;
+      background: radial-gradient(circle at 0 0, rgba(248,148,56,0.16), rgba(15,23,42,0.98));
+      border: 1px solid rgba(249,250,251,0.14);
+      font-size: 12px;
+    }
+    .kpi-label { color: var(--muted); font-size: 11px; opacity:.9; }
+    .kpi-value { font-size: 17px; font-weight: 600; margin-top: 3px; }
+
+    .tabs {
+      display: inline-flex;
+      padding: 3px;
+      border-radius: 999px;
+      background: rgba(15,23,42,0.95);
+      border: 1px solid rgba(249,250,251,0.2);
+    }
+    .tab-btn {
+      border-radius: 999px;
+      padding: 6px 14px;
+      font-size: 12px;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+    }
+    .tab-btn.active {
+      background: rgba(248,148,56,0.9);
+      color: #1c1917;
     }
 
-    .full {
-      grid-column: 1 / -1;
+    table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 8px; }
+    th, td {
+      padding: 6px 8px;
+      border-bottom: 1px solid rgba(31,41,55,0.9);
+      text-align: left;
+      vertical-align: top;
     }
+    th { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; opacity:.8; }
+    tr:hover td { background: rgba(15,23,42,0.9); cursor: pointer; }
 
-    .message {
-      margin-top: 12px;
-      font-size: 14px;
-    }
-
-    .success {
-      color: #166534;
-      background: #dcfce7;
-      padding: 10px;
-      border-radius: 10px;
-    }
-
-    .error {
-      color: #991b1b;
-      background: #fee2e2;
-      padding: 10px;
-      border-radius: 10px;
-    }
-
-    .empty {
-      color: #6b7280;
-      padding: 24px;
-      text-align: center;
+    .two-columns {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+      gap: 12px;
+      margin-top: 10px;
+      align-items: flex-start;
     }
 
     @media (max-width: 900px) {
-      .home-grid,
-      .store-grid,
-      .detail-layout,
-      .filters,
-      .form-grid,
-      .info-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .topbar {
-        align-items: flex-start;
-        flex-direction: column;
-      }
+      .app-shell { flex-direction: column; }
+      .sidebar { width: 100%; }
+      .two-columns { grid-template-columns: minmax(0,1fr); }
+      .kpi-row { grid-template-columns: repeat(2,minmax(0,1fr)); }
     }
+    .chart-grid{
+  display:grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap:12px;
+  margin-top:12px;
+}
+.chart-card{
+  background: rgba(15,23,42,0.7);
+  border: 1px solid rgba(249,250,251,0.12);
+  border-radius: 14px;
+  padding: 12px;
+}
+.chart-title{
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+.chart-wrap{
+  position: relative;
+  height: 320px;
+}
+@media (max-width: 900px){
+  .chart-grid{ grid-template-columns: 1fr; }
+  .chart-wrap{ height: 240px; }
+}
+
+/* --- Détention : SCORE plus visible --- */
+th.score-cell, td.score-cell{
+  text-align: right;
+  font-weight: 800;
+}
+
+td.score-cell{
+  font-size: 13px;
+  background: rgba(248,148,56,0.10);
+  border-left: 1px solid rgba(248,148,56,0.25);
+}
+
+td.score-cell b{
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(248,148,56,0.18);
+}
+  
+
+/* --- GLOBAL SAVE STATUS --- */
+.topbar{
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  border-radius: 16px;
+  border: 1px solid rgba(249,250,251,0.10);
+  background: rgba(15,23,42,0.72);
+  backdrop-filter: blur(10px);
+}
+
+.save-status{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:6px 12px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:700;
+  border:1px solid rgba(249,250,251,0.14);
+}
+
+.save-status[data-status="saving"]{
+  background: rgba(248,148,56,0.16);
+  border-color: rgba(248,148,56,0.28);
+}
+
+.save-status[data-status="saved"]{
+  background: rgba(34,197,94,0.14);
+  border-color: rgba(34,197,94,0.28);
+}
+
+.save-status[data-status="error"]{
+  background: rgba(248,113,113,0.14);
+  border-color: rgba(248,113,113,0.28);
+}
+    .visit-note {
+  min-height: 140px;
+  font-size: 15px;
+  line-height: 1.45;
+  padding: 12px 14px;
+}
   </style>
 </head>
 
 <body>
-  <div class="app" id="app"></div>
+  <div id="root" style="width:100%"></div>
 
-  <div class="modal-bg" id="storeModal">
-    <div class="modal">
-      <div class="modal-header">
-        <h2 id="storeModalTitle">Ajouter un magasin</h2>
-        <button class="btn-secondary" onclick="closeStoreModal()">Fermer</button>
-      </div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
-      <form id="storeForm">
-        <div class="form-grid">
-          <div class="full">
-            <label>Nom du magasin</label>
-            <input id="storeName" required />
-          </div>
+  <script>
+    const SUPABASE_URL = "https://sytpnqayyyjdjhojafyi.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_5ernJ3tbCW3XnAdx983E8A_ASPSKBVx";
+    const { createClient } = supabase;
+    const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+async function loadStoresFromSupabase() {
+  try {
+    const { data, error } = await sb
+      .from("stores")
+      .select("*")
+      .order("commercial_id", { ascending: true })
+      .order("name", { ascending: true });
 
-          <div>
-            <label>Ville</label>
-            <input id="storeCity" />
-          </div>
+    if (error) {
+      console.error("❌ Erreur chargement stores :", error.message || error);
+      return;
+    }
 
-          <div>
-            <label>Adresse</label>
-            <input id="storeAddress" />
-          </div>
+    STORES = (data || []).map(row => ({
+      id: row.id,
+      name: row.name,
+      ca2025: Number(row.ca2025 || 0),
+      commercialId: row.commercial_id
+    }));
 
-          <div>
-            <label>Prix de vente du magasin</label>
-            <input id="storePrice" type="number" step="0.01" />
-          </div>
+    console.log("✅ Stores chargés :", STORES.length);
+  } catch (err) {
+    console.error("❌ Erreur loadStoresFromSupabase :", err);
+  }
+}
 
-          <div>
-            <label>CA</label>
-            <input id="storeCA" type="number" step="0.01" />
-          </div>
+async function addStoreToSupabase(store) {
+  if (!currentUser || currentUser.role !== "admin") return false;
 
-          <div>
-            <label>Date de signature du contrat</label>
-            <input id="storeSignature" type="date" />
-          </div>
+  setGlobalSaveStatus("saving");
 
-          <div class="full">
-            <label>Photo du magasin</label>
-            <input id="storePhoto" type="file" accept="image/*" />
-          </div>
-        </div>
-
-        <div class="actions" style="margin-top:18px;">
-          <button type="submit">Enregistrer</button>
-          <button type="button" class="btn-secondary" onclick="closeStoreModal()">Annuler</button>
-        </div>
-
-        <div id="storeFormMessage" class="message"></div>
-      </form>
-    </div>
-  </div>
-
-  <div class="modal-bg" id="visitModal">
-    <div class="modal">
-      <div class="modal-header">
-        <h2>Ajouter une visite</h2>
-        <button class="btn-secondary" onclick="closeVisitModal()">Fermer</button>
-      </div>
-
-      <form id="visitForm">
-        <div class="form-grid">
-          <div>
-            <label>Date de visite</label>
-            <input id="visitDate" type="date" required />
-          </div>
-
-          <div class="full">
-            <label>Commentaire</label>
-            <textarea id="visitComment" placeholder="Compte-rendu de visite, remarques, actions à prévoir..."></textarea>
-          </div>
-        </div>
-
-        <div class="actions" style="margin-top:18px;">
-          <button type="submit">Ajouter la visite</button>
-          <button type="button" class="btn-secondary" onclick="closeVisitModal()">Annuler</button>
-        </div>
-
-        <div id="visitFormMessage" class="message"></div>
-      </form>
-    </div>
-  </div>
-
-  <script type="module">
-    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
-
-    const SUPABASE_URL = "https://nnbmbpycmhqvrzcszbkz.supabase.co";
-    const SUPABASE_KEY = "sb_publishable_slPyRsJhGZbUZT5rJ1Zf1A_amrs3G8F";
-
-    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
-
-    const commerciaux = [
-      { id: "laurent-page", nom: "Laurent Page" },
-      { id: "jerome-gigmes", nom: "Jérôme Gigmes" },
-      { id: "laurent-pizzolato", nom: "Laurent Pizzolato" }
-    ];
-
-    let currentCommercial = null;
-    let magasins = [];
-    let visites = [];
-    let selectedMagasin = null;
-    let editingMagasin = null;
-
-    const app = document.getElementById("app");
-
-    const filters = {
-      search: "",
-      ville: "",
-      contrat: "",
-      caMin: "",
-      caMax: ""
+  try {
+    const payload = {
+      id: store.id,
+      name: store.name,
+      ca2025: Number(store.ca2025 || 0),
+      commercial_id: store.commercialId
     };
 
-    function formatMoney(value) {
-      if (value === null || value === undefined || value === "") return "Non renseigné";
-      return Number(value).toLocaleString("fr-FR", {
-        style: "currency",
-        currency: "EUR",
-        maximumFractionDigits: 0
+    const { error } = await sb.from("stores").insert(payload);
+
+    if (error) {
+      console.error("❌ Erreur ajout magasin :", error.message || error);
+      setGlobalSaveStatus("error");
+      return false;
+    }
+
+    STORES.push({
+      id: store.id,
+      name: store.name,
+      ca2025: Number(store.ca2025 || 0),
+      commercialId: store.commercialId
+    });
+
+    setGlobalSaveStatus("saved");
+    return true;
+  } catch (err) {
+    console.error("❌ Erreur addStoreToSupabase :", err);
+    setGlobalSaveStatus("error");
+    return false;
+  }
+}
+
+async function deleteStoreFromSupabase(storeId) {
+  if (!currentUser || currentUser.role !== "admin") return false;
+
+  setGlobalSaveStatus("saving");
+
+  try {
+    const { error } = await sb
+      .from("stores")
+      .delete()
+      .eq("id", storeId);
+
+    if (error) {
+      console.error("❌ Erreur suppression magasin :", error.message || error);
+      setGlobalSaveStatus("error");
+      return false;
+    }
+
+    STORES = STORES.filter(s => s.id !== storeId);
+    delete STATE[storeId];
+
+    if (currentStoreId === storeId) {
+      currentStoreId = null;
+    }
+
+    setGlobalSaveStatus("saved");
+    return true;
+  } catch (err) {
+    console.error("❌ Erreur deleteStoreFromSupabase :", err);
+    setGlobalSaveStatus("error");
+    return false;
+  }
+}
+
+function slugifyStoreName(name) {
+  return String(name || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+    function slugifyPromoLabel(label) {
+  return String(label || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+function rebuildPromoCatalog(rows) {
+  const catalog = {};
+  const monthsSet = new Set();
+
+  (rows || []).forEach(row => {
+    const month = row.month_key;
+    const format = row.store_format;
+
+    monthsSet.add(month);
+
+    if (!catalog[month]) catalog[month] = {};
+    if (!catalog[month][format]) catalog[month][format] = [];
+
+    // ligne technique pour créer le mois sans afficher un faux produit
+    if (row.product_id === "__month__" && row.label === "__month__") {
+      return;
+    }
+
+    catalog[month][format].push({
+  rowId: row.id,
+  id: row.product_id,
+  label: row.label
+});
+  });
+
+  Object.keys(catalog).forEach(month => {
+    Object.keys(catalog[month]).forEach(format => {
+      catalog[month][format].sort((a, b) => a.label.localeCompare(b.label, "fr"));
+    });
+  });
+
+  PROMOS = catalog;
+  PROMO_MONTHS = Array.from(monthsSet).sort();
+
+  if (!PROMO_MONTHS.length) PROMO_MONTHS = ["2026-01"];
+}
+
+async function loadPromoCatalogFromSupabase() {
+  try {
+    const { data, error } = await sb
+      .from("promo_catalog")
+      .select("*")
+      .order("month_key", { ascending: true })
+      .order("store_format", { ascending: true })
+      .order("label", { ascending: true });
+
+    if (error) {
+      console.error("❌ Erreur chargement promo_catalog :", error.message || error);
+      return;
+    }
+
+    rebuildPromoCatalog(data || []);
+    console.log("✅ Promo catalog chargé");
+  } catch (err) {
+    console.error("❌ Erreur loadPromoCatalogFromSupabase :", err);
+  }
+}
+
+async function addPromoProductToSupabase({ monthKey, storeFormat, label }) {
+  if (!currentUser || currentUser.role !== "admin") return false;
+
+  const productId = slugifyPromoLabel(label);
+
+  setGlobalSaveStatus("saving");
+
+  try {
+    const payload = {
+      month_key: monthKey,
+      store_format: storeFormat,
+      product_id: productId,
+      label
+    };
+
+    const { error } = await sb.from("promo_catalog").insert(payload);
+
+    if (error) {
+      console.error("❌ Erreur ajout produit promo :", error.message || error);
+      setGlobalSaveStatus("error");
+      return false;
+    }
+
+    await loadPromoCatalogFromSupabase();
+    setGlobalSaveStatus("saved");
+    return true;
+  } catch (err) {
+    console.error("❌ Erreur addPromoProductToSupabase :", err);
+    setGlobalSaveStatus("error");
+    return false;
+  }
+}
+
+async function deletePromoProductFromSupabase(rowId) {
+  if (!currentUser || currentUser.role !== "admin") return false;
+
+  setGlobalSaveStatus("saving");
+
+  try {
+    const { error } = await sb
+      .from("promo_catalog")
+      .delete()
+      .eq("id", rowId);
+
+    if (error) {
+      console.error("❌ Erreur suppression produit promo :", error.message || error);
+      setGlobalSaveStatus("error");
+      return false;
+    }
+
+    await loadPromoCatalogFromSupabase();
+    setGlobalSaveStatus("saved");
+    return true;
+  } catch (err) {
+    console.error("❌ Erreur deletePromoProductFromSupabase :", err);
+    setGlobalSaveStatus("error");
+    return false;
+  }
+}
+    async function createPromoMonthInSupabase(monthKey) {
+  if (!currentUser || currentUser.role !== "admin") return false;
+
+  const cleanMonth = String(monthKey || "").trim();
+
+  if (!/^\d{4}-\d{2}$/.test(cleanMonth)) {
+    alert("Format attendu : AAAA-MM (ex: 2026-02)");
+    return false;
+  }
+
+  if (PROMO_MONTHS.includes(cleanMonth)) {
+    currentPromoMonth = cleanMonth;
+    renderApp();
+    return true;
+  }
+
+  setGlobalSaveStatus("saving");
+
+  try {
+    const payload = {
+      month_key: cleanMonth,
+      store_format: "proxi",
+      product_id: "__month__",
+      label: "__month__"
+    };
+
+    const { error } = await sb.from("promo_catalog").insert(payload);
+
+    if (error) {
+      console.error("❌ Erreur création mois promo :", error.message || error);
+      setGlobalSaveStatus("error");
+      return false;
+    }
+
+    await loadPromoCatalogFromSupabase();
+    currentPromoMonth = cleanMonth;
+    setGlobalSaveStatus("saved");
+    return true;
+  } catch (err) {
+    console.error("❌ Erreur createPromoMonthInSupabase :", err);
+    setGlobalSaveStatus("error");
+    return false;
+  }
+}
+    const USERS = {
+      admins: [
+        { id: "admin-marie-charlotte", name: "Marie-Charlotte", role: "admin" },
+        { id: "admin-xavier", name: "Xavier", role: "admin" }
+      ],
+      commerciaux: [
+        { id: "costanza-damien", name: "COSTANZA Damien" },
+        { id: "besquent-dominique", name: "BESQUENT Dominique" },
+        { id: "hamparsoumiam-armand", name: "HAMPARSOUMIAN Armand" },
+        { id: "juif-olivier", name: "JUIF Olivier" },
+        { id: "laurent-severine", name: "LAURENT Séverine" },
+        { id: "michelet-yves", name: "MICHELET Yves" },
+        { id: "aydogan-nevin", name: "AYDOGAN Nevin" },
+        { id: "vernay-benoit", name: "VERNAY Benoit" }
+      ]
+    };
+
+  let STORES = [
+      { id:"montpellier-delicie", name:"Montpellier Delicie", ca2025:503033, commercialId:"costanza-damien" },
+      { id:"moussac", name:"Moussac", ca2025:378503, commercialId:"costanza-damien" },
+      { id:"saint-jean-du-gard", name:"Saint Jean du Gard", ca2025:361924, commercialId:"costanza-damien" },
+      { id:"lus-la-croix-haute", name:"Lus La Croix Haute", ca2025:308362, commercialId:"costanza-damien" },
+      { id:"poulx-chenes", name:"Poulx Chênes", ca2025:308221, commercialId:"costanza-damien" },
+      { id:"valras-plage", name:"Valras-Plage", ca2025:172560, commercialId:"costanza-damien" },
+      { id:"charols", name:"Charols", ca2025:162242, commercialId:"costanza-damien" },
+      { id:"vercheny", name:"Vercheny", ca2025:156344, commercialId:"costanza-damien" },
+      { id:"st-ambroix", name:"Saint ambroix", ca2025:154212, commercialId:"costanza-damien" },
+      { id:"bouillargues", name:"Bouillargues", ca2025:99687, commercialId:"costanza-damien" },
+      { id:"colmars-les-alpes", name:"Colmars les Alpes", ca2025:799900, commercialId:"besquent-dominique" },
+      { id:"bargemon", name:"Bargemon", ca2025:719952, commercialId:"besquent-dominique" },
+      { id:"la-palud-verdon", name:"La Palud s/Verdon", ca2025:505004, commercialId:"besquent-dominique" },
+      { id:"moutiers-eglise", name:"Moutiers Église", ca2025:350261, commercialId:"besquent-dominique" },
+      { id:"callas", name:"Callas", ca2025:343055, commercialId:"besquent-dominique" },
+      { id:"frejus-anc-comb-afn", name:"Fréjus Anc Comb AFN", ca2025:336117, commercialId:"besquent-dominique" },
+      { id:"comps-artuby", name:"Comps s/Artuby", ca2025:317976, commercialId:"besquent-dominique" },
+      { id:"les-salles-verdon", name:"Les Salles sur Verdon", ca2025:316500, commercialId:"besquent-dominique" },
+      { id:"greoux-les-bains", name:"Gréoux-les-Bains", ca2025:305397, commercialId:"besquent-dominique" },
+      { id:"frejus-afrique-n3775", name:"Fréjus Afrique N3775", ca2025:291165, commercialId:"besquent-dominique" },
+      { id:"apt-marchand", name:"Apt Marchand", ca2025:558971, commercialId:"hamparsoumiam-armand" },
+      { id:"calacussia", name:"Calacussia", ca2025:519365, commercialId:"hamparsoumiam-armand" },
+      { id:"savines-le-lac", name:"Savines le Lac", ca2025:344729, commercialId:"hamparsoumiam-armand" },
+      { id:"ceillac-rue-ppl", name:"Ceillac Rue PPL", ca2025:332701, commercialId:"hamparsoumiam-armand" },
+      { id:"l-ile-rousse", name:"L'Île Rousse", ca2025:301807, commercialId:"hamparsoumiam-armand" },
+      { id:"mirabeau", name:"Mirabeau", ca2025:298647, commercialId:"hamparsoumiam-armand" },
+      { id:"orcieres-merlette", name:"Orcières Merlette", ca2025:298214, commercialId:"hamparsoumiam-armand" },
+      { id:"ajaccio-napoleon", name:"Ajaccio Napoléon", ca2025:289735, commercialId:"hamparsoumiam-armand" },
+      { id:"tallard-dumont", name:"Tallard Dumont", ca2025:282726, commercialId:"hamparsoumiam-armand" },
+      { id:"vacqueyras", name:"Vacqueyras", ca2025:254074, commercialId:"hamparsoumiam-armand" },
+      { id:"guillaumes", name:"Guillaumes", ca2025:584678, commercialId:"juif-olivier" },
+      { id:"valdeblore", name:"Valdeblore", ca2025:463999, commercialId:"juif-olivier" },
+      { id:"st-etienne-tinee", name:"St Étienne de Tinée", ca2025:444197, commercialId:"juif-olivier" },
+      { id:"carces", name:"Carcès", ca2025:418646, commercialId:"juif-olivier" },
+      { id:"nice-e-dorves", name:"Nice E. d'Orves", ca2025:399883, commercialId:"juif-olivier" },
+      { id:"st-julien", name:"St Julien", ca2025:376184, commercialId:"juif-olivier" },
+      { id:"antibes-4-chemins", name:"Antibes 4 Chemins", ca2025:300493, commercialId:"juif-olivier" },
+      { id:"bormes-mimosas-plage", name:"Bormes les Mimosas Plage", ca2025:290531, commercialId:"juif-olivier" },
+      { id:"nice-thiers", name:"Nice Thiers", ca2025:232677, commercialId:"juif-olivier" },
+      { id:"peille-virounours", name:"Peille Virounours", ca2025:214091, commercialId:"juif-olivier" },
+      { id:"varennes-st-sauveur", name:"Varennes St Sauveur", ca2025:329427, commercialId:"laurent-severine" },
+      { id:"belmont-loire", name:"Belmont de la Loire", ca2025:239901, commercialId:"laurent-severine" },
+      { id:"cunlhat-domaize", name:"Cunlhat Domaize", ca2025:227290, commercialId:"laurent-severine" },
+      { id:"branges-bourg", name:"Branges Bourg", ca2025:203375, commercialId:"laurent-severine" },
+      { id:"vernet-la-varenne", name:"Vernet la Varenne", ca2025:198285, commercialId:"laurent-severine" },
+      { id:"st-julien-la-vetre", name:"Saint Julien la Vêtre", ca2025:143331, commercialId:"laurent-severine" },
+      { id:"issy-l-eveque", name:"Issy l'Évêque", ca2025:120262, commercialId:"laurent-severine" },
+      { id:"lucenay-l-eveque", name:"Lucenay l'Évêque", ca2025:113586, commercialId:"laurent-severine" },
+      { id:"vollore-ville", name:"Vollore Ville", ca2025:103120, commercialId:"laurent-severine" },
+      { id:"vichy", name:"Vichy", ca2025:95858, commercialId:"laurent-severine" },
+      { id:"monsols", name:"Monsols", ca2025:485466, commercialId:"michelet-yves" },
+      { id:"propieres", name:"Propières", ca2025:451599, commercialId:"michelet-yves" },
+      { id:"bessenay", name:"Bessenay", ca2025:295103, commercialId:"michelet-yves" },
+      { id:"legny-tarrets", name:"Légny Tarrets", ca2025:219820, commercialId:"michelet-yves" },
+      { id:"porte-pier-dor-ecla", name:"Porte Pier Dor Écla", ca2025:205801, commercialId:"michelet-yves" },
+      { id:"montanay-poype", name:"Montanay Poype", ca2025:198797, commercialId:"michelet-yves" },
+      { id:"leymant", name:"Leyment", ca2025:182849, commercialId:"michelet-yves" },
+      { id:"villeurbanne-blum", name:"Villeurbanne Blum", ca2025:166715, commercialId:"michelet-yves" },
+      { id:"nivigne-et-suran", name:"Nivigne et Suran", ca2025:152322, commercialId:"michelet-yves" },
+      { id:"lyon-croix-rousse", name:"Lyon Croix Rousse", ca2025:133155, commercialId:"michelet-yves" },
+      { id:"virieu-lamartine", name:"Virieu Lamartine", ca2025:655986, commercialId:"aydogan-nevin" },
+      { id:"st-sorlin-d-arves", name:"St Sorlin d'Arves", ca2025:574774, commercialId:"aydogan-nevin" },
+      { id:"le-bourget-du-lac", name:"Le Bourget du Lac", ca2025:497771, commercialId:"aydogan-nevin" },
+      { id:"courchevel", name:"Courchevel", ca2025:407291, commercialId:"aydogan-nevin" },
+      { id:"auris-oisans", name:"Auris en Oisans", ca2025:404916, commercialId:"aydogan-nevin" },
+      { id:"macot-la-plagne", name:"Macot la Plagne", ca2025:357829, commercialId:"aydogan-nevin" },
+      { id:"val-thorens-temple", name:"Val thorens temple", ca2025:280341, commercialId:"aydogan-nevin" },
+      { id:"areches", name:"Arêches", ca2025:271143, commercialId:"aydogan-nevin" },
+      { id:"monestiers-clermont", name:"Monestiers Clermont", ca2025:231951, commercialId:"aydogan-nevin" },
+      { id:"lepin-le-lac", name:"Lepin le lac", ca2025:210577, commercialId:"aydogan-nevin" },
+      { id:"vals-les-bains", name:"Vals les Bains", ca2025:553773, commercialId:"vernay-benoit" },
+      { id:"langogne-capucins", name:"Langogne Capucins", ca2025:370729, commercialId:"vernay-benoit" },
+      { id:"st-mamet-salvetat", name:"St Mamet la Salvetat", ca2025:337355, commercialId:"vernay-benoit" },
+      { id:"chadrac-pm", name:"Chadrac PM", ca2025:316194, commercialId:"vernay-benoit" },
+      { id:"st-fortunat", name:"St Fortunat", ca2025:311429, commercialId:"vernay-benoit" },
+      { id:"espaly-st-marcel", name:"Espaly St Marcel", ca2025:247376, commercialId:"vernay-benoit" },
+      { id:"colombier-le-jeune", name:"Colombier le Jeune", ca2025:240298, commercialId:"vernay-benoit" },
+      { id:"le-cheylard", name:"Le Cheylard", ca2025:197555, commercialId:"vernay-benoit" },
+      { id:"langeac-lafayette", name:"Langeac Lafayette", ca2025:196202, commercialId:"vernay-benoit" },
+      { id:"allanche", name:"Allanche", ca2025:168103, commercialId:"vernay-benoit" }
+    ];
+
+    const WAVES = [
+      { id: "wave1", label: "Vague 1" },
+      { id: "wave2", label: "Vague 2" },
+      { id: "wave3", label: "Vague 3" },
+      { id: "wave4", label: "Vague 4" },
+      { id: "wave5", label: "Vague 5" },
+      { id: "wave6", label: "Vague 6" }
+    ];
+
+    const SEASONS = [
+  "Janvier","Février","Mars","Avril","Mai","Juin",
+  "Juillet","Août","Septembre","Octobre","Novembre","Décembre"
+];
+    const WAVE_STATUSES = ["Non concerné", "À faire", "En cours", "Engagé", "Refusé"];
+
+    let PROMOS = {};
+let PROMO_MONTHS = ["2026-01"];
+    const PROXI_SUPER_STORES = [
+  "montpellier-delicie",
+  "moussac",
+  "saint-jean-du-gard",
+  "lus-la-croix-haute",
+  "poulx-chenes",
+  "bouillargues",
+  "la-palud-verdon",
+  "moutiers-eglise",
+  "frejus-anc-comb-afn",
+  "comps-artuby",
+  "les-salles-verdon",
+  "mirabeau",
+  "bormes-mimosas-plage",
+  "cunlhat-domaize",
+  "propieres",
+  "legny-tarrets",
+  "val-thorens-temple",
+  "le-bourget-du-lac",
+  "courchevel",
+  "auris-oisans",
+  "vals-les-bains",
+  "langogne-capucins",
+  "st-mamet-salvetat",
+  "chadrac-pm",
+  "espaly-st-marcel",
+  "le-cheylard"
+];
+
+function getStoreFormat(store) {
+  return PROXI_SUPER_STORES.includes(store.id)
+    ? "proxi_super"
+    : "proxi";
+}
+
+  const FL_OBJECTIFS_2025 = { 
+  "saint-jean-du-gard": 43225,
+  "lus-la-croix-haute": 37705,
+  "moussac": 36587,
+  "st-ambroix": 18353,
+  "valras-plage": 12126,
+  "charols": 11500,
+  "vercheny": 807,
+  "poulx-chenes": 0,
+  "montpellier-delicie": 0,
+  "bouillargues": 0,
+  "colmars-les-alpes": 128444,
+  "bargemon": 97822, 
+  "la-palud-verdon": 60676, 
+  "moutiers-eglise": 60564,
+  "les-salles-verdon": 42004,
+  "greoux-les-bains": 29010,
+  "comps-artuby": 27510,
+  "frejus-anc-comb-afn": 690, 
+  "frejus-afrique-n3775": 136,
+  "callas": 0,
+  "tallard-dumont": 30259,
+  "ceillac-rue-ppl": 29028,
+  "mirabeau": 24925,
+  "savines-le-lac": 19488,
+  "l-ile-rousse": 19041,
+  "apt-marchand": 6890, 
+  "calacussia": 0,
+  "orcieres-merlette": 0,
+  "ajaccio-napoleon": 0,
+  "vacqueyras": 1120,
+  "valdeblore": 84018,
+  "nice-e-dorves": 69950, 
+  "st-etienne-tinee": 69913,
+  "st-julien": 62016, 
+  "guillaumes": 41890,
+  "nice-thiers": 34029,
+  "carces": 30340, 
+  "peille-virounours": 22148,
+  "bormes-mimosas-plage": 3831,
+  "antibes-4-chemins": 0,
+  "varennes-st-sauveur": 61876,
+  "cunlhat-domaize": 30945,
+  "issy-l-eveque": 25513,
+  "branges-bourg": 23822,
+  "belmont-loire": 18275,
+  "st-julien-la-vetre": 17599,
+  "vernet-la-varenne": 7092,
+  "vollore-ville": 2318,
+  "lucenay-l-eveque": 0,  
+  "vichy": 0,
+  "propieres": 55120,
+  "monsols": 47550,  
+  "bessenay": 37903, 
+  "porte-pier-dor-ecla": 26459,
+  "montanay-poype": 19640,
+  "nivigne-et-suran": 12343,
+  "lyon-croix-rousse": 1334,
+  "legny-tarrets": 5588,   
+  "leymant": 4407, 
+  "villeurbanne-blum": 0, 
+  "le-bourget-du-lac": 104435,
+  "st-sorlin-d-arves": 65475,
+  "courchevel": 46871,
+  "macot-la-plagne": 37894,
+  "areches": 36226,
+  "virieu-lamartine": 34027, 
+  "monestiers-clermont": 17599,
+  "val-thorens-temple": 17354,
+  "auris-oisans": 13857, 
+  "lepin-le-lac": 13835,
+  "st-mamet-salvetat": 45653,
+  "langogne-capucins": 19764, 
+  "vals-les-bains": 17858,
+  "le-cheylard": 2156,
+  "allanche": 1582,
+  "chadrac-pm": 0, 
+  "st-fortunat": 0, 
+  "espaly-st-marcel": 0, 
+  "colombier-le-jeune": 0,  
+  "langeac-lafayette": 0
+     
+};
+      function getFlTarget(storeId) {
+      const v = FL_OBJECTIFS_2025[storeId];
+      const n = Number(v || 0);
+      return Number.isNaN(n) ? 0 : n;
+    }
+
+    function safeJsonParse(str, fallback) {
+      try { return JSON.parse(str); } catch { return fallback; }
+    }
+    function todayLocalISO() {
+  const d = new Date();
+  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+  return d.toISOString().slice(0, 10);
+}
+function safeCalcExpression(expr){
+  const s = String(expr).replace(/\s+/g, "");
+  // Autorise uniquement chiffres + . + + -
+  if (!/^[0-9.+-]+$/.test(s)) return NaN;
+
+  // "2250+1000-200" => ["2250","+1000","-200"]
+  const parts = s.match(/[+-]?\d+(\.\d+)?/g);
+  if (!parts) return NaN;
+
+  return parts.reduce((sum, p) => sum + Number(p), 0);
+}
+
+
+    function computeFLProgression(actual, target) {
+  const t = Number(target || 0);
+  const a = Number(actual || 0);
+
+  // Aucun objectif défini
+  if (t === 0) {
+    if (a === 0) return "0 %";
+    return "100 %";
+  }
+
+  return Math.round((a / t) * 100) + " %";
+}
+
+    function defaultFlBySeason() {
+  const out = {};
+  SEASONS.forEach(m => {
+    out[m] = { ordered: "", amount2025: "", amount2026: "", plan: "" };
+  });
+  return out;
+}
+
+    function defaultEngagementByWave() {
+      return {
+        wave1: { name: "", amount: "" },
+        wave2: { name: "", amount: "" },
+        wave3: { name: "", amount: "" },
+        wave4: { name: "", amount: "" },
+        wave5: { name: "", amount: "" },
+        wave6: { name: "", amount: "" }
+      };
+    }
+
+    function normalizeFlData(any) {
+      if (!any || typeof any !== "object") {
+        return {
+          meta: { commande: "" },
+          seasons: defaultFlBySeason()
+        };
+      }
+      if (any.seasons && typeof any.seasons === "object") {
+        return {
+          meta: { commande: (any.meta && typeof any.meta === "object") ? (any.meta.commande || "") : "" },
+          seasons: ensureAllSeasons(any.seasons)
+        };
+      }
+      return {
+        meta: { commande: "" },
+        seasons: ensureAllSeasons(any)
+      };
+    }
+
+   function ensureAllSeasons(obj) {
+  const base = defaultFlBySeason();
+  const out = { ...base };
+
+  SEASONS.forEach(month => {
+    const d = obj?.[month];
+    if (d && typeof d === "object") {
+      out[month] = {
+        ordered: d.ordered || "",
+        // 2025 admin
+        amount2025: (d.amount2025 ?? ""),
+        // 2026 commercial (compat ancienne clé "amount")
+        amount2026: (d.amount2026 ?? d.amount ?? ""),
+        plan: d.plan || ""
+      };
+    }
+  });
+
+  return out;
+}
+
+    function normalizeEngagementByWave(raw) {
+      const base = defaultEngagementByWave();
+      if (!raw || typeof raw !== "object") return base;
+      Object.keys(base).forEach(waveId => {
+        if (!raw[waveId] || typeof raw[waveId] !== "object") {
+          raw[waveId] = { name: "", amount: "" };
+        } else {
+          raw[waveId].name = raw[waveId].name || "";
+          raw[waveId].amount = raw[waveId].amount || "";
+        }
+      });
+      return raw;
+    }
+
+    function normalizeVisits(raw) {
+  if (!Array.isArray(raw)) return [];
+  return raw.map(v =>
+    typeof v === "string"
+      ? { date: v, note: "" }
+      : { date: v.date, note: v.note || "" }
+  );
+}
+
+    function updateFlKpisLive(storeId) {
+  const totalActuel = computeFLActualTotal(storeId);   // total 2026
+  const total2025 = computeFL2025Total(storeId);       // total 2025 saisi
+
+  const row = document.querySelector(`tr[data-id="${storeId}"]`);
+  if (row) {
+    const tds = row.querySelectorAll("td");
+    // Colonnes du tableau F&L : 0 magasin, 1 commande, 2 total 2025, 3 total 2026, 4 progression
+    if (tds[2]) tds[2].textContent = euro(total2025);
+    if (tds[3]) tds[3].textContent = euro(totalActuel);
+    if (tds[4]) tds[4].textContent = computeFLProgression(totalActuel, total2025);
+  }
+
+  const kpiActual = document.querySelector("[data-kpi-fl-actual]");
+  if (kpiActual) kpiActual.textContent = euro(totalActuel);
+}
+
+    function formatNumber(n) {
+      if (n == null) return "-";
+      const num = Number(n);
+      if (Number.isNaN(num)) return "-";
+      return num.toLocaleString("fr-FR");
+    }
+
+    function euro(n) {
+      if (n == null || n === "" || Number.isNaN(Number(n))) return "—";
+      return `${formatNumber(Number(n))} €`;
+    }
+
+    function computeFLActualTotal(storeId) {
+  const st = getStoreState(storeId);
+  let total = 0;
+  const months = st.flBySeason || defaultFlBySeason();
+  Object.values(months).forEach(m => {
+    const val = Number(m?.amount2026 || 0);
+    if (!Number.isNaN(val)) total += val;
+  });
+  return total;
+}
+function computeFL2025Total(storeId) {
+  const st = getStoreState(storeId);
+  let total = 0;
+  const months = st.flBySeason || defaultFlBySeason();
+
+  Object.values(months).forEach(m => {
+    const val = Number(m?.amount2025 || 0);
+    if (!Number.isNaN(val)) total += val;
+  });
+
+  return total;
+}
+    function computeEngagementTotal(storeId) {
+      const st = getStoreState(storeId);
+      let total = 0;
+      Object.entries(st.engagementByWave || {}).forEach(([waveId, data]) => {
+        if (st.waves?.[waveId] === "Engagé") {
+          const val = Number(data?.amount || 0);
+          if (!Number.isNaN(val)) total += val;
+        }
+      });
+      return total;
+    }
+function getPromoState(storeId, month) {
+  const st = getStoreState(storeId);
+  if (!st.promoByMonth[month]) st.promoByMonth[month] = {};
+  return st.promoByMonth[month];
+}
+
+function getPromoList(store, month) {
+  const format = getStoreFormat(store);
+  const list = PROMOS?.[month]?.[format];
+
+  if (Array.isArray(list) && list.length > 0) {
+    return list;
+  }
+
+  return PROMOS?.[month]?.proxi || [];
+}
+
+function computePromoPercent(store, month) {
+  const list = getPromoList(store, month);
+  if (!list.length) return "—";
+  const state = getPromoState(store.id, month);
+  const ordered = list.filter(p => state[p.id]?.checked).length;
+  return Math.round((ordered / list.length) * 100);
+}
+    let STATE = {};
+
+  // -------------------- GLOBAL SAVE STATUS --------------------
+function setGlobalSaveStatus(status){
+  const el = document.getElementById("globalSaveStatus");
+  if (!el) return;
+
+  el.dataset.status = status;
+
+  if (status === "saving") el.textContent = "⏳ Enregistrement…";
+  else if (status === "saved") el.textContent = "✅ Enregistré";
+  else if (status === "error") el.textContent = "⚠️ Erreur";
+}
+// -----------------------------------------------------------
+    // -------------------- CHARTS (Admin dashboard) --------------------
+let CHARTS = [];
+
+function destroyCharts(){
+  try { CHARTS.forEach(c => c?.destroy?.()); } catch {}
+  CHARTS = [];
+}
+
+function toNum(v){
+  const n = Number(v ?? 0);
+  return Number.isNaN(n) ? 0 : n;
+}
+function percent(part, total){
+  const t = toNum(total);
+  if (t <= 0) return 0;
+  return Math.round((toNum(part) / t) * 100);
+}
+function groupByCommercial(rows){
+  const map = {};
+  rows.forEach(r => {
+    const cid = r.commercialId || "—";
+    if (!map[cid]){
+      map[cid] = {
+        commercialId: cid,
+        commercialName: r.commercialName || cid,
+        stores: 0,
+        ca: 0,
+        visits: 0,
+        engagedStores: 0,
+        flActual: 0,
+        flTarget: 0
+      };
+    }
+    map[cid].stores += 1;
+    map[cid].ca += toNum(r.ca);
+    map[cid].visits += toNum(r.visitsCount);
+    map[cid].flActual += toNum(r.flActual);
+    map[cid].flTarget += toNum(r.flTarget);
+    if (toNum(r.engagedWaves) > 0) map[cid].engagedStores += 1;
+  });
+  return Object.values(map).sort((a,b)=> b.ca - a.ca);
+}
+function getSelectedCommercialName(){
+  if (!adminPilotCommercial) return "";
+  return USERS.commerciaux.find(c => c.id === adminPilotCommercial)?.name || adminPilotCommercial;
+}
+    function renderAdminCharts(rows){
+  // rows = data.rows (déjà filtrées / triées par computeAdminPilotData)
+  destroyCharts();
+
+  const grouped = groupByCommercial(rows);
+  const labels = grouped.map(g => g.commercialName);
+
+  // 1) FL Actuel vs Objectif
+  const flActual = grouped.map(g => Math.round(g.flActual));
+  const flTarget = grouped.map(g => Math.round(g.flTarget));
+
+  const c1 = document.getElementById("chartFlByCommercial");
+  if (c1){
+    CHARTS.push(new Chart(c1, {
+      type: "bar",
+      data: {
+        labels,
+        datasets: [
+          { label: "FL actuel", data: flActual },
+          { label: "FL objectif", data: flTarget }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: "bottom" } },
+        scales: { y: { beginAtZero: true } }
+      }
+    }));
+  }
+
+  // 2) Engagement — magasins engagés / total
+  const engagedStores = grouped.map(g => g.engagedStores);
+  const totalStores = grouped.map(g => g.stores);
+
+  const c2 = document.getElementById("chartEngagedByCommercial");
+  if (c2){
+    CHARTS.push(new Chart(c2, {
+      type: "bar",
+      data: {
+        labels,
+        datasets: [
+          { label: "Magasins engagés", data: engagedStores },
+          { label: "Magasins (total)", data: totalStores }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: "bottom" } },
+        scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+      }
+    }));
+  }
+
+  // 3) Visites — total par commercial
+  const visits = grouped.map(g => g.visits);
+
+  const c3 = document.getElementById("chartVisitsByCommercial");
+  if (c3){
+    CHARTS.push(new Chart(c3, {
+      type: "bar",
+      data: {
+        labels,
+        datasets: [{ label: "Visites (total)", data: visits }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: "bottom" } },
+        scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+      }
+    }));
+  }
+
+  // 4) CA — répartition (doughnut)
+  const ca = grouped.map(g => Math.round(g.ca));
+
+  const colors = [
+  "#60a5fa", // Dominique
+  "#f87171", // Nevin
+  "#fbbf24", // Olivier
+  "#34d399", // Armand
+  "#a78bfa", // Benoit
+  "#fb923c", // Damien
+  "#94a3b8", // Yves
+  "#22d3ee"  // Séverine
+];
+
+const c4 = document.getElementById("chartCaShare");
+if (c4){
+  CHARTS.push(new Chart(c4, {
+    type: "doughnut",
+    data: {
+      labels,
+      datasets: [{
+        label: "CA",
+        data: ca,
+        backgroundColor: colors
+      }]
+    },
+    
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: "bottom" } }
+      }
+    }));
+  }
+}
+// -----------------------------------------------------------------
+
+    async function loadStateFromSupabase() {
+      STATE = {};
+      
+      try {
+        console.log("🔄 Chargement depuis Supabase...");
+        
+        const { data, error } = await sb.from("store_state").select("*");
+        
+        if (error) {
+          console.error("❌ Erreur Supabase:", error.message);
+          console.log("⚠️ Démarrage avec état vide");
+          return;
+        }
+        
+        if (!data || data.length === 0) {
+          console.log("ℹ️ Aucune donnée - démarrage vide");
+          return;
+        }
+        
+        console.log("📦 Reçu:", data.length, "lignes");
+        
+        const cleanData = JSON.parse(JSON.stringify(data));
+cleanData.forEach(row => {
+  const normalized = row.fl_by_season ? normalizeFlData(row.fl_by_season) : null;
+
+  STATE[row.id] = {
+    flBySeason: normalized ? normalized.seasons : defaultFlBySeason(),
+    flCommande: normalized ? (normalized.meta.commande || "") : "",
+
+    waves: row.waves || {},
+
+    engagementByWave: normalizeEngagementByWave(row.engagement_by_wave || {}),
+
+    engNotesByWave: row.eng_notes_by_waves || {},
+
+    visits: normalizeVisits(row.visits),
+
+    buysEng: row.buys_eng || "",
+    notesEng: row.notes_eng || "",
+
+    promoByMonth: row.promo_by_month || {},
+    detentionByPeriod: row.detention_by_period || {}
+  };
+});
+
+const periodsSet = new Set(DETENTION_PERIODS);
+
+cleanData.forEach(row => {
+  const det = row.detention_by_period || {};
+  Object.keys(det).forEach(period => periodsSet.add(period));
+});
+
+DETENTION_PERIODS = Array.from(periodsSet).sort();
+
+console.log("✅ Chargé:", Object.keys(STATE).length, "magasins");
+        
+      } catch (err) {
+        console.error("❌ Erreur:", err.message);
+        console.log("⚠️ Démarrage avec état vide malgré l'erreur");
+      }
+    }
+
+    function getStoreState(id) {
+      if (!STATE[id]) {
+        STATE[id] = {
+          flBySeason: defaultFlBySeason(),
+          flCommande: "",
+          waves: {},
+          engagementByWave: defaultEngagementByWave(),
+          engNotesByWave: {},
+          visits: [],
+          buysEng: "",
+          notesEng: "",
+          promoByMonth: {},
+          detentionByPeriod: {},
+        };
+      } else {
+        if (!STATE[id].flBySeason) STATE[id].flBySeason = defaultFlBySeason();
+        if (!STATE[id].engagementByWave) STATE[id].engagementByWave = defaultEngagementByWave();
+        if (!STATE[id].engNotesByWave) STATE[id].engNotesByWave = {};
+        if (STATE[id].flCommande === undefined) STATE[id].flCommande = "";
+        if (!STATE[id].visits) STATE[id].visits = [];
+        if (!STATE[id].promoByMonth) STATE[id].promoByMonth = {};
+        if (!STATE[id].detentionByPeriod) STATE[id].detentionByPeriod = {};
+      }
+      return STATE[id];
+    }
+
+    const saveTimeouts = {};
+
+function saveWithDebounce(storeId) {
+  clearTimeout(saveTimeouts[storeId]);
+  saveTimeouts[storeId] = setTimeout(() => {
+    saveStoreToSupabase(storeId);
+  }, 800);
+}
+
+    async function saveStoreToSupabase(id) {
+  setGlobalSaveStatus("saving"); 
+  const st = getStoreState(id);
+      const flPayload = {
+        meta: { commande: st.flCommande || "" },
+        seasons: st.flBySeason || defaultFlBySeason()
+      };
+      
+      const payload = {
+        id: id,
+        fl_by_season: JSON.parse(JSON.stringify(flPayload)),
+        waves: JSON.parse(JSON.stringify(st.waves || {})),
+        engagement_by_wave: JSON.parse(JSON.stringify(st.engagementByWave || {})),
+        eng_notes_by_waves: JSON.parse(JSON.stringify(st.engNotesByWave || {})),
+        visits: JSON.parse(JSON.stringify(st.visits || [])),
+        buys_eng: st.buysEng || "",
+        notes_eng: st.notesEng || "",
+        promo_by_month: JSON.parse(JSON.stringify(st.promoByMonth || {})),
+        detention_by_period: JSON.parse(JSON.stringify(st.detentionByPeriod || {})),
+      };
+
+      try {
+        const { data, error } = await sb
+          .from("store_state")
+          .upsert(payload, { onConflict: 'id' });
+
+if (error) {
+  console.error("❌ Erreur de sauvegarde Supabase :", error.message || error);
+  setGlobalSaveStatus("error"); // 👈 AJOUT
+} else {
+  console.log("✅ Données sauvegardées pour :", id);
+  setGlobalSaveStatus("saved"); // 👈 AJOUT
+}
+      } catch (err) {
+  console.error("❌ Erreur lors de la sauvegarde :", err);
+  setGlobalSaveStatus("error");
+}
+    }
+
+async function saveDetentionPeriodForAllStores(period) {
+  setGlobalSaveStatus("saving");
+
+  try {
+    const rows = STORES.map(store => {
+      const st = getStoreState(store.id);
+
+      if (!st.detentionByPeriod[period]) {
+        st.detentionByPeriod[period] = {
+          rangA: "",
+          top200: "",
+          top300: "",
+          bio: ""
+        };
+      }
+
+      return {
+        id: store.id,
+        detention_by_period: JSON.parse(JSON.stringify(st.detentionByPeriod || {}))
+      };
+    });
+
+    const { error } = await sb
+      .from("store_state")
+      .upsert(rows, { onConflict: "id" });
+
+    if (error) {
+      console.error("❌ Erreur sauvegarde période détention :", error.message || error);
+      setGlobalSaveStatus("error");
+    } else {
+      console.log("✅ Période détention sauvegardée pour tous les magasins :", period);
+      setGlobalSaveStatus("saved");
+    }
+  } catch (err) {
+    console.error("❌ Erreur saveDetentionPeriodForAllStores :", err);
+    setGlobalSaveStatus("error");
+  }
+}
+    const root = document.getElementById("root");
+    let currentUser = null;
+    let currentCommercialFilter = null;
+    let currentTab = "overview";
+    let currentStoreId = null;
+    let currentSearch = "";
+    let currentEngWave = "wave1";
+    let currentFlSeason = "Janvier";
+    let adminPilotCommercial = "";   
+let adminPilotSearch = "";     
+let adminPilotSort = { key: "lastVisit", dir: "asc" }; 
+
+    function getUserStores(user) {
+      if (!user) return [];
+      if (user.role === "admin") {
+        if (currentCommercialFilter) return STORES.filter(s => s.commercialId === currentCommercialFilter);
+        return STORES;
+      }
+      return STORES.filter(s => s.commercialId === user.id);
+    }
+
+    function computeKpis(user) {
+      const stores = getUserStores(user);
+      const totalStores = stores.length;
+      const totalCA = stores.reduce((sum, s) => sum + (s.ca2025 || 0), 0);
+      let engagedStores = 0;
+      stores.forEach(s => {
+        const st = getStoreState(s.id);
+        const hasEng = WAVES.some(w => st.waves[w.id] === "Engagé");
+        if (hasEng) engagedStores++;
+      });
+      const avgCA = totalStores ? Math.round(totalCA / totalStores) : 0;
+      return { totalStores, totalCA, avgCA, engagedStores };
+    }
+
+    function computeFlKpis(user) {
+      const stores = getUserStores(user);
+      let totalTarget = 0;
+      let totalActual = 0;
+      stores.forEach(s => {
+totalTarget += computeFL2025Total(s.id);
+        totalActual += computeFLActualTotal(s.id);
+      });
+      const progression = computeFLProgression(totalActual, totalTarget);
+      return { totalTarget, totalActual, progression };
+    }
+    function renderTopbar(title){
+  const topbar = document.createElement("div");
+  topbar.className = "topbar";
+
+  topbar.innerHTML = `
+    <div style="font-size:13px;font-weight:600;">
+      ${title}
+    </div>
+    <div id="globalSaveStatus" class="save-status" data-status="saved">
+      ✅ Enregistré
+    </div>
+  `;
+
+  return topbar;
+}
+
+    function renderLogin() {
+      root.innerHTML = "";
+      const wrap = document.createElement("div");
+      wrap.className = "app-shell";
+      wrap.style.flexDirection = "column";
+wrap.style.alignItems = "stretch";
+      wrap.appendChild(renderTopbar("CRM PROXI · Connexion"));
+      const card = document.createElement("div");
+      card.className = "card login-card";
+      card.innerHTML = `
+        <h1><span class="logo-dot"></span> CRM PROXI</h1>
+        <div class="subtext">Connexion commercial ou admin (Marie-Charlotte / Xavier).</div>
+        <div class="field" style="margin-top:16px;">
+          <label>Type de profil</label>
+          <select id="roleSelect">
+            <option value="commercial">Commercial</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Utilisateur</label>
+          <select id="userSelect"></select>
+        </div>
+        <button id="loginBtn">Entrer dans le CRM</button>
+        <div class="subtext" style="margin-top:8px;">Les données sont sauvegardées sur un serveur sécurisé (Supabase) et partagées entre les utilisateurs.</div>
+      `;
+      wrap.appendChild(card);
+      root.appendChild(wrap);
+
+      const roleSelect = card.querySelector("#roleSelect");
+      const userSelect = card.querySelector("#userSelect");
+
+      function refreshUserOptions() {
+        const role = roleSelect.value;
+        userSelect.innerHTML = "";
+        const list = role === "admin" ? USERS.admins : USERS.commerciaux;
+        list.forEach(u => {
+          const opt = document.createElement("option");
+          opt.value = u.id;
+          opt.textContent = u.name;
+          userSelect.appendChild(opt);
+        });
+      }
+      roleSelect.addEventListener("change", refreshUserOptions);
+      refreshUserOptions();
+
+      card.querySelector("#loginBtn").addEventListener("click", () => {
+        const role = roleSelect.value;
+        const id = userSelect.value;
+        if (!id) return;
+        if (role === "admin") {
+          currentUser = { ...USERS.admins.find(a => a.id === id) };
+        } else {
+          currentUser = { ...USERS.commerciaux.find(c => c.id === id), role: "commercial" };
+        }
+        
+        currentCommercialFilter = null;
+        currentTab = "overview";
+        currentStoreId = null;
+        currentSearch = "";
+        currentFlSeason = "Janvier";
+        currentEngWave = "wave1";
+        adminPilotCommercial = "";
+adminPilotSearch = "";
+adminPilotSort = { key: "lastVisit", dir: "asc" };
+        renderApp();
       });
     }
 
-    function formatDate(date) {
-      if (!date) return "Non renseigné";
-      return new Date(date + "T00:00:00").toLocaleDateString("fr-FR");
+    function getCommercialName(id){
+  return USERS.commerciaux.find(c => c.id === id)?.name || id || "—";
+}
+
+function getLastVisitDate(storeId){
+  const st = getStoreState(storeId);
+  const visits = Array.isArray(st.visits) ? st.visits : [];
+  const dates = visits.map(v => (typeof v === "string" ? v : v?.date)).filter(Boolean).sort();
+  return dates.length ? dates[dates.length - 1] : "";
+}
+
+function getEngagedWavesCount(storeId){
+  const st = getStoreState(storeId);
+  return WAVES.filter(w => st.waves?.[w.id] === "Engagé").length;
+}
+
+function computePilotRow(store, promoMonth, detentionPeriod){
+  const st = getStoreState(store.id);
+
+  const lastVisit = getLastVisitDate(store.id);
+  const visitsCount = Array.isArray(st.visits) ? st.visits.length : 0;
+
+  const engagedWaves = getEngagedWavesCount(store.id);
+  const engagedTotal = computeEngagementTotal(store.id);
+
+  const flActual = computeFLActualTotal(store.id);
+  const flTarget = getFlTarget(store.id);
+  const flPct = (Number(flTarget || 0) > 0)
+    ? Math.round((Number(flActual || 0) / Number(flTarget)) * 100)
+    : (flActual > 0 ? 100 : 0);
+
+  const promoPct = computePromoPercent(store, promoMonth);
+
+  const det = getDetentionState(store.id, detentionPeriod);
+  const detAvg = Math.round((Number(det.rangA||0)+Number(det.top200||0)+Number(det.top300||0)+Number(det.bio||0))/4);
+  const detHas = det.rangA || det.top200 || det.top300 || det.bio;
+  const detentionAvg = detHas ? detAvg : "";
+
+  return {
+    id: store.id,
+    storeName: store.name,
+    commercialId: store.commercialId,
+    commercialName: getCommercialName(store.commercialId),
+    ca: Number(store.ca2025 || 0),
+
+    lastVisit,
+    visitsCount,
+
+    engagedWaves,
+    engagedTotal,
+
+    flActual,
+    flTarget,
+    flPct,
+
+    promoPct,          // number or "—"
+    detentionAvg       // number or ""
+  };
+}
+
+function computeAdminPilotData(){
+  const promoMonth = (typeof currentPromoMonth === "string" && currentPromoMonth) ? currentPromoMonth : "2026-01";
+  const detentionPeriod = (typeof currentDetentionPeriod === "string" && currentDetentionPeriod) ? currentDetentionPeriod : "2025-11_2026-01";
+
+  let rows = STORES.map(s => computePilotRow(s, promoMonth, detentionPeriod));
+
+  const filterCommercial = currentCommercialFilter || adminPilotCommercial;
+if (filterCommercial) rows = rows.filter(r => r.commercialId === filterCommercial);
+
+  if (adminPilotSearch.trim()){
+    const q = adminPilotSearch.trim().toLowerCase();
+    rows = rows.filter(r =>
+      r.storeName.toLowerCase().includes(q) ||
+      r.commercialName.toLowerCase().includes(q)
+    );
+  }
+
+  const { key, dir } = adminPilotSort || { key: "lastVisit", dir: "asc" };
+  const mult = dir === "desc" ? -1 : 1;
+
+  rows.sort((a,b) => {
+    const va = a[key];
+    const vb = b[key];
+
+    if (key === "lastVisit") return (String(va||"").localeCompare(String(vb||""))) * mult;
+
+    if (key === "promoPct"){
+      const na = typeof va === "number" ? va : -1;
+      const nb = typeof vb === "number" ? vb : -1;
+      return (na - nb) * mult;
     }
 
-    function escapeHTML(value) {
-      return String(value ?? "")
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
-    }
+    const na = Number(va ?? 0);
+    const nb = Number(vb ?? 0);
+    return (na - nb) * mult;
+  });
 
-    function getLatestVisit(magasinId) {
-      const related = visites
-        .filter(v => v.magasin_id === magasinId)
-        .sort((a, b) => new Date(b.date_visite) - new Date(a.date_visite));
+  const totalStores = rows.length;
+  const totalCA = rows.reduce((s,r)=> s + (r.ca||0), 0);
 
-      return related[0] || null;
-    }
+  const totalFlActual = rows.reduce((s,r)=> s + (r.flActual||0), 0);
+  const totalFlTarget = rows.reduce((s,r)=> s + (r.flTarget||0), 0);
+  const flProgress = computeFLProgression(totalFlActual, totalFlTarget);
 
-    function renderHome() {
-      currentCommercial = null;
-      selectedMagasin = null;
+  const totalVisits = rows.reduce((s,r)=> s + (r.visitsCount||0), 0);
+  const engagedStores = rows.filter(r => r.engagedWaves > 0).length;
 
-      app.innerHTML = `
-        <div class="topbar">
+  return {
+    promoMonth,
+    detentionPeriod,
+    rows,
+    kpis: { totalStores, totalCA, totalFlActual, totalFlTarget, flProgress, totalVisits, engagedStores }
+  };
+}
+
+function setAdminPilotSort(key){
+  if (adminPilotSort.key === key){
+    adminPilotSort.dir = adminPilotSort.dir === "asc" ? "desc" : "asc";
+  } else {
+    adminPilotSort.key = key;
+    adminPilotSort.dir = "asc";
+  }
+  renderApp();
+}
+
+    function renderApp() {
+      destroyCharts();
+      root.innerHTML = "";
+      const shell = document.createElement("div");
+      shell.className = "app-shell";
+
+      const sidebar = document.createElement("div");
+      sidebar.className = "sidebar card";
+      sidebar.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
           <div>
-            <h1>CRM Magasins</h1>
-            <p class="subtitle">Choisis un commercial pour accéder à ses magasins.</p>
-          </div>
-        </div>
-
-        <div class="home-grid">
-          ${commerciaux.map(c => `
-            <div class="commercial-card" data-commercial="${c.id}">
-              <h2>${escapeHTML(c.nom)}</h2>
-              <p class="subtitle">Accéder à l’espace commercial</p>
+            <div style="font-size:13px;color:var(--muted);opacity:.85;">Connecté en tant que</div>
+            <div style="font-size:15px;font-weight:600;">${currentUser.name}</div>
+            <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;opacity:.8;">
+              ${currentUser.role === "admin" ? "Admin · vue globale" : "Commercial · portefeuille magasins"}
             </div>
-          `).join("")}
+          </div>
+          <button class="secondary" id="logoutBtn">Quitter</button>
         </div>
       `;
 
-      document.querySelectorAll("[data-commercial]").forEach(card => {
-        card.addEventListener("click", () => {
-          const id = card.dataset.commercial;
-          currentCommercial = commerciaux.find(c => c.id === id);
-          loadDashboard();
-        });
+      const listWrap = document.createElement("div");
+      listWrap.className = "list";
+
+      const commList = currentUser.role === "admin"
+        ? USERS.commerciaux
+        : USERS.commerciaux.filter(c => c.id === currentUser.id);
+
+      const storesAll = getUserStores(currentUser);
+      const byCommercial = {};
+      storesAll.forEach(s => {
+        byCommercial[s.commercialId] = (byCommercial[s.commercialId] || 0) + 1;
       });
-    }
 
-    async function loadDashboard() {
-      app.innerHTML = `<div class="card"><p>Chargement des magasins...</p></div>`;
+      commList.forEach(c => {
+        const row = document.createElement("div");
+        row.className = "commercial-row";
+        if (currentCommercialFilter === c.id || currentUser.id === c.id) row.classList.add("active");
+        row.innerHTML = `
+          <div>
+            <div class="commercial-name">${c.name}</div>
+            <div class="commercial-meta">${byCommercial[c.id] || 0} magasin(s)</div>
+          </div>
+        `;
+        row.addEventListener("click", () => {
+          if (currentUser.role === "admin") {
+            currentCommercialFilter = c.id;
+            currentStoreId = null;
+            currentTab = "overview";
+            currentSearch = "";
+            currentFlSeason = "Janvier";
+            renderApp();
+          }
+        });
+        listWrap.appendChild(row);
+      });
 
-      const { data, error } = await supabase
-        .from("magasins")
-        .select("*")
-        .eq("commercial_id", currentCommercial.id)
-        .eq("archive", false)
-        .order("created_at", { ascending: false });
+      sidebar.appendChild(listWrap);
 
-      if (error) {
-        app.innerHTML = `<div class="error">Erreur chargement magasins : ${escapeHTML(error.message)}</div>`;
-        return;
+      const main = document.createElement("div");
+      main.className = "main";
+      // --- GLOBAL SAVE BAR ---
+main.appendChild(renderTopbar(currentUser.name));
+setGlobalSaveStatus("saved");
+
+      const kpiCard = document.createElement("div");
+      kpiCard.className = "card";
+
+      if (currentTab === "fl") {
+        const fl = computeFlKpis(currentUser);
+        kpiCard.innerHTML = `
+          <h1><span class="logo-dot"></span> CRM PROXI · Fruits & Légumes</h1>
+          <div class="subtext">Suivi F&L par saison (commande / montant / plan d'action).</div>
+          <div class="kpi-row">
+            <div class="kpi-card">
+              <div class="kpi-label">Total montants 2025 (objectif)</div>
+              <div class="kpi-value">${euro(fl.totalTarget)}</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-label">Total montant actuel</div>
+              <div class="kpi-value">${euro(fl.totalActual)}</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-label">Progression</div>
+              <div class="kpi-value">${fl.progression}</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-label">Écart (actuel - objectif)</div>
+              <div class="kpi-value">${euro(Number(fl.totalActual) - Number(fl.totalTarget))}</div>
+            </div>
+          </div>
+        `;
+      } else {
+        const kpis = computeKpis(currentUser);
+        kpiCard.innerHTML = `
+          <h1><span class="logo-dot"></span> CRM PROXI</h1>
+          <div class="subtext">Vue d'ensemble du portefeuille.</div>
+          <div class="kpi-row">
+            <div class="kpi-card">
+              <div class="kpi-label">Magasins</div>
+              <div class="kpi-value">${kpis.totalStores}</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-label">CA total</div>
+              <div class="kpi-value">${formatNumber(kpis.totalCA)} €</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-label">CA moyen</div>
+              <div class="kpi-value">${formatNumber(kpis.avgCA)} €</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-label">Magasins engagés</div>
+              <div class="kpi-value">${kpis.engagedStores}</div>
+            </div>
+          </div>
+        `;
       }
 
-      magasins = data || [];
+      main.appendChild(kpiCard);
 
-      if (magasins.length > 0) {
-        const ids = magasins.map(m => m.id);
+      const mainCard = document.createElement("div");
+      mainCard.className = "card";
+      mainCard.innerHTML = `
+        <div class="tabs">
+  <button class="tab-btn ${currentTab === "overview" ? "active" : ""}" data-tab="overview">Vue d'ensemble</button>
+  <button class="tab-btn ${currentTab === "list" ? "active" : ""}" data-tab="list">Magasins</button>
+  <button class="tab-btn ${currentTab === "fl" ? "active" : ""}" data-tab="fl">Fruits & Légumes</button>
+  <button class="tab-btn ${currentTab === "eng" ? "active" : ""}" data-tab="eng">Engagement</button>
+  <button class="tab-btn ${currentTab === "promo" ? "active" : ""}" data-tab="promo">Promo</button>
+  <button class="tab-btn ${currentTab === "detention" ? "active" : ""}" data-tab="detention">Détention</button>
+</div>
+      `;
 
-        const { data: visitesData, error: visitesError } = await supabase
-          .from("visites")
-          .select("*")
-          .in("magasin_id", ids)
-          .order("date_visite", { ascending: false });
+      const content = document.createElement("div");
+      content.className = "two-columns";
 
-        if (visitesError) {
-          app.innerHTML = `<div class="error">Erreur chargement visites : ${escapeHTML(visitesError.message)}</div>`;
+      const stores = getUserStores(currentUser);
+      if (!currentStoreId && stores.length) currentStoreId = stores[0].id;
+      const currentStore = stores.find(s => s.id === currentStoreId);
+
+      if (currentTab === "overview") {
+
+  if (currentUser?.role === "admin") {
+
+    const data = computeAdminPilotData();
+
+    content.innerHTML = `
+      <div style="grid-column: 1 / -1;">
+        <div class="chart-grid" style="margin-top:0;">
+          
+          <div class="chart-card">
+            <div class="chart-title">F&L — Actuel vs Objectif (par commercial)</div>
+            <div class="chart-wrap">
+              <canvas id="chartFlByCommercial"></canvas>
+            </div>
+          </div>
+
+          <div class="chart-card">
+            <div class="chart-title">Engagement — Magasins engagés (par commercial)</div>
+            <div class="chart-wrap">
+              <canvas id="chartEngagedByCommercial"></canvas>
+            </div>
+          </div>
+
+          <div class="chart-card">
+            <div class="chart-title">Visites — Nombre total (par commercial)</div>
+            <div class="chart-wrap">
+              <canvas id="chartVisitsByCommercial"></canvas>
+            </div>
+          </div>
+
+          <div class="chart-card">
+            <div class="chart-title">Répartition du CA (par commercial)</div>
+            <div class="chart-wrap">
+              <canvas id="chartCaShare"></canvas>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    `;
+
+    requestAnimationFrame(() => {
+      renderAdminCharts(data.rows);
+    });
+
+  } else {
+    
+    // ✅ COMMERCIAL : overview simple
+    content.innerHTML = `
+      <div>
+        <div style="font-size:13px;font-weight:600;">Vue d’ensemble · Magasins</div>
+        <table>
+          <thead>
+            <tr>
+              <th>Magasin</th>
+              <th>CA 2025</th>
+              <th>Visites</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${stores.map(s => {
+              const visitsCount = getStoreState(s.id).visits.length;
+              return `
+                <tr>
+                  <td>${s.name}</td>
+                  <td>${formatNumber(s.ca2025)} €</td>
+                  <td>${visitsCount}</td>
+                </tr>
+              `;
+            }).join("")}
+          </tbody>
+        </table>
+      </div>
+    `;
+  }
+
+} else if (currentTab === "list") {
+  renderStoresTab(content, stores, currentStore);
+} else if (currentTab === "fl") {
+  renderFruitsLegumesTab(content, stores, currentStore);
+} else if (currentTab === "eng") {
+  renderEngagementTab(content, stores, currentStore);
+} else if (currentTab === "promo") {
+  renderPromoTab(content, stores, currentStore);
+} else if (currentTab === "detention") {
+  renderDetentionTab(content, stores, currentStore);
+}
+  
+
+      mainCard.appendChild(content);
+      main.appendChild(mainCard);
+
+      sidebar.querySelector("#logoutBtn").addEventListener("click", () => {
+        currentUser = null;
+        currentCommercialFilter = null;
+        currentStoreId = null;
+        currentTab = "overview";
+        currentFlSeason = "Janvier";
+        currentEngWave = "wave1";
+        renderLogin();
+      });
+
+     mainCard.querySelectorAll(".tab-btn[data-tab]").forEach(btn => {
+  btn.addEventListener("click", () => {
+    currentTab = btn.dataset.tab;
+    renderApp();
+  });
+});
+
+      shell.appendChild(sidebar);
+      shell.appendChild(main);
+      root.appendChild(shell);
+    }
+
+    function renderStoresTab(container, stores, currentStore) {
+  const left = document.createElement("div");
+  const right = document.createElement("div");
+
+  left.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;">
+      <div>
+        <div style="font-size:13px;font-weight:600;">Magasins · Suivi terrain</div>
+        <div class="subtext">Clique sur un magasin pour voir le détail.</div>
+      </div>
+
+      ${currentUser.role === "admin" ? `
+        <div class="card" style="padding:10px;min-width:280px;">
+          <div style="font-size:12px;font-weight:700;margin-bottom:8px;">Ajouter un magasin</div>
+
+          <label>Nom du magasin</label>
+          <input id="newStoreName" placeholder="Ex: Besse St Anastasie" />
+
+          <label>CA 2025</label>
+<input id="newStoreCa" type="number" placeholder="Ex: 120000" />
+
+          <label>Commercial</label>
+          <select id="newStoreCommercial">
+            ${USERS.commerciaux.map(c => `
+              <option value="${c.id}">${c.name}</option>
+            `).join("")}
+          </select>
+
+          <button id="addStoreBtn" style="margin-top:10px;">+ Ajouter</button>
+        </div>
+      ` : ""}
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Magasin</th>
+          <th>Visites</th>
+          ${currentUser.role === "admin" ? `<th>Action</th>` : ""}
+        </tr>
+      </thead>
+      <tbody>
+        ${stores.map(s => {
+          const visitsCount = getStoreState(s.id).visits.length;
+          return `
+            <tr data-id="${s.id}">
+              <td>${s.name}</td>
+              <td>${visitsCount}</td>
+              ${currentUser.role === "admin" ? `
+                <td>
+                  <button class="secondary" data-delete-store="${s.id}">Supprimer</button>
+                </td>
+              ` : ""}
+            </tr>
+          `;
+        }).join("")}
+      </tbody>
+    </table>
+  `;
+
+  left.querySelectorAll("tbody tr").forEach(tr => {
+    tr.addEventListener("click", () => {
+      currentStoreId = tr.dataset.id;
+      renderApp();
+    });
+  });
+
+  if (currentUser.role === "admin") {
+    const addBtn = left.querySelector("#addStoreBtn");
+    const nameInput = left.querySelector("#newStoreName");
+    const caInput = left.querySelector("#newStoreCa");
+    const commercialSelect = left.querySelector("#newStoreCommercial");
+
+    if (addBtn && nameInput && caInput && commercialSelect) {
+      addBtn.addEventListener("click", async () => {
+        const name = nameInput.value.trim();
+        const ca2025 = Number(caInput.value || 0);
+        const commercialId = commercialSelect.value;
+
+        if (!name) {
+          alert("Renseigne le nom du magasin.");
           return;
         }
 
-        visites = visitesData || [];
-      } else {
-        visites = [];
-      }
+        const id = slugifyStoreName(name);
+      
 
-      renderDashboard();
-    }
-
-    function getFilteredMagasins() {
-      return magasins.filter(m => {
-        const search = filters.search.toLowerCase();
-        const matchSearch =
-          !search ||
-          String(m.nom || "").toLowerCase().includes(search) ||
-          String(m.ville || "").toLowerCase().includes(search) ||
-          String(m.adresse || "").toLowerCase().includes(search);
-
-        const matchVille = !filters.ville || m.ville === filters.ville;
-
-        const matchContrat =
-          !filters.contrat ||
-          (filters.contrat === "signe" && m.date_signature) ||
-          (filters.contrat === "non-signe" && !m.date_signature);
-
-        const ca = Number(m.ca || 0);
-        const matchCaMin = !filters.caMin || ca >= Number(filters.caMin);
-        const matchCaMax = !filters.caMax || ca <= Number(filters.caMax);
-
-        return matchSearch && matchVille && matchContrat && matchCaMin && matchCaMax;
-      });
-    }
-
-    function renderDashboard() {
-      const villes = [...new Set(magasins.map(m => m.ville).filter(Boolean))].sort();
-      const filtered = getFilteredMagasins();
-
-      app.innerHTML = `
-        <div class="topbar">
-          <div>
-            <h1>${escapeHTML(currentCommercial.nom)}</h1>
-            <p class="subtitle">${magasins.length} magasin(s) enregistré(s)</p>
-          </div>
-
-          <div class="actions">
-            <button class="btn-light" id="backHomeBtn">Retour accueil</button>
-            <button id="addStoreBtn">+ Ajouter un magasin</button>
-          </div>
-        </div>
-
-        <div class="card">
-          <h2>Recherche et filtres</h2>
-
-          <div class="filters">
-            <input id="filterSearch" placeholder="Rechercher un magasin, une ville, une adresse..." value="${escapeHTML(filters.search)}" />
-
-            <select id="filterVille">
-              <option value="">Toutes les villes</option>
-              ${villes.map(v => `<option value="${escapeHTML(v)}" ${filters.ville === v ? "selected" : ""}>${escapeHTML(v)}</option>`).join("")}
-            </select>
-
-            <select id="filterContrat">
-              <option value="">Tous les contrats</option>
-              <option value="signe" ${filters.contrat === "signe" ? "selected" : ""}>Contrat signé</option>
-              <option value="non-signe" ${filters.contrat === "non-signe" ? "selected" : ""}>Non signé</option>
-            </select>
-
-            <input id="filterCaMin" type="number" placeholder="CA min" value="${escapeHTML(filters.caMin)}" />
-            <input id="filterCaMax" type="number" placeholder="CA max" value="${escapeHTML(filters.caMax)}" />
-          </div>
-        </div>
-
-        <div class="store-grid">
-          ${
-            filtered.length === 0
-              ? `<div class="card empty">Aucun magasin ne correspond à ta recherche.</div>`
-              : filtered.map(m => {
-                  const latestVisit = getLatestVisit(m.id);
-                  return `
-                    <div class="store-card" data-store="${m.id}">
-                      <div class="store-name">${escapeHTML(m.nom)}</div>
-                      <div class="store-meta">
-                        Ville : ${escapeHTML(m.ville || "Non renseignée")}<br>
-                        CA : ${formatMoney(m.ca)}<br>
-                        Dernière visite : ${latestVisit ? formatDate(latestVisit.date_visite) : "Aucune visite"}
-                      </div>
-                      <span class="badge ${m.date_signature ? "badge-green" : "badge-gray"}">
-                        ${m.date_signature ? "Contrat signé" : "Contrat non signé"}
-                      </span>
-                    </div>
-                  `;
-                }).join("")
-          }
-        </div>
-      `;
-
-      document.getElementById("backHomeBtn").addEventListener("click", renderHome);
-      document.getElementById("addStoreBtn").addEventListener("click", () => openStoreModal());
-
-      document.getElementById("filterSearch").addEventListener("input", e => {
-        filters.search = e.target.value;
-        renderDashboard();
-      });
-
-      document.getElementById("filterVille").addEventListener("change", e => {
-        filters.ville = e.target.value;
-        renderDashboard();
-      });
-
-      document.getElementById("filterContrat").addEventListener("change", e => {
-        filters.contrat = e.target.value;
-        renderDashboard();
-      });
-
-      document.getElementById("filterCaMin").addEventListener("input", e => {
-        filters.caMin = e.target.value;
-        renderDashboard();
-      });
-
-      document.getElementById("filterCaMax").addEventListener("input", e => {
-        filters.caMax = e.target.value;
-        renderDashboard();
-      });
-
-      document.querySelectorAll("[data-store]").forEach(card => {
-        card.addEventListener("click", () => {
-          selectedMagasin = magasins.find(m => m.id === card.dataset.store);
-          renderMagasinDetail();
-        });
-      });
-    }
-
-    async function refreshSelectedMagasin() {
-      const { data, error } = await supabase
-        .from("magasins")
-        .select("*")
-        .eq("id", selectedMagasin.id)
-        .single();
-
-      if (!error && data) {
-        selectedMagasin = data;
-        const index = magasins.findIndex(m => m.id === data.id);
-        if (index !== -1) magasins[index] = data;
-      }
-    }
-
-    async function renderMagasinDetail() {
-      if (!selectedMagasin) return;
-
-      const { data: visitesData, error } = await supabase
-        .from("visites")
-        .select("*")
-        .eq("magasin_id", selectedMagasin.id)
-        .order("date_visite", { ascending: false });
-
-      if (error) {
-        app.innerHTML = `<div class="error">Erreur chargement fiche : ${escapeHTML(error.message)}</div>`;
-        return;
-      }
-
-      const magasinVisites = visitesData || [];
-
-      app.innerHTML = `
-        <div class="topbar">
-          <div>
-            <h1>${escapeHTML(selectedMagasin.nom)}</h1>
-            <p class="subtitle">${escapeHTML(currentCommercial.nom)}</p>
-          </div>
-
-          <div class="actions">
-  <button class="btn-light" id="backDashboardBtn">Retour à la liste</button>
-  <button class="btn-secondary" id="editStoreBtn">Modifier la fiche</button>
-  <button id="addVisitBtn">+ Ajouter une visite</button>
-  <button class="btn-danger" id="deleteStoreBtn">Supprimer le magasin</button>
-</div>
-        </div>
-
-        <div class="detail-layout">
-          <div class="card">
-            <div class="photo-box">
-              ${
-                selectedMagasin.photo_url
-                  ? `<img src="${escapeHTML(selectedMagasin.photo_url)}" alt="Photo magasin">`
-                  : `Aucune photo<br>Ajoute une photo en modifiant la fiche`
-              }
-            </div>
-          </div>
-
-          <div class="card">
-            <h2>Fiche magasin</h2>
-
-            <div class="info-grid">
-              <div class="info-item">
-                <div class="info-label">Adresse</div>
-                <div class="info-value">${escapeHTML(selectedMagasin.adresse || "Non renseignée")}</div>
-              </div>
-
-              <div class="info-item">
-                <div class="info-label">Ville</div>
-                <div class="info-value">${escapeHTML(selectedMagasin.ville || "Non renseignée")}</div>
-              </div>
-
-              <div class="info-item">
-                <div class="info-label">Prix de vente</div>
-                <div class="info-value">${formatMoney(selectedMagasin.prix_vente)}</div>
-              </div>
-
-              <div class="info-item">
-                <div class="info-label">CA</div>
-                <div class="info-value">${formatMoney(selectedMagasin.ca)}</div>
-              </div>
-
-              <div class="info-item">
-                <div class="info-label">Date de signature du contrat</div>
-                <div class="info-value">${formatDate(selectedMagasin.date_signature)}</div>
-              </div>
-
-              <div class="info-item">
-                <div class="info-label">Nombre de visites</div>
-                <div class="info-value">${magasinVisites.length}</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="card" style="margin-top:20px;">
-          <h2>Historique des visites</h2>
-
-          <div class="visit-list">
-            ${
-              magasinVisites.length === 0
-                ? `<div class="empty">Aucune visite enregistrée pour ce magasin.</div>`
-                : magasinVisites.map(v => `
-                  <div class="visit-item">
-                    <div class="visit-date">${formatDate(v.date_visite)}</div>
-                    <div>${escapeHTML(v.commentaire || "Aucun commentaire")}</div>
-                  </div>
-                `).join("")
-            }
-          </div>
-        </div>
-      `;
-
-   document.getElementById("backDashboardBtn").addEventListener("click", loadDashboard);
-document.getElementById("editStoreBtn").addEventListener("click", () => openStoreModal(selectedMagasin));
-document.getElementById("addVisitBtn").addEventListener("click", openVisitModal);
-document.getElementById("deleteStoreBtn").addEventListener("click", deleteSelectedMagasin);
-    }
-
-    function openStoreModal(magasin = null) {
-      editingMagasin = magasin;
-
-      document.getElementById("storeModalTitle").textContent = magasin ? "Modifier le magasin" : "Ajouter un magasin";
-      document.getElementById("storeName").value = magasin?.nom || "";
-      document.getElementById("storeCity").value = magasin?.ville || "";
-      document.getElementById("storeAddress").value = magasin?.adresse || "";
-      document.getElementById("storePrice").value = magasin?.prix_vente || "";
-      document.getElementById("storeCA").value = magasin?.ca || "";
-      document.getElementById("storeSignature").value = magasin?.date_signature || "";
-      document.getElementById("storePhoto").value = "";
-      document.getElementById("storeFormMessage").innerHTML = "";
-      document.getElementById("storeModal").style.display = "flex";
-    }
-
-    window.closeStoreModal = function() {
-      document.getElementById("storeModal").style.display = "none";
-      editingMagasin = null;
-    };
-
-    async function uploadPhoto(file) {
-      if (!file) return null;
-
-      const cleanName = file.name
-        .toLowerCase()
-        .replaceAll(" ", "-")
-        .replace(/[^a-z0-9.-]/g, "");
-
-      const path = `magasins/${Date.now()}-${cleanName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from("photos-magasins")
-        .upload(path, file, {
-          cacheControl: "3600",
-          upsert: true
-        });
-
-      if (uploadError) throw uploadError;
-
-      const { data } = supabase.storage
-        .from("photos-magasins")
-        .getPublicUrl(path);
-
-      return {
-        photo_url: data.publicUrl,
-        photo_path: path
-      };
-    }
-
-    document.getElementById("storeForm").addEventListener("submit", async function(e) {
-      e.preventDefault();
-
-      const message = document.getElementById("storeFormMessage");
-      message.innerHTML = `<div class="success">Enregistrement en cours...</div>`;
-
-      try {
-        const file = document.getElementById("storePhoto").files[0];
-        const uploaded = await uploadPhoto(file);
-
-        const payload = {
-          commercial_id: currentCommercial.id,
-          nom: document.getElementById("storeName").value.trim(),
-          ville: document.getElementById("storeCity").value.trim() || null,
-          adresse: document.getElementById("storeAddress").value.trim() || null,
-          prix_vente: document.getElementById("storePrice").value || null,
-          ca: document.getElementById("storeCA").value || null,
-          date_signature: document.getElementById("storeSignature").value || null,
-          updated_at: new Date().toISOString()
-        };
-
-        if (uploaded) {
-          payload.photo_url = uploaded.photo_url;
-          payload.photo_path = uploaded.photo_path;
+        if (STORES.some(s => s.id === id)) {
+          alert("Un magasin avec cet identifiant existe déjà.");
+          return;
         }
 
-        if (editingMagasin) {
-          const { error } = await supabase
-            .from("magasins")
-            .update(payload)
-            .eq("id", editingMagasin.id);
+        const ok = await addStoreToSupabase({
+          id,
+          name,
+          ca2025,
+          commercialId
+        });
 
-          if (error) throw error;
-
-          selectedMagasin = { ...selectedMagasin, ...payload };
-          message.innerHTML = `<div class="success">Magasin modifié avec succès.</div>`;
-        } else {
-          const { data, error } = await supabase
-            .from("magasins")
-            .insert([payload])
-            .select()
-            .single();
-
-          if (error) throw error;
-
-          selectedMagasin = data;
-          message.innerHTML = `<div class="success">Magasin ajouté avec succès.</div>`;
+        if (!ok) {
+          alert("Impossible d'ajouter le magasin.");
+          return;
         }
 
-        setTimeout(async () => {
-          closeStoreModal();
-
-          if (selectedMagasin) {
-            await refreshSelectedMagasin();
-            renderMagasinDetail();
-          } else {
-            loadDashboard();
-          }
-        }, 600);
-
-      } catch (error) {
-        console.error(error);
-        message.innerHTML = `<div class="error">Erreur : ${escapeHTML(error.message)}</div>`;
-      }
-    });
-
-    function openVisitModal() {
-      document.getElementById("visitDate").value = "";
-      document.getElementById("visitComment").value = "";
-      document.getElementById("visitFormMessage").innerHTML = "";
-      document.getElementById("visitModal").style.display = "flex";
+        nameInput.value = "";
+        caInput.value = "";
+        currentStoreId = id;
+        renderApp();
+      });
     }
 
-    window.closeVisitModal = function() {
-      document.getElementById("visitModal").style.display = "none";
-    };
+    left.querySelectorAll("[data-delete-store]").forEach(btn => {
+      btn.addEventListener("click", async (e) => {
+        e.stopPropagation();
 
-    document.getElementById("visitForm").addEventListener("submit", async function(e) {
-      e.preventDefault();
+        const storeId = btn.dataset.deleteStore;
+        const store = STORES.find(s => s.id === storeId);
+        if (!store) return;
 
-      const message = document.getElementById("visitFormMessage");
-      message.innerHTML = `<div class="success">Ajout de la visite...</div>`;
+        const confirmDelete = confirm(
+          `Supprimer le magasin "${store.name}" ? Cette action supprimera aussi ses données de suivi.`
+        );
+        if (!confirmDelete) return;
 
-      const payload = {
-        magasin_id: selectedMagasin.id,
-        date_visite: document.getElementById("visitDate").value,
-        commentaire: document.getElementById("visitComment").value.trim() || null
-      };
+        const ok = await deleteStoreFromSupabase(storeId);
+        if (!ok) {
+          alert("Impossible de supprimer le magasin.");
+          return;
+        }
 
-      const { error } = await supabase
-        .from("visites")
-        .insert([payload]);
-
-      if (error) {
-        message.innerHTML = `<div class="error">Erreur : ${escapeHTML(error.message)}</div>`;
-        return;
-      }
-
-      message.innerHTML = `<div class="success">Visite ajoutée avec succès.</div>`;
-
-      setTimeout(() => {
-        closeVisitModal();
-        renderMagasinDetail();
-      }, 500);
+        renderApp();
+      });
     });
-async function deleteSelectedMagasin() {
-  if (!selectedMagasin) return;
+  }
 
-  const confirmation = confirm(
-    `Tu es sûr de vouloir supprimer le magasin "${selectedMagasin.nom}" ?\n\nIl ne sera plus visible dans le CRM.`
-  );
-
-  if (!confirmation) return;
-
-  const { error } = await supabase
-    .from("magasins")
-    .update({
-      archive: true,
-      updated_at: new Date().toISOString()
-    })
-    .eq("id", selectedMagasin.id);
-
-  if (error) {
-    alert("Erreur lors de la suppression : " + error.message);
+  if (!currentStore) {
+    right.innerHTML = `<div class="subtext">Sélectionne un magasin.</div>`;
+    container.appendChild(left);
+    container.appendChild(right);
     return;
   }
 
-  alert("Magasin supprimé du CRM.");
+  const st = getStoreState(currentStore.id);
 
-  selectedMagasin = null;
-  await loadDashboard();
+  right.innerHTML = `
+    <div style="font-size:13px;font-weight:600;">${currentStore.name}</div>
+    <div class="card" style="margin-top:10px;padding:12px;">
+      <div style="font-size:13px;font-weight:600;">Visites terrain</div>
+      <div style="margin-top:6px;">
+        ${st.visits.length
+          ? st.visits.slice().reverse().map((visit, i) => {
+              const idx = st.visits.length - 1 - i;
+              return `
+                <div style="margin-bottom:8px;">
+                  <input type="date" value="${visit.date}" data-edit-visit="${idx}" />
+                  <textarea
+  class="visit-note"
+  placeholder="Commentaire de visite"
+  data-note-visit="${idx}"
+>${visit.note || ""}</textarea>
+                  <button class="secondary" data-delete-visit="${idx}">🗑️</button>
+                </div>
+              `;
+            }).join("")
+          : `<span class="subtext">Aucune visite renseignée</span>`
+        }
+      </div>
+      <button id="addVisitBtn" style="margin-top:8px;">+ Ajouter une visite aujourd'hui</button>
+    </div>
+  `;
+
+  right.querySelector("#addVisitBtn").addEventListener("click", () => {
+    const today = todayLocalISO();
+    if (!st.visits.some(v => v.date === today)) {
+      st.visits.push({
+        date: today,
+        note: ""
+      });
+      saveStoreToSupabase(currentStore.id);
+      renderApp();
+    }
+  });
+
+  right.querySelectorAll("[data-edit-visit]").forEach(inp => {
+    inp.addEventListener("change", () => {
+      const index = Number(inp.dataset.editVisit);
+      const newDate = inp.value;
+      if (!newDate) return;
+
+      if (st.visits.some((v, i) => v.date === newDate && i !== index)) {
+        alert("Une visite existe déjà à cette date.");
+        renderApp();
+        return;
+      }
+
+      st.visits[index].date = newDate;
+      saveStoreToSupabase(currentStore.id);
+      renderApp();
+    });
+  });
+
+  right.querySelectorAll("[data-note-visit]").forEach(txt => {
+    txt.addEventListener("blur", () => {
+      const index = Number(txt.dataset.noteVisit);
+      st.visits[index].note = txt.value;
+      saveWithDebounce(currentStore.id);
+    });
+  });
+
+  right.querySelectorAll("[data-delete-visit]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const index = Number(btn.dataset.deleteVisit);
+      if (!confirm("Supprimer cette visite ?")) return;
+      st.visits.splice(index, 1);
+      saveStoreToSupabase(currentStore.id);
+      renderApp();
+    });
+  });
+
+  container.appendChild(left);
+  container.appendChild(right);
 }
-    renderHome();
+
+    function renderFruitsLegumesTab(container, stores, currentStore) {
+      container.innerHTML = "";
+      const left = document.createElement("div");
+      const right = document.createElement("div");
+
+      left.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+          <div>
+            <div style="font-size:13px;font-weight:600;">Magasins · Fruits & Légumes</div>
+            <div class="subtext">Aperçu F&L (commande + objectif + actuel + progression), puis détail par saisons à droite.</div>
+          </div>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Magasin</th>
+              <th>Commande</th>
+              <th>Total montants 2025</th>
+              <th>Total montant 2026</th>
+              <th>Taux d’atteinte</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${stores.map(s => {
+              const st = getStoreState(s.id);
+              const commande = st.flCommande || "";
+              const total2025 = computeFL2025Total(s.id);
+              const totalActuel = computeFLActualTotal(s.id);
+              const progression = computeFLProgression(totalActuel, total2025);
+              return `
+                <tr data-id="${s.id}">
+                  <td>${s.name}</td>
+                  <td>
+                    <select data-fl-commande="${s.id}">
+                      <option value="">NC</option>
+                      <option value="Oui" ${commande === "Oui" ? "selected" : ""}>Oui</option>
+                      <option value="Non" ${commande === "Non" ? "selected" : ""}>Non</option>
+                    </select>
+                  </td>
+                  <td>${euro(total2025)}</td>
+                  <td>${euro(totalActuel)}</td>
+                  <td>${progression}</td>
+                </tr>
+              `;
+            }).join("")}
+          </tbody>
+        </table>
+      `;
+
+      left.querySelectorAll("tbody tr").forEach(tr => {
+        tr.addEventListener("click", e => {
+          if (e.target.tagName.toLowerCase() === "select") return;
+          currentStoreId = tr.dataset.id;
+          renderApp();
+        });
+      });
+
+      left.querySelectorAll("select[data-fl-commande]").forEach(sel => {
+        sel.addEventListener("change", () => {
+          const id = sel.dataset.flCommande;
+          const st = getStoreState(id);
+          st.flCommande = sel.value;
+          saveStoreToSupabase(id);
+        });
+      });
+  if (currentStore) {
+  renderFlRightPanel(right, currentStore);
+} else {
+  right.innerHTML = '<div class="subtext">Sélectionne un magasin dans la liste.</div>';
+}
+
+      container.appendChild(left);
+      container.appendChild(right);
+    }
+
+    function updateEngagementRow(storeId) {
+      const row = document.querySelector(`tr[data-id="${storeId}"]`);
+      if (!row) return;
+      const st = getStoreState(storeId);
+      const engagedCount = WAVES.filter(w => st.waves[w.id] === "Engagé").length;
+      const total = computeEngagementTotal(storeId);
+      const tds = row.querySelectorAll("td");
+      if (tds[1]) tds[1].textContent = engagedCount;
+      if (tds[2]) tds[2].textContent = euro(total);
+    }
+
+    function renderEngagementTab(container, stores, currentStore) {
+      const left = document.createElement("div");
+      const right = document.createElement("div");
+
+      left.innerHTML = `
+        <div>
+          <div style="font-size:13px;font-weight:600;">Magasins · Engagement</div>
+          <div class="subtext">Suivi des vagues d'engagement.</div>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Magasin</th>
+              <th>Vagues engagées</th>
+              <th>Total engagé</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${stores.map(s => {
+              const st = getStoreState(s.id);
+              const engagedCount = WAVES.filter(w => st.waves[w.id] === "Engagé").length;
+              const total = computeEngagementTotal(s.id);
+              return `
+                <tr data-id="${s.id}">
+                  <td>${s.name}</td>
+                  <td>${engagedCount}</td>
+                  <td>${euro(total)}</td>
+                </tr>
+              `;
+            }).join("")}
+          </tbody>
+        </table>
+      `;
+
+      left.querySelectorAll("tbody tr").forEach(tr => {
+        tr.addEventListener("click", () => {
+          currentStoreId = tr.dataset.id;
+          renderApp();
+        });
+      });
+
+      if (!currentStore) {
+        right.innerHTML = `<div class="subtext">Sélectionne un magasin.</div>`;
+        container.appendChild(left);
+        container.appendChild(right);
+        return;
+      }
+
+      if (currentStore) {
+  renderEngRightPanel(right, currentStore);
+} else {
+  right.innerHTML = '<div class="subtext">Sélectionne un magasin.</div>';
+}
+
+      container.appendChild(left);
+      container.appendChild(right);
+    }
+    function renderFlRightPanel(right, currentStore) {
+  const st = getStoreState(currentStore.id);
+
+  if (!SEASONS.includes(currentFlSeason)) currentFlSeason = "Janvier";
+      function ensureMonth(st, month){
+  // garantir l'objet flBySeason
+  if (!st.flBySeason || typeof st.flBySeason !== "object") {
+    st.flBySeason = defaultFlBySeason();
+  }
+
+  // garantir le mois
+  if (!st.flBySeason[month] || typeof st.flBySeason[month] !== "object") {
+    st.flBySeason[month] = { ordered: "", amount2025: "", amount2026: "", plan: "" };
+  }
+
+  const d = st.flBySeason[month];
+
+  // compat anciennes clés
+  if (d.amount2026 == null && d.amount != null) d.amount2026 = d.amount;
+
+  // normalisation
+  if (d.ordered == null) d.ordered = "";
+  if (d.amount2025 == null) d.amount2025 = "";
+  if (d.amount2026 == null) d.amount2026 = "";
+  if (d.plan == null) d.plan = "";
+
+  return d;
+}
+ const data = ensureMonth(st, currentFlSeason);
+
+  const totalActuel = computeFLActualTotal(currentStore.id); // somme 2026
+  const totalTarget = computeFL2025Total(currentStore.id);
+const progression = computeFLProgression(totalActuel, totalTarget);
+
+  function computeDeltaPct(v2026, v2025){
+    const a = Number(v2026 || 0);
+    const b = Number(v2025 || 0);
+    if (b === 0 && a === 0) return "0 %";
+    if (b === 0) return "—";
+    const pct = ((a - b) / b) * 100;
+    const sign = pct > 0 ? "+" : "";
+    return sign + Math.round(pct) + " %";
+  }
+
+  function refreshDelta(){
+    const base2025 = Number(st.flBySeason[currentFlSeason]?.amount2025 || 0);
+    const v2026 = Number(st.flBySeason[currentFlSeason]?.amount2026 || 0);
+    const el = right.querySelector("#monthDeltaPct");
+    if (el) el.textContent = computeDeltaPct(v2026, base2025);
+  }
+
+  right.innerHTML = `
+    <div style="font-size:13px;font-weight:600;">${currentStore.name}</div>
+
+    <div class="card" style="margin-top:10px;padding:12px;">
+      <div class="subtext">
+        Objectif : <b>${euro(totalTarget)}</b> ·
+        Actuel (2026) : <b data-kpi-fl-actual>${euro(totalActuel)}</b> ·
+        Progression : <b>${progression}</b>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:10px;padding:12px;">
+      <div class="tabs" style="flex-wrap:wrap;">
+        ${SEASONS.map(month => `
+          <button class="tab-btn ${currentFlSeason === month ? "active" : ""}"
+                  data-fl-season="${month}">
+            ${month}
+          </button>
+        `).join("")}
+      </div>
+
+      <label>Commande F&L</label>
+      <select id="seasonOrdered">
+        <option value="">NC</option>
+        <option value="Oui" ${data.ordered === "Oui" ? "selected" : ""}>Oui</option>
+        <option value="Non" ${data.ordered === "Non" ? "selected" : ""}>Non</option>
+      </select>
+
+      <label>Montant 2025 (admin)</label>
+      <input id="monthAmount2025"
+             value="${data.amount2025 ?? ""}"
+             placeholder="Montant 2025"
+             ${currentUser.role === "admin" ? "" : "disabled"} />
+
+      <label>Montant 2026 (commercial)</label>
+      <input id="monthAmount2026"
+             value="${data.amount2026 ?? ""}"
+             placeholder="Ex: 2500 ou +300 ou 1000+500-200" />
+
+      <div class="subtext" style="margin-top:6px;">
+        Évolution 2026 vs 2025 : <b id="monthDeltaPct">—</b>
+      </div>
+
+      <label style="margin-top:10px;">Plan d'action</label>
+      <textarea id="seasonPlan" rows="4">${data.plan || ""}</textarea>
+    </div>
+  `;
+
+  // Tabs mois
+  right.querySelectorAll("[data-fl-season]").forEach(btn => {
+    btn.onclick = (e) => {
+      e.stopPropagation();
+      currentFlSeason = btn.dataset.flSeason;
+      renderFlRightPanel(right, currentStore);
+    };
+  });
+
+  // Commande
+  right.querySelector("#seasonOrdered").onchange = e => {
+    st.flBySeason[currentFlSeason].ordered = e.target.value;
+    saveWithDebounce(currentStore.id);
+  };
+
+  // Plan
+  right.querySelector("#seasonPlan").addEventListener("input", (e) => {
+    st.flBySeason[currentFlSeason].plan = e.target.value;
+    saveWithDebounce(currentStore.id);
+  });
+
+  // 2025 admin only
+  const input2025 = right.querySelector("#monthAmount2025");
+  if (input2025) {
+    input2025.addEventListener("change", () => {
+      if (currentUser.role !== "admin") return;
+      const v = Number(input2025.value || 0);
+      st.flBySeason[currentFlSeason].amount2025 = Number.isNaN(v) ? 0 : v;
+      saveWithDebounce(currentStore.id);
+      updateFlKpisLive(currentStore.id);
+      refreshDelta();
+    });
+  }
+
+  // 2026 commercial (avec + / - / expression)
+  const input2026 = right.querySelector("#monthAmount2026");
+  if (input2026) {
+    input2026.addEventListener("change", function () {
+      const txt = this.value.trim();
+
+      if (!txt) {
+        st.flBySeason[currentFlSeason].amount2026 = 0;
+        this.value = "";
+        updateFlKpisLive(currentStore.id);
+        saveWithDebounce(currentStore.id);
+        refreshDelta();
+        return;
+      }
+
+      const current = Number(st.flBySeason[currentFlSeason].amount2026 || 0);
+      let result;
+
+      if (txt.startsWith("+") || txt.startsWith("-")) {
+        result = current + Number(txt);
+      } else if (txt.includes("+") || txt.includes("-")) {
+        result = safeCalcExpression(txt);
+      } else {
+        result = Number(txt);
+      }
+
+      if (Number.isNaN(result)) return;
+
+      st.flBySeason[currentFlSeason].amount2026 = result;
+      this.value = result;
+
+      updateFlKpisLive(currentStore.id);
+      saveWithDebounce(currentStore.id);
+      refreshDelta();
+    });
+  }
+
+  refreshDelta();
+}
+    function renderEngRightPanel(right, currentStore) {
+  const st = getStoreState(currentStore.id);
+  const wave = WAVES.find(w => w.id === currentEngWave);
+  const data = st.engagementByWave[currentEngWave] || { name: "", amount: "" };
+  const status = st.waves[currentEngWave] || "Non concerné";
+  const notes = st.engNotesByWave?.[currentEngWave] || "";
+
+  right.innerHTML = `
+    <div style="font-size:13px;font-weight:600;">${currentStore.name}</div>
+
+    <div class="card" style="margin-top:10px;padding:12px;">
+      <div class="tabs">
+        ${WAVES.map(w => `
+          <button class="tab-btn ${currentEngWave === w.id ? "active" : ""}"
+                  data-eng-wave="${w.id}">
+            ${w.label}
+          </button>
+        `).join("")}
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:10px;padding:12px;">
+      <label>Statut</label>
+      <select id="engStatus">
+        ${WAVE_STATUSES.map(s => `
+          <option ${s === status ? "selected" : ""}>${s}</option>
+        `).join("")}
+      </select>
+
+      <label>Nom</label>
+      <input id="engName" value="${data.name || ""}" />
+
+      <label>Montant</label>
+      <input type="number" id="engAmount" value="${data.amount || ""}" />
+
+      <label>Notes</label>
+      <textarea id="engNotes">${notes}</textarea>
+    </div>
+  `;
+
+  right.querySelectorAll("[data-eng-wave]").forEach(btn => {
+  btn.onclick = (e) => {
+    e.stopPropagation();
+    currentEngWave = btn.dataset.engWave;
+    renderEngRightPanel(right, currentStore);
+  };
+});
+
+  right.querySelector("#engStatus").onchange = e => {
+    st.waves[currentEngWave] = e.target.value;
+    updateEngagementRow(currentStore.id);
+    saveWithDebounce(currentStore.id);
+  };
+
+  right.querySelector("#engName").onblur = e => {
+    st.engagementByWave[currentEngWave].name = e.target.value;
+    saveWithDebounce(currentStore.id);
+  };
+
+  right.querySelector("#engAmount").onblur = e => {
+    st.engagementByWave[currentEngWave].amount = e.target.value;
+    updateEngagementRow(currentStore.id);
+    saveWithDebounce(currentStore.id);
+  };
+
+  right.querySelector("#engNotes").onblur = e => {
+    st.engNotesByWave[currentEngWave] = e.target.value;
+    saveWithDebounce(currentStore.id);
+  };
+}
+ let currentPromoMonth = "2026-01";
+
+function renderPromoTab(container, stores, currentStore) {
+  container.innerHTML = "";
+
+  const left = document.createElement("div");
+  const right = document.createElement("div");
+
+  if (!PROMO_MONTHS.includes(currentPromoMonth)) {
+    currentPromoMonth = PROMO_MONTHS[0] || "2026-01";
+  }
+
+  left.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;">
+      <div>
+        <div style="font-size:13px;font-weight:600;">Promotions</div>
+        <div class="subtext">Suivi promo par mois.</div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:10px;padding:12px;">
+      <div class="tabs" style="flex-wrap:wrap;">
+        ${PROMO_MONTHS.map(month => `
+          <button class="tab-btn ${currentPromoMonth === month ? "active" : ""}" data-promo-month="${month}">
+            ${month}
+          </button>
+        `).join("")}
+      </div>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Magasin</th>
+          <th>% commandé</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${stores.map(s => {
+          const percent = computePromoPercent(s, currentPromoMonth);
+          return `
+            <tr data-id="${s.id}">
+              <td>${s.name}</td>
+              <td>${percent === "—" ? "—" : percent + " %"}</td>
+            </tr>
+          `;
+        }).join("")}
+      </tbody>
+    </table>
+  `;
+
+  left.querySelectorAll("[data-promo-month]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      currentPromoMonth = btn.dataset.promoMonth;
+      renderApp();
+    });
+  });
+
+  left.querySelectorAll("tbody tr").forEach(tr => {
+    tr.addEventListener("click", () => {
+      currentStoreId = tr.dataset.id;
+      renderApp();
+    });
+  });
+
+  if (!currentStore) {
+    right.innerHTML = `<div class="subtext">Sélectionne un magasin</div>`;
+    container.appendChild(left);
+    container.appendChild(right);
+    return;
+  }
+
+  const promoList = getPromoList(currentStore, currentPromoMonth);
+  const promoState = getPromoState(currentStore.id, currentPromoMonth);
+  const currentFormat = getStoreFormat(currentStore);
+
+  right.innerHTML = `
+    <div style="font-size:13px;font-weight:600;">${currentStore.name}</div>
+
+    <div class="card" style="margin-top:10px;padding:12px;">
+      <div class="subtext">Mois sélectionné : <b>${currentPromoMonth}</b> · Format : <b>${currentFormat}</b></div>
+    </div>
+
+    ${currentUser.role === "admin" ? `
+      <div class="card" style="margin-top:10px;padding:12px;">
+        <div style="font-size:12px;font-weight:700;margin-bottom:8px;">Admin · Ajouter un mois promo</div>
+
+        <label>Nouveau mois</label>
+        <input id="newPromoMonth" placeholder="Ex: 2026-02" />
+
+        <button id="addPromoMonthBtn" style="margin-top:10px;">+ Ajouter le mois</button>
+      </div>
+
+      <div class="card" style="margin-top:10px;padding:12px;">
+        <div style="font-size:12px;font-weight:700;margin-bottom:8px;">Admin · Ajouter un produit promo</div>
+
+        <label>Produit</label>
+        <input id="newPromoLabel" placeholder="Ex: Coca-Cola 33cl" />
+
+        <label>Format</label>
+        <select id="newPromoFormat">
+          <option value="proxi">proxi</option>
+          <option value="proxi_super">proxi_super</option>
+        </select>
+
+        <button id="addPromoProductBtn" style="margin-top:10px;">+ Ajouter</button>
+      </div>
+    ` : ""}
+
+    <div class="card" style="margin-top:10px;padding:12px;">
+      <div style="font-size:13px;font-weight:600;margin-bottom:8px;">Produits promo</div>
+
+      ${promoList.length ? `
+        <table>
+          <thead>
+            <tr>
+              <th>Produit</th>
+              <th>Commandé</th>
+              ${currentUser.role === "admin" ? `<th>Action admin</th>` : ""}
+            </tr>
+          </thead>
+          <tbody>
+            ${promoList.map(p => `
+              <tr>
+                <td>${p.label}</td>
+                <td>
+                  <input type="checkbox"
+                    ${promoState[p.id]?.checked ? "checked" : ""}
+                    data-check="${p.id}">
+                </td>
+                ${currentUser.role === "admin" ? `
+                  <td>
+                    <button class="secondary" data-delete-promo="${p.rowId}">Supprimer</button>
+                  </td>
+                ` : ""}
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      ` : `<div class="subtext">Aucun produit promo sur ce mois.</div>`}
+    </div>
+  `;
+
+  right.querySelectorAll("[data-check]").forEach(cb => {
+    cb.addEventListener("change", () => {
+      const id = cb.dataset.check;
+      promoState[id] = promoState[id] || {};
+      promoState[id].checked = cb.checked;
+      saveWithDebounce(currentStore.id);
+      renderApp();
+    });
+  });
+
+  if (currentUser.role === "admin") {
+    const addBtn = right.querySelector("#addPromoProductBtn");
+    const labelInput = right.querySelector("#newPromoLabel");
+    const formatSelect = right.querySelector("#newPromoFormat");
+
+    if (addBtn && labelInput && formatSelect) {
+      addBtn.addEventListener("click", async () => {
+        const label = labelInput.value.trim();
+        const storeFormat = formatSelect.value;
+
+        if (!label) {
+          alert("Renseigne un produit promo.");
+          return;
+        }
+
+        const ok = await addPromoProductToSupabase({
+          monthKey: currentPromoMonth,
+          storeFormat,
+          label
+        });
+
+        if (!ok) {
+          alert("Impossible d'ajouter le produit promo.");
+          return;
+        }
+
+        labelInput.value = "";
+        renderApp();
+      });
+    }
+
+    const addMonthBtn = right.querySelector("#addPromoMonthBtn");
+    const monthInput = right.querySelector("#newPromoMonth");
+
+    if (addMonthBtn && monthInput) {
+      addMonthBtn.addEventListener("click", async () => {
+        const monthKey = monthInput.value.trim();
+
+        if (!monthKey) {
+          alert("Renseigne un mois au format AAAA-MM.");
+          return;
+        }
+
+        const ok = await createPromoMonthInSupabase(monthKey);
+
+        if (!ok) {
+          alert("Impossible de créer le mois promo.");
+          return;
+        }
+
+        monthInput.value = "";
+        renderApp();
+      });
+    }
+
+    right.querySelectorAll("[data-delete-promo]").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        const rowId = btn.dataset.deletePromo;
+
+        const ok = await deletePromoProductFromSupabase(rowId);
+
+        if (!ok) {
+          alert("Impossible de supprimer le produit promo.");
+          return;
+        }
+
+        renderApp();
+      });
+    });
+  }
+
+  container.appendChild(left);
+  container.appendChild(right);
+}
+
+    let currentDetentionPeriod = "2025-11_2026-01";
+
+let DETENTION_PERIODS = [
+  "2025-11_2026-01"
+];
+
+function detentionColor(v){
+  return "";
+}
+
+function getDetentionState(storeId, period) {
+  const st = getStoreState(storeId);
+
+  if (!st.detentionByPeriod[period]) {
+    st.detentionByPeriod[period] = {
+      rangA: "",
+      top200: "",
+      top300: "",
+      bio: ""
+    };
+  }
+
+  return st.detentionByPeriod[period];
+}
+
+function computeDetentionScore(det) {
+  const values = [
+    Number(det?.rangA || 0),
+    Number(det?.top200 || 0),
+    Number(det?.top300 || 0),
+    Number(det?.bio || 0)
+  ];
+
+  const hasData = values.some(v => v > 0);
+  if (!hasData) return null;
+
+  return Math.round(values.reduce((a, b) => a + b, 0) / 4);
+}
+
+function getPreviousDetentionPeriod(period) {
+  const sorted = [...DETENTION_PERIODS].sort();
+  const idx = sorted.indexOf(period);
+  if (idx <= 0) return null;
+  return sorted[idx - 1];
+}
+
+function computeDetentionProgress(storeId, period) {
+  const previousPeriod = getPreviousDetentionPeriod(period);
+  if (!previousPeriod) return "—";
+
+  const currentDet = getDetentionState(storeId, period);
+  const previousDet = getDetentionState(storeId, previousPeriod);
+
+  const currentScore = computeDetentionScore(currentDet);
+  const previousScore = computeDetentionScore(previousDet);
+
+  if (currentScore == null || previousScore == null) return "—";
+
+  const diff = currentScore - previousScore;
+  if (diff > 0) return `+${diff} %`;
+  if (diff < 0) return `${diff} %`;
+  return "0 %";
+}
+
+function renderDetentionTab(container, stores, currentStore){
+    container.innerHTML = "";
+
+  const left = document.createElement("div");
+  const right = document.createElement("div");
+
+  left.innerHTML = `
+  <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:12px;margin-bottom:12px;flex-wrap:wrap;">
+    <div>
+      <div style="font-size:13px;font-weight:600;">Détention</div>
+      <div class="subtext">Consultation et suivi par période.</div>
+    </div>
+
+    <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;">
+      <div style="min-width:220px;">
+        <label>Période</label>
+        <select id="detentionPeriodSelect">
+          ${DETENTION_PERIODS.map(period => `
+            <option value="${period}" ${period === currentDetentionPeriod ? "selected" : ""}>
+              ${period}
+            </option>
+          `).join("")}
+        </select>
+      </div>
+
+      ${currentUser.role === "admin" ? `
+        <div style="min-width:220px;">
+          <label>Nouvelle période</label>
+          <input id="newDetentionPeriod" placeholder="Ex: 2026-02_2026-04" />
+        </div>
+        <button id="addDetentionPeriodBtn">+ Ajouter</button>
+      ` : ""}
+    </div>
+  </div>
+
+  <table>
+    <thead>
+  <tr>
+    <th>Magasin</th>
+    <th>Rang A</th>
+    <th>TOP200</th>
+    <th>TOP300</th>
+    <th>BIO</th>
+    <th class="score-cell">Score</th>
+    <th>Progression</th>
+  </tr>
+</thead>
+      <tbody>
+        ${[...stores]
+.sort((a,b)=>{
+  const da = getDetentionState(a.id,currentDetentionPeriod);
+  const db = getDetentionState(b.id,currentDetentionPeriod);
+
+  const avgA = (Number(da.rangA||0)+Number(da.top200||0)+Number(da.top300||0)+Number(da.bio||0))/4;
+  const avgB = (Number(db.rangA||0)+Number(db.top200||0)+Number(db.top300||0)+Number(db.bio||0))/4;
+
+  const hasDataA = da.rangA||da.top200||da.top300||da.bio;
+  const hasDataB = db.rangA||db.top200||db.top300||db.bio;
+
+  if(!hasDataA && !hasDataB) return 0;
+  if(!hasDataA) return 1;
+  if(!hasDataB) return -1;
+
+  return avgB - avgA;
+})
+.map(s=>{
+  const d = getDetentionState(s.id, currentDetentionPeriod);
+  const score = computeDetentionScore(d);
+  const progression = computeDetentionProgress(s.id, currentDetentionPeriod);
+
+  return `
+  <tr data-id="${s.id}">
+    <td>${s.name}</td>
+    <td>${d.rangA || 0}%</td>
+    <td>${d.top200 || 0}%</td>
+    <td>${d.top300 || 0}%</td>
+    <td>${d.bio || 0}%</td>
+    <td class="score-cell"><b>${score != null ? (score + "%") : "—"}</b></td>
+    <td>${progression}</td>
+  </tr>`;
+}).join("")}
+      </tbody>
+    </table>
+  `;
+
+  left.querySelectorAll("tr[data-id]").forEach(tr=>{
+    tr.onclick = ()=>{
+      currentStoreId = tr.dataset.id;
+      renderApp();
+    }
+  });
+  const periodSelect = left.querySelector("#detentionPeriodSelect");
+if (periodSelect) {
+  periodSelect.addEventListener("change", () => {
+    currentDetentionPeriod = periodSelect.value;
+    renderApp();
+  });
+}
+
+if (currentUser.role === "admin") {
+  const addBtn = left.querySelector("#addDetentionPeriodBtn");
+  const input = left.querySelector("#newDetentionPeriod");
+
+  if (addBtn && input) {
+    addBtn.addEventListener("click", async () => {
+      const newPeriod = input.value.trim();
+      if (!newPeriod) return;
+
+      if (!DETENTION_PERIODS.includes(newPeriod)) {
+        DETENTION_PERIODS.push(newPeriod);
+        DETENTION_PERIODS.sort();
+      }
+
+      currentDetentionPeriod = newPeriod;
+
+      STORES.forEach(store => {
+        const st = getStoreState(store.id);
+        if (!st.detentionByPeriod[newPeriod]) {
+          st.detentionByPeriod[newPeriod] = {
+            rangA: "",
+            top200: "",
+            top300: "",
+            bio: ""
+          };
+        }
+      });
+
+      input.value = "";
+
+      await saveDetentionPeriodForAllStores(newPeriod);
+
+      renderApp();
+    });
+  }
+}
+
+  if(!currentStore){
+    container.appendChild(left);
+    return;
+  }
+
+  const d = getDetentionState(currentStore.id,currentDetentionPeriod);
+
+  right.innerHTML = `
+    <div style="font-size:13px;font-weight:600;margin-bottom:10px;">${currentStore.name}</div>
+
+    <label>Rang A PGC</label>
+${currentUser.role === "admin"
+  ? `<input type="number" value="${d.rangA||""}" data-det="rangA">`
+  : `<div>${detentionColor(d.rangA)} ${d.rangA||0}%</div>`
+}
+
+<label>TOP 200 MDC</label>
+${currentUser.role === "admin"
+  ? `<input type="number" value="${d.top200||""}" data-det="top200">`
+  : `<div>${detentionColor(d.top200)} ${d.top200||0}%</div>`
+}
+
+<label>TOP 300 MN</label>
+${currentUser.role === "admin"
+  ? `<input type="number" value="${d.top300||""}" data-det="top300">`
+  : `<div>${detentionColor(d.top300)} ${d.top300||0}%</div>`
+}
+
+<label>TOP BIO MDC</label>
+${currentUser.role === "admin"
+  ? `<input type="number" value="${d.bio||""}" data-det="bio">`
+  : `<div>${detentionColor(d.bio)} ${d.bio||0}%</div>`
+}
+  `;
+
+  if (currentUser.role === "admin") {
+  right.querySelectorAll("[data-det]").forEach(inp=>{
+    inp.onblur = ()=>{
+      d[inp.dataset.det] = Number(inp.value||0);
+      saveWithDebounce(currentStore.id);
+      renderApp();
+    }
+  });
+}
+
+container.appendChild(left);
+container.appendChild(right);
+}
+
+   async function init() {
+  await loadStoresFromSupabase();
+  await loadPromoCatalogFromSupabase();
+  await loadStateFromSupabase();
+  renderLogin();
+}
+
+    init();
   </script>
 </body>
 </html>
