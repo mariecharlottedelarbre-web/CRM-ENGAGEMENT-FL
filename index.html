@@ -388,176 +388,6 @@ function slugifyStoreName(name) {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
 }
-    function slugifyPromoLabel(label) {
-  return String(label || "")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-}
-
-function rebuildPromoCatalog(rows) {
-  const catalog = {};
-  const monthsSet = new Set();
-
-  (rows || []).forEach(row => {
-    const month = row.month_key;
-    const format = row.store_format;
-
-    monthsSet.add(month);
-
-    if (!catalog[month]) catalog[month] = {};
-    if (!catalog[month][format]) catalog[month][format] = [];
-
-    // ligne technique pour créer le mois sans afficher un faux produit
-    if (row.product_id === "__month__" && row.label === "__month__") {
-      return;
-    }
-
-    catalog[month][format].push({
-  rowId: row.id,
-  id: row.product_id,
-  label: row.label
-});
-  });
-
-  Object.keys(catalog).forEach(month => {
-    Object.keys(catalog[month]).forEach(format => {
-      catalog[month][format].sort((a, b) => a.label.localeCompare(b.label, "fr"));
-    });
-  });
-
-  PROMOS = catalog;
-  PROMO_MONTHS = Array.from(monthsSet).sort();
-
-  if (!PROMO_MONTHS.length) PROMO_MONTHS = ["2026-01"];
-}
-
-async function loadPromoCatalogFromSupabase() {
-  try {
-    const { data, error } = await sb
-      .from("promo_catalog")
-      .select("*")
-      .order("month_key", { ascending: true })
-      .order("store_format", { ascending: true })
-      .order("label", { ascending: true });
-
-    if (error) {
-      console.error("❌ Erreur chargement promo_catalog :", error.message || error);
-      return;
-    }
-
-    rebuildPromoCatalog(data || []);
-    console.log("✅ Promo catalog chargé");
-  } catch (err) {
-    console.error("❌ Erreur loadPromoCatalogFromSupabase :", err);
-  }
-}
-
-async function addPromoProductToSupabase({ monthKey, storeFormat, label }) {
-  if (!currentUser || currentUser.role !== "admin") return false;
-
-  const productId = slugifyPromoLabel(label);
-
-  setGlobalSaveStatus("saving");
-
-  try {
-    const payload = {
-      month_key: monthKey,
-      store_format: storeFormat,
-      product_id: productId,
-      label
-    };
-
-    const { error } = await sb.from("promo_catalog").insert(payload);
-
-    if (error) {
-      console.error("❌ Erreur ajout produit promo :", error.message || error);
-      setGlobalSaveStatus("error");
-      return false;
-    }
-
-    await loadPromoCatalogFromSupabase();
-    setGlobalSaveStatus("saved");
-    return true;
-  } catch (err) {
-    console.error("❌ Erreur addPromoProductToSupabase :", err);
-    setGlobalSaveStatus("error");
-    return false;
-  }
-}
-
-async function deletePromoProductFromSupabase(rowId) {
-  if (!currentUser || currentUser.role !== "admin") return false;
-
-  setGlobalSaveStatus("saving");
-
-  try {
-    const { error } = await sb
-      .from("promo_catalog")
-      .delete()
-      .eq("id", rowId);
-
-    if (error) {
-      console.error("❌ Erreur suppression produit promo :", error.message || error);
-      setGlobalSaveStatus("error");
-      return false;
-    }
-
-    await loadPromoCatalogFromSupabase();
-    setGlobalSaveStatus("saved");
-    return true;
-  } catch (err) {
-    console.error("❌ Erreur deletePromoProductFromSupabase :", err);
-    setGlobalSaveStatus("error");
-    return false;
-  }
-}
-    async function createPromoMonthInSupabase(monthKey) {
-  if (!currentUser || currentUser.role !== "admin") return false;
-
-  const cleanMonth = String(monthKey || "").trim();
-
-  if (!/^\d{4}-\d{2}$/.test(cleanMonth)) {
-    alert("Format attendu : AAAA-MM (ex: 2026-02)");
-    return false;
-  }
-
-  if (PROMO_MONTHS.includes(cleanMonth)) {
-    currentPromoMonth = cleanMonth;
-    renderApp();
-    return true;
-  }
-
-  setGlobalSaveStatus("saving");
-
-  try {
-    const payload = {
-      month_key: cleanMonth,
-      store_format: "proxi",
-      product_id: "__month__",
-      label: "__month__"
-    };
-
-    const { error } = await sb.from("promo_catalog").insert(payload);
-
-    if (error) {
-      console.error("❌ Erreur création mois promo :", error.message || error);
-      setGlobalSaveStatus("error");
-      return false;
-    }
-
-    await loadPromoCatalogFromSupabase();
-    currentPromoMonth = cleanMonth;
-    setGlobalSaveStatus("saved");
-    return true;
-  } catch (err) {
-    console.error("❌ Erreur createPromoMonthInSupabase :", err);
-    setGlobalSaveStatus("error");
-    return false;
-  }
-}
     const USERS = {
       admins: [
         { id: "admin-marie-charlotte", name: "Marie-Charlotte", role: "admin" },
@@ -658,13 +488,20 @@ async function deletePromoProductFromSupabase(rowId) {
       { id:"allanche", name:"Allanche", ca2025:168103, commercialId:"vernay-benoit" }
     ];
 
+    // Engagement : suivi par mois au lieu des anciennes vagues
     const WAVES = [
-      { id: "wave1", label: "Vague 1" },
-      { id: "wave2", label: "Vague 2" },
-      { id: "wave3", label: "Vague 3" },
-      { id: "wave4", label: "Vague 4" },
-      { id: "wave5", label: "Vague 5" },
-      { id: "wave6", label: "Vague 6" }
+      { id: "Janvier", label: "Janvier" },
+      { id: "Février", label: "Février" },
+      { id: "Mars", label: "Mars" },
+      { id: "Avril", label: "Avril" },
+      { id: "Mai", label: "Mai" },
+      { id: "Juin", label: "Juin" },
+      { id: "Juillet", label: "Juillet" },
+      { id: "Août", label: "Août" },
+      { id: "Septembre", label: "Septembre" },
+      { id: "Octobre", label: "Octobre" },
+      { id: "Novembre", label: "Novembre" },
+      { id: "Décembre", label: "Décembre" }
     ];
 
     const SEASONS = [
@@ -672,43 +509,6 @@ async function deletePromoProductFromSupabase(rowId) {
   "Juillet","Août","Septembre","Octobre","Novembre","Décembre"
 ];
     const WAVE_STATUSES = ["Non concerné", "À faire", "En cours", "Engagé", "Refusé"];
-
-    let PROMOS = {};
-let PROMO_MONTHS = ["2026-01"];
-    const PROXI_SUPER_STORES = [
-  "montpellier-delicie",
-  "moussac",
-  "saint-jean-du-gard",
-  "lus-la-croix-haute",
-  "poulx-chenes",
-  "bouillargues",
-  "la-palud-verdon",
-  "moutiers-eglise",
-  "frejus-anc-comb-afn",
-  "comps-artuby",
-  "les-salles-verdon",
-  "mirabeau",
-  "bormes-mimosas-plage",
-  "cunlhat-domaize",
-  "propieres",
-  "legny-tarrets",
-  "val-thorens-temple",
-  "le-bourget-du-lac",
-  "courchevel",
-  "auris-oisans",
-  "vals-les-bains",
-  "langogne-capucins",
-  "st-mamet-salvetat",
-  "chadrac-pm",
-  "espaly-st-marcel",
-  "le-cheylard"
-];
-
-function getStoreFormat(store) {
-  return PROXI_SUPER_STORES.includes(store.id)
-    ? "proxi_super"
-    : "proxi";
-}
 
   const FL_OBJECTIFS_2025 = { 
   "saint-jean-du-gard": 43225,
@@ -842,14 +642,11 @@ function safeCalcExpression(expr){
 }
 
     function defaultEngagementByWave() {
-      return {
-        wave1: { name: "", amount: "" },
-        wave2: { name: "", amount: "" },
-        wave3: { name: "", amount: "" },
-        wave4: { name: "", amount: "" },
-        wave5: { name: "", amount: "" },
-        wave6: { name: "", amount: "" }
-      };
+      const out = {};
+      WAVES.forEach(m => {
+        out[m.id] = { name: "", amount: "" };
+      });
+      return out;
     }
 
     function normalizeFlData(any) {
@@ -977,30 +774,6 @@ function computeFL2025Total(storeId) {
       });
       return total;
     }
-function getPromoState(storeId, month) {
-  const st = getStoreState(storeId);
-  if (!st.promoByMonth[month]) st.promoByMonth[month] = {};
-  return st.promoByMonth[month];
-}
-
-function getPromoList(store, month) {
-  const format = getStoreFormat(store);
-  const list = PROMOS?.[month]?.[format];
-
-  if (Array.isArray(list) && list.length > 0) {
-    return list;
-  }
-
-  return PROMOS?.[month]?.proxi || [];
-}
-
-function computePromoPercent(store, month) {
-  const list = getPromoList(store, month);
-  if (!list.length) return "—";
-  const state = getPromoState(store.id, month);
-  const ordered = list.filter(p => state[p.id]?.checked).length;
-  return Math.round((ordered / list.length) * 100);
-}
     let STATE = {};
 
   // -------------------- GLOBAL SAVE STATUS --------------------
@@ -1213,7 +986,6 @@ cleanData.forEach(row => {
     buysEng: row.buys_eng || "",
     notesEng: row.notes_eng || "",
 
-    promoByMonth: row.promo_by_month || {},
     detentionByPeriod: row.detention_by_period || {}
   };
 });
@@ -1246,7 +1018,6 @@ console.log("✅ Chargé:", Object.keys(STATE).length, "magasins");
           visits: [],
           buysEng: "",
           notesEng: "",
-          promoByMonth: {},
           detentionByPeriod: {},
         };
       } else {
@@ -1255,7 +1026,6 @@ console.log("✅ Chargé:", Object.keys(STATE).length, "magasins");
         if (!STATE[id].engNotesByWave) STATE[id].engNotesByWave = {};
         if (STATE[id].flCommande === undefined) STATE[id].flCommande = "";
         if (!STATE[id].visits) STATE[id].visits = [];
-        if (!STATE[id].promoByMonth) STATE[id].promoByMonth = {};
         if (!STATE[id].detentionByPeriod) STATE[id].detentionByPeriod = {};
       }
       return STATE[id];
@@ -1287,7 +1057,6 @@ function saveWithDebounce(storeId) {
         visits: JSON.parse(JSON.stringify(st.visits || [])),
         buys_eng: st.buysEng || "",
         notes_eng: st.notesEng || "",
-        promo_by_month: JSON.parse(JSON.stringify(st.promoByMonth || {})),
         detention_by_period: JSON.parse(JSON.stringify(st.detentionByPeriod || {})),
       };
 
@@ -1353,7 +1122,7 @@ async function saveDetentionPeriodForAllStores(period) {
     let currentTab = "overview";
     let currentStoreId = null;
     let currentSearch = "";
-    let currentEngWave = "wave1";
+    let currentEngWave = "Janvier";
     let currentFlSeason = "Janvier";
     let adminPilotCommercial = "";   
 let adminPilotSearch = "";     
@@ -1470,7 +1239,7 @@ wrap.style.alignItems = "stretch";
         currentStoreId = null;
         currentSearch = "";
         currentFlSeason = "Janvier";
-        currentEngWave = "wave1";
+        currentEngWave = "Janvier";
         adminPilotCommercial = "";
 adminPilotSearch = "";
 adminPilotSort = { key: "lastVisit", dir: "asc" };
@@ -1494,7 +1263,7 @@ function getEngagedWavesCount(storeId){
   return WAVES.filter(w => st.waves?.[w.id] === "Engagé").length;
 }
 
-function computePilotRow(store, promoMonth, detentionPeriod){
+function computePilotRow(store, detentionPeriod){
   const st = getStoreState(store.id);
 
   const lastVisit = getLastVisitDate(store.id);
@@ -1509,7 +1278,6 @@ function computePilotRow(store, promoMonth, detentionPeriod){
     ? Math.round((Number(flActual || 0) / Number(flTarget)) * 100)
     : (flActual > 0 ? 100 : 0);
 
-  const promoPct = computePromoPercent(store, promoMonth);
 
   const det = getDetentionState(store.id, detentionPeriod);
   const detAvg = Math.round((Number(det.rangA||0)+Number(det.top200||0)+Number(det.top300||0)+Number(det.bio||0))/4);
@@ -1533,16 +1301,14 @@ function computePilotRow(store, promoMonth, detentionPeriod){
     flTarget,
     flPct,
 
-    promoPct,          // number or "—"
     detentionAvg       // number or ""
   };
 }
 
 function computeAdminPilotData(){
-  const promoMonth = (typeof currentPromoMonth === "string" && currentPromoMonth) ? currentPromoMonth : "2026-01";
   const detentionPeriod = (typeof currentDetentionPeriod === "string" && currentDetentionPeriod) ? currentDetentionPeriod : "2025-11_2026-01";
 
-  let rows = STORES.map(s => computePilotRow(s, promoMonth, detentionPeriod));
+  let rows = STORES.map(s => computePilotRow(s, detentionPeriod));
 
   const filterCommercial = currentCommercialFilter || adminPilotCommercial;
 if (filterCommercial) rows = rows.filter(r => r.commercialId === filterCommercial);
@@ -1564,11 +1330,6 @@ if (filterCommercial) rows = rows.filter(r => r.commercialId === filterCommercia
 
     if (key === "lastVisit") return (String(va||"").localeCompare(String(vb||""))) * mult;
 
-    if (key === "promoPct"){
-      const na = typeof va === "number" ? va : -1;
-      const nb = typeof vb === "number" ? vb : -1;
-      return (na - nb) * mult;
-    }
 
     const na = Number(va ?? 0);
     const nb = Number(vb ?? 0);
@@ -1586,7 +1347,6 @@ if (filterCommercial) rows = rows.filter(r => r.commercialId === filterCommercia
   const engagedStores = rows.filter(r => r.engagedWaves > 0).length;
 
   return {
-    promoMonth,
     detentionPeriod,
     rows,
     kpis: { totalStores, totalCA, totalFlActual, totalFlTarget, flProgress, totalVisits, engagedStores }
@@ -1675,7 +1435,7 @@ setGlobalSaveStatus("saved");
         const fl = computeFlKpis(currentUser);
         kpiCard.innerHTML = `
           <h1><span class="logo-dot"></span> CRM PROXI · Fruits & Légumes</h1>
-          <div class="subtext">Suivi F&L par saison (commande / montant / plan d'action).</div>
+          <div class="subtext">Suivi F&L par mois (commande / montant / plan d'action).</div>
           <div class="kpi-row">
             <div class="kpi-card">
               <div class="kpi-label">Total montants 2025 (objectif)</div>
@@ -1731,7 +1491,6 @@ setGlobalSaveStatus("saved");
   <button class="tab-btn ${currentTab === "list" ? "active" : ""}" data-tab="list">Magasins</button>
   <button class="tab-btn ${currentTab === "fl" ? "active" : ""}" data-tab="fl">Fruits & Légumes</button>
   <button class="tab-btn ${currentTab === "eng" ? "active" : ""}" data-tab="eng">Engagement</button>
-  <button class="tab-btn ${currentTab === "promo" ? "active" : ""}" data-tab="promo">Promo</button>
   <button class="tab-btn ${currentTab === "detention" ? "active" : ""}" data-tab="detention">Détention</button>
 </div>
       `;
@@ -1826,8 +1585,6 @@ setGlobalSaveStatus("saved");
   renderFruitsLegumesTab(content, stores, currentStore);
 } else if (currentTab === "eng") {
   renderEngagementTab(content, stores, currentStore);
-} else if (currentTab === "promo") {
-  renderPromoTab(content, stores, currentStore);
 } else if (currentTab === "detention") {
   renderDetentionTab(content, stores, currentStore);
 }
@@ -1842,7 +1599,7 @@ setGlobalSaveStatus("saved");
         currentStoreId = null;
         currentTab = "overview";
         currentFlSeason = "Janvier";
-        currentEngWave = "wave1";
+        currentEngWave = "Janvier";
         renderLogin();
       });
 
@@ -2174,13 +1931,13 @@ setGlobalSaveStatus("saved");
       left.innerHTML = `
         <div>
           <div style="font-size:13px;font-weight:600;">Magasins · Engagement</div>
-          <div class="subtext">Suivi des vagues d'engagement.</div>
+          <div class="subtext">Suivi des engagements par mois.</div>
         </div>
         <table>
           <thead>
             <tr>
               <th>Magasin</th>
-              <th>Vagues engagées</th>
+              <th>Mois engagés</th>
               <th>Total engagé</th>
             </tr>
           </thead>
@@ -2398,8 +2155,14 @@ const progression = computeFLProgression(totalActuel, totalTarget);
 }
     function renderEngRightPanel(right, currentStore) {
   const st = getStoreState(currentStore.id);
-  const wave = WAVES.find(w => w.id === currentEngWave);
-  const data = st.engagementByWave[currentEngWave] || { name: "", amount: "" };
+
+  if (!WAVES.some(w => w.id === currentEngWave)) currentEngWave = "Janvier";
+  if (!st.waves || typeof st.waves !== "object") st.waves = {};
+  if (!st.engagementByWave || typeof st.engagementByWave !== "object") st.engagementByWave = defaultEngagementByWave();
+  if (!st.engNotesByWave || typeof st.engNotesByWave !== "object") st.engNotesByWave = {};
+  if (!st.engagementByWave[currentEngWave]) st.engagementByWave[currentEngWave] = { name: "", amount: "" };
+
+  const data = st.engagementByWave[currentEngWave];
   const status = st.waves[currentEngWave] || "Non concerné";
   const notes = st.engNotesByWave?.[currentEngWave] || "";
 
@@ -2407,7 +2170,7 @@ const progression = computeFLProgression(totalActuel, totalTarget);
     <div style="font-size:13px;font-weight:600;">${currentStore.name}</div>
 
     <div class="card" style="margin-top:10px;padding:12px;">
-      <div class="tabs">
+      <div class="tabs" style="flex-wrap:wrap;">
         ${WAVES.map(w => `
           <button class="tab-btn ${currentEngWave === w.id ? "active" : ""}"
                   data-eng-wave="${w.id}">
@@ -2425,11 +2188,11 @@ const progression = computeFLProgression(totalActuel, totalTarget);
         `).join("")}
       </select>
 
-      <label>Nom</label>
-      <input id="engName" value="${data.name || ""}" />
+      <label>Engagement / action du mois</label>
+      <input id="engName" value="${data.name || ""}" placeholder="Ex: Opération locale, mise en avant, contrat..." />
 
-      <label>Montant</label>
-      <input type="number" id="engAmount" value="${data.amount || ""}" />
+      <label>Montant du mois</label>
+      <input type="number" id="engAmount" value="${data.amount || ""}" placeholder="Montant engagé" />
 
       <label>Notes</label>
       <textarea id="engNotes">${notes}</textarea>
@@ -2466,234 +2229,6 @@ const progression = computeFLProgression(totalActuel, totalTarget);
     saveWithDebounce(currentStore.id);
   };
 }
- let currentPromoMonth = "2026-01";
-
-function renderPromoTab(container, stores, currentStore) {
-  container.innerHTML = "";
-
-  const left = document.createElement("div");
-  const right = document.createElement("div");
-
-  if (!PROMO_MONTHS.includes(currentPromoMonth)) {
-    currentPromoMonth = PROMO_MONTHS[0] || "2026-01";
-  }
-
-  left.innerHTML = `
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;">
-      <div>
-        <div style="font-size:13px;font-weight:600;">Promotions</div>
-        <div class="subtext">Suivi promo par mois.</div>
-      </div>
-    </div>
-
-    <div class="card" style="margin-top:10px;padding:12px;">
-      <div class="tabs" style="flex-wrap:wrap;">
-        ${PROMO_MONTHS.map(month => `
-          <button class="tab-btn ${currentPromoMonth === month ? "active" : ""}" data-promo-month="${month}">
-            ${month}
-          </button>
-        `).join("")}
-      </div>
-    </div>
-
-    <table>
-      <thead>
-        <tr>
-          <th>Magasin</th>
-          <th>% commandé</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${stores.map(s => {
-          const percent = computePromoPercent(s, currentPromoMonth);
-          return `
-            <tr data-id="${s.id}">
-              <td>${s.name}</td>
-              <td>${percent === "—" ? "—" : percent + " %"}</td>
-            </tr>
-          `;
-        }).join("")}
-      </tbody>
-    </table>
-  `;
-
-  left.querySelectorAll("[data-promo-month]").forEach(btn => {
-    btn.addEventListener("click", () => {
-      currentPromoMonth = btn.dataset.promoMonth;
-      renderApp();
-    });
-  });
-
-  left.querySelectorAll("tbody tr").forEach(tr => {
-    tr.addEventListener("click", () => {
-      currentStoreId = tr.dataset.id;
-      renderApp();
-    });
-  });
-
-  if (!currentStore) {
-    right.innerHTML = `<div class="subtext">Sélectionne un magasin</div>`;
-    container.appendChild(left);
-    container.appendChild(right);
-    return;
-  }
-
-  const promoList = getPromoList(currentStore, currentPromoMonth);
-  const promoState = getPromoState(currentStore.id, currentPromoMonth);
-  const currentFormat = getStoreFormat(currentStore);
-
-  right.innerHTML = `
-    <div style="font-size:13px;font-weight:600;">${currentStore.name}</div>
-
-    <div class="card" style="margin-top:10px;padding:12px;">
-      <div class="subtext">Mois sélectionné : <b>${currentPromoMonth}</b> · Format : <b>${currentFormat}</b></div>
-    </div>
-
-    ${currentUser.role === "admin" ? `
-      <div class="card" style="margin-top:10px;padding:12px;">
-        <div style="font-size:12px;font-weight:700;margin-bottom:8px;">Admin · Ajouter un mois promo</div>
-
-        <label>Nouveau mois</label>
-        <input id="newPromoMonth" placeholder="Ex: 2026-02" />
-
-        <button id="addPromoMonthBtn" style="margin-top:10px;">+ Ajouter le mois</button>
-      </div>
-
-      <div class="card" style="margin-top:10px;padding:12px;">
-        <div style="font-size:12px;font-weight:700;margin-bottom:8px;">Admin · Ajouter un produit promo</div>
-
-        <label>Produit</label>
-        <input id="newPromoLabel" placeholder="Ex: Coca-Cola 33cl" />
-
-        <label>Format</label>
-        <select id="newPromoFormat">
-          <option value="proxi">proxi</option>
-          <option value="proxi_super">proxi_super</option>
-        </select>
-
-        <button id="addPromoProductBtn" style="margin-top:10px;">+ Ajouter</button>
-      </div>
-    ` : ""}
-
-    <div class="card" style="margin-top:10px;padding:12px;">
-      <div style="font-size:13px;font-weight:600;margin-bottom:8px;">Produits promo</div>
-
-      ${promoList.length ? `
-        <table>
-          <thead>
-            <tr>
-              <th>Produit</th>
-              <th>Commandé</th>
-              ${currentUser.role === "admin" ? `<th>Action admin</th>` : ""}
-            </tr>
-          </thead>
-          <tbody>
-            ${promoList.map(p => `
-              <tr>
-                <td>${p.label}</td>
-                <td>
-                  <input type="checkbox"
-                    ${promoState[p.id]?.checked ? "checked" : ""}
-                    data-check="${p.id}">
-                </td>
-                ${currentUser.role === "admin" ? `
-                  <td>
-                    <button class="secondary" data-delete-promo="${p.rowId}">Supprimer</button>
-                  </td>
-                ` : ""}
-              </tr>
-            `).join("")}
-          </tbody>
-        </table>
-      ` : `<div class="subtext">Aucun produit promo sur ce mois.</div>`}
-    </div>
-  `;
-
-  right.querySelectorAll("[data-check]").forEach(cb => {
-    cb.addEventListener("change", () => {
-      const id = cb.dataset.check;
-      promoState[id] = promoState[id] || {};
-      promoState[id].checked = cb.checked;
-      saveWithDebounce(currentStore.id);
-      renderApp();
-    });
-  });
-
-  if (currentUser.role === "admin") {
-    const addBtn = right.querySelector("#addPromoProductBtn");
-    const labelInput = right.querySelector("#newPromoLabel");
-    const formatSelect = right.querySelector("#newPromoFormat");
-
-    if (addBtn && labelInput && formatSelect) {
-      addBtn.addEventListener("click", async () => {
-        const label = labelInput.value.trim();
-        const storeFormat = formatSelect.value;
-
-        if (!label) {
-          alert("Renseigne un produit promo.");
-          return;
-        }
-
-        const ok = await addPromoProductToSupabase({
-          monthKey: currentPromoMonth,
-          storeFormat,
-          label
-        });
-
-        if (!ok) {
-          alert("Impossible d'ajouter le produit promo.");
-          return;
-        }
-
-        labelInput.value = "";
-        renderApp();
-      });
-    }
-
-    const addMonthBtn = right.querySelector("#addPromoMonthBtn");
-    const monthInput = right.querySelector("#newPromoMonth");
-
-    if (addMonthBtn && monthInput) {
-      addMonthBtn.addEventListener("click", async () => {
-        const monthKey = monthInput.value.trim();
-
-        if (!monthKey) {
-          alert("Renseigne un mois au format AAAA-MM.");
-          return;
-        }
-
-        const ok = await createPromoMonthInSupabase(monthKey);
-
-        if (!ok) {
-          alert("Impossible de créer le mois promo.");
-          return;
-        }
-
-        monthInput.value = "";
-        renderApp();
-      });
-    }
-
-    right.querySelectorAll("[data-delete-promo]").forEach(btn => {
-      btn.addEventListener("click", async () => {
-        const rowId = btn.dataset.deletePromo;
-
-        const ok = await deletePromoProductFromSupabase(rowId);
-
-        if (!ok) {
-          alert("Impossible de supprimer le produit promo.");
-          return;
-        }
-
-        renderApp();
-      });
-    });
-  }
-
-  container.appendChild(left);
-  container.appendChild(right);
-}
-
     let currentDetentionPeriod = "2025-11_2026-01";
 
 let DETENTION_PERIODS = [
@@ -2945,7 +2480,6 @@ container.appendChild(right);
 
    async function init() {
   await loadStoresFromSupabase();
-  await loadPromoCatalogFromSupabase();
   await loadStateFromSupabase();
   renderLogin();
 }
